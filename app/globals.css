@@ -1,0 +1,317 @@
+﻿@import "tailwindcss";
+@import "tw-animate-css";
+
+/* â”€â”€â”€ Design Tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@theme {
+  /* Brand palette â€” Avegatasta Jal-Urja */
+  --color-brand-50:  oklch(97.5% 0.015 250);
+  --color-brand-100: oklch(94%   0.035 250);
+  --color-brand-200: oklch(88%   0.06  250);
+  --color-brand-300: oklch(78%   0.10  250);
+  --color-brand-400: oklch(65%   0.15  250);
+  --color-brand-500: oklch(55%   0.18  250);   /* primary action */
+  --color-brand-600: oklch(47%   0.18  250);   /* hover */
+  --color-brand-700: oklch(39%   0.17  250);
+  --color-brand-800: oklch(30%   0.14  250);
+  --color-brand-900: oklch(22%   0.10  250);
+  --color-brand-950: oklch(14%   0.07  250);   /* headings */
+
+  /* Accent â€” water teal */
+  --color-accent-400: oklch(73% 0.14 195);
+  --color-accent-500: oklch(63% 0.16 195);
+  --color-accent-600: oklch(53% 0.15 195);
+
+  /* Surface tokens */
+  --color-surface-base:    oklch(100% 0 0);
+  --color-surface-subtle:  oklch(97.5% 0.005 250);
+  --color-surface-muted:   oklch(95%   0.008 250);
+  --color-surface-inverse: var(--color-brand-950);
+
+  /* Text tokens */
+  --color-text-primary:   var(--color-brand-950);
+  --color-text-secondary: oklch(45% 0.02 250);
+  --color-text-tertiary:  oklch(62% 0.02 250);
+  --color-text-inverse:   oklch(100% 0 0);
+  --color-text-brand:     var(--color-brand-600);
+
+  /* Typography */
+  --font-sans:  'Geist', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'DM Serif Display', 'Georgia', ui-serif, serif;
+  --font-mono:  'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Type scale */
+  --text-display: clamp(2.5rem, 5vw + 1rem, 5rem);
+  --text-hero:    clamp(2rem, 4vw + 0.5rem, 3.75rem);
+
+  /* Spacing */
+  --spacing-section: clamp(4rem, 8vw, 7rem);
+  --spacing-gutter:  clamp(1.5rem, 5vw, 6rem);
+
+  /* Radii */
+  --radius-card:  1.75rem;
+  --radius-badge: 0.625rem;
+  --radius-pill:  9999px;
+
+  /* Shadows */
+  --shadow-card:      0 4px 24px -4px oklch(14% 0.07 250 / 0.08),
+                      0 1px 4px -1px  oklch(14% 0.07 250 / 0.04);
+  --shadow-card-hover: 0 20px 60px -12px oklch(14% 0.07 250 / 0.18),
+                       0 4px 16px -4px   oklch(14% 0.07 250 / 0.08);
+  --shadow-brand:     0 16px 48px -8px oklch(47% 0.18 250 / 0.30);
+  --shadow-ai:        0 8px 32px -4px  oklch(63% 0.16 195 / 0.25);
+
+  /* Transitions */
+  --ease-brand: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* â”€â”€â”€ Base layer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-surface-base);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+  }
+
+  ::selection {
+    background-color: oklch(88% 0.06 250);
+    color: var(--color-brand-950);
+  }
+
+  /* Focus visible â€” brand ring */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+}
+
+/* â”€â”€â”€ Brand marquee â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 28s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* â”€â”€â”€ Skeleton loader â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    oklch(93% 0.005 250) 25%,
+    oklch(96% 0.003 250) 50%,
+    oklch(93% 0.005 250) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: var(--radius-badge);
+}
+
+/* Site motion layer */
+@keyframes site-section-reveal {
+  from {
+    opacity: 0.35;
+    transform: translateY(42px) scale(0.985);
+    filter: blur(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes site-copy-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes site-media-reveal {
+  from {
+    opacity: 0.45;
+    clip-path: inset(8% round 1.5rem);
+    filter: saturate(0.8) contrast(0.94);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 round 0);
+    filter: saturate(1) contrast(1);
+  }
+}
+
+@layer utilities {
+  .motion-page-shell {
+    min-height: 100%;
+    isolation: isolate;
+  }
+
+  .motion-card {
+    transform: translateZ(0);
+    transition:
+      transform 420ms var(--ease-brand),
+      box-shadow 420ms var(--ease-brand),
+      border-color 420ms var(--ease-brand),
+      background-color 420ms var(--ease-brand);
+    will-change: transform;
+  }
+
+  .motion-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .motion-media {
+    isolation: isolate;
+  }
+
+  .motion-media img {
+    transition:
+      transform 900ms var(--ease-brand),
+      filter 520ms var(--ease-brand);
+  }
+
+  .motion-media:hover img {
+    filter: saturate(1.08) contrast(1.03);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  body.site-motion [data-motion-root] main > section:not(:first-child) {
+    animation: site-section-reveal both;
+    animation-timeline: view();
+    animation-range: entry 6% cover 28%;
+    transform-origin: center top;
+    will-change: opacity, transform, filter;
+  }
+
+  body.site-motion [data-motion-root] main > section:not(:first-child) :where(h2, h3, p, li, dt, dd, form) {
+    animation: site-copy-reveal both;
+    animation-timeline: view();
+    animation-range: entry 8% cover 30%;
+    will-change: opacity, transform;
+  }
+
+  body.site-motion [data-motion-root] main > section:not(:first-child) :where(img, picture, video) {
+    animation: site-media-reveal both;
+    animation-timeline: view();
+    animation-range: entry 4% cover 34%;
+    will-change: opacity, clip-path, filter;
+  }
+
+  body.site-motion [data-admin-shell] :where(section, h1, h2, h3, p, li, dt, dd, form, img, picture, video) {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    clip-path: none !important;
+  }
+}
+
+body.site-motion [data-motion-root] main :where(a, button) {
+  transition-timing-function: var(--ease-brand);
+}
+
+body.site-motion [data-motion-root] main :where(a, button):active {
+  transform: translateY(1px) scale(0.99);
+}
+
+
+/* â”€â”€â”€ Scrollbar utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.no-scrollbar {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE/Edge */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;                  /* Chrome/Safari/WebKit */
+}
+
+/* â”€â”€â”€ Mobile touch improvements â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ensure embla carousel gets proper touch scroll behavior */
+[data-embla] {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent text selection during carousel drag */
+.embla__slide {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* â”€â”€â”€ Responsive hardening â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+@layer base {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  body {
+    min-width: 320px;
+  }
+
+  *,
+  *::before,
+  *::after {
+    min-width: 0;
+  }
+
+  img,
+  svg,
+  video,
+  canvas,
+  iframe {
+    max-width: 100%;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+  }
+}
+
+@media (max-width: 640px) {
+  .animate-marquee {
+    animation-duration: 40s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

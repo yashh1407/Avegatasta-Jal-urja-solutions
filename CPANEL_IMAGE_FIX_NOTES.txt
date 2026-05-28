@@ -1,0 +1,27 @@
+Image loading fix applied
+
+Changed:
+1. Added components/SafeProductImage.tsx
+   - Renders all remote product images without the Next.js image optimizer.
+   - Falls back to /logo.png if an image URL fails.
+   - Normalizes /public/... paths to proper Next.js public paths.
+
+2. Updated product image areas:
+   - app/products/ProductsPageClient.tsx
+   - app/product/[id]/ProductDetailClient.tsx
+   - components/FeaturedProducts.tsx
+   - components/ProductGrid.tsx
+   - app/client/products/ClientProductCatalog.tsx
+   - app/admin/products/page.tsx
+   - app/admin/pricing/page.tsx
+   - components/Navbar.tsx search result thumbnails
+
+3. Updated next.config.ts
+   - images.unoptimized = true to avoid broken /_next/image optimization on cPanel/standalone hosting.
+
+Important deployment note:
+When uploading the standalone build to cPanel, upload these folders together beside server.js:
+- public
+- .next/static
+
+The existing postbuild script already copies them into .next/standalone after npm run build.
