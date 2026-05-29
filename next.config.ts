@@ -41,6 +41,12 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'vguard.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'bluewaveproducts.com',
         port: '',
         pathname: '/**',

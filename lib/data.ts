@@ -1,4 +1,4 @@
-export interface Product {
+﻿export interface Product {
   id: string;
   name: string;
   brand: "V-Guard" | "Zero B" | "Wilo" | "Bluewave India" | "Pure Energy";
@@ -37,7 +37,7 @@ export const categories = [
 export const products: Product[] = [
   {
     "id": "wilo-wbw3-sub",
-    "name": "Borewell submersible pumpset 75 mm - (WBW3”)",
+    "name": "Borewell submersible pumpset 75 mm - (WBW3â€)",
     "brand": "Wilo",
     "category": "Pumping Segments",
     "subCategory": "Borewell Submersible Pumpset",
@@ -382,11 +382,11 @@ export const products: Product[] = [
     "brand": "V-Guard",
     "category": "Heat Pumps",
     "subCategory": "Commercial",
-    "description": "Designed for commercial environments such as hospitals, swimming pools, hotels, and resorts. Constant temperature output 55-60°C.",
+    "description": "Designed for commercial environments such as hospitals, swimming pools, hotels, and resorts. Constant temperature output 55-60Â°C.",
     "image": "/products/vg-hp-commercial-cover.webp",
     "features": [
       "High Capacity",
-      "Constant Temp 55-60°C",
+      "Constant Temp 55-60Â°C",
       "Easy Installation",
       "Commercial Grade"
     ],
@@ -416,7 +416,7 @@ export const products: Product[] = [
       "Heating Capacity": "3500 W",
       "Rated Power Input": "810 W",
       "COP": "4.32",
-      "Max Water Temperature": "60°C"
+      "Max Water Temperature": "60Â°C"
     },
     "inStock": true
   },
@@ -439,7 +439,7 @@ export const products: Product[] = [
       "Heating Capacity": "3500 W",
       "Rated Power Input": "810 W",
       "COP": "4.32",
-      "Max Water Temperature": "60°C"
+      "Max Water Temperature": "60Â°C"
     },
     "inStock": true
   },
@@ -462,7 +462,7 @@ export const products: Product[] = [
       "Heating Capacity": "5800 W",
       "Rated Power Input": "1320 W",
       "COP": "4.38",
-      "Max Water Temperature": "60°C"
+      "Max Water Temperature": "60Â°C"
     },
     "inStock": true
   },
@@ -752,7 +752,7 @@ export const products: Product[] = [
   },
   {
     "id": "zb-rejive-ro",
-    "name": "REJIVE RO + UF + HEALTH CHARGER (MINERAL)​",
+    "name": "REJIVE RO + UF + HEALTH CHARGER (MINERAL)â€‹",
     "brand": "Zero B",
     "category": "Water Treatment",
     "subCategory": "RO Purifiers",
@@ -836,15 +836,15 @@ export const products: Product[] = [
       "Auto tank fill"
     ],
     "specs": {
-      "Purification Technology": "RO + ESS (Electrolytic Sanitizing System — Active Silver Technology)",
+      "Purification Technology": "RO + ESS (Electrolytic Sanitizing System â€” Active Silver Technology)",
       "Purification Stages": "7 stages",
       "Dispensing Flow Rate": "9 litres/hour",
       "Storage Capacity": "8 litres (Hydropneumatic / HN Tank for pressurized water)",
-      "RO Membrane": "1810 × 1 type",
+      "RO Membrane": "1810 Ã— 1 type",
       "Carbon Filter": "Bacteriostatic Activated Carbon",
       "Sediment Filter": "Filter bag + Hi-Q filtration with ACF",
       "Installation": "Under-the-sink; only long-reach faucet visible on platform",
-      "Auto Tank Fill": "Yes — purifier never runs out of pure water",
+      "Auto Tank Fill": "Yes â€” purifier never runs out of pure water",
       "Post-RO Protection": "ESS Technology provides complete microbiological protection post-RO without separate UV or UF stage",
       "Standards": "USEPA and IS 10500 certified"
     },
@@ -867,13 +867,13 @@ export const products: Product[] = [
       "Protects appliances and plumbing"
     ],
     "specs": {
-      "Flow Rate": "8000 LPH (8 m³/hour)",
-      "Technology": "Ion Exchange Resin — replaces calcium and magnesium ions with sodium ions",
+      "Flow Rate": "8000 LPH (8 mÂ³/hour)",
+      "Technology": "Ion Exchange Resin â€” replaces calcium and magnesium ions with sodium ions",
       "Regeneration Type": "Timer-based or volume-based automatic regeneration",
       "Construction": "Corrosion-resistant tanks for long-term durability",
       "Maintenance": "Simple and hassle-free; only periodic refilling of salt tank required",
       "Application": "Large homes, big apartment complexes, small industries",
-      "Key Benefits": "Soft, scale-free water for entire premises; protects all water-based appliances; improves skin and hair health; eco-friendly — uses minimal water and salt during regeneration"
+      "Key Benefits": "Soft, scale-free water for entire premises; protects all water-based appliances; improves skin and hair health; eco-friendly â€” uses minimal water and salt during regeneration"
     },
     "inStock": true
   },
@@ -898,7 +898,7 @@ export const products: Product[] = [
       "Technology": "Ion Exchange Resin Media",
       "Installation": "Wall-mounted; can be attached directly to geysers, washing machines, or showers",
       "Operation": "Semi-automatic with manual regeneration using salt",
-      "Application": "Bathroom, laundry, geyser inlet — point-of-use hardness reduction",
+      "Application": "Bathroom, laundry, geyser inlet â€” point-of-use hardness reduction",
       "Key Benefits": "Reduces hair loss and skin ailments caused by hard water; prevents scale on bathroom fittings and appliances; retains fabric colour and reduces soap/shampoo consumption"
     },
     "inStock": true
@@ -922,7 +922,7 @@ export const products: Product[] = [
     "specs": {
       "Purification Technology": "HRR (High Recovery RO) + ESS Active Silver Technology",
       "Output Capacity": "50 LPH to 500 LPH (scalable range)",
-      "Water Recovery": "Up to 70% — approximately 3× higher than conventional RO systems",
+      "Water Recovery": "Up to 70% â€” approximately 3Ã— higher than conventional RO systems",
       "NOVA Filter": "Proprietary pre-treatment filter that prevents membrane fouling and scaling, enabling high water recovery",
       "Tank Sanitization": "Automatic ESS sanitization every 24 hours",
       "Smart Alerts": "Visual alert indicators for maintenance, filter change, and system performance monitoring",
@@ -969,7 +969,7 @@ export const products: Product[] = [
     "specs": {
       "Type": "UV + UF",
       "Storage": "6 Litres",
-      "MRP": "₹7,492"
+      "MRP": "â‚¹7,492"
     },
     "inStock": true
   },
@@ -979,7 +979,7 @@ export const products: Product[] = [
     "brand": "Zero B",
     "category": "Water Treatment",
     "subCategory": "UV Purifiers",
-    "description": "Multi-stage UV water purifier with an electronics circuit that allows water to flow only when the UV lamp is ON — ensuring pure or no water. Includes sediment filter, carbon filter, and UV purification.",
+    "description": "Multi-stage UV water purifier with an electronics circuit that allows water to flow only when the UV lamp is ON â€” ensuring pure or no water. Includes sediment filter, carbon filter, and UV purification.",
     "image": "https://www.zerobonline.com/wp-content/uploads/2025/06/ZeroB-ULTRA-UV-300x300.webp",
     "features": [
       "UV Lamp Sensing",
@@ -1034,9 +1034,9 @@ export const products: Product[] = [
       "Purification Technology": "UV + UF (Ultra-Filtration)",
       "Purification Stages": "5 to 6 stages",
       "Storage Tank": "6 litres detachable tank (easy cleaning and maintenance)",
-      "UV Lamp": "11 Watt — next-gen UV that deactivates bacteria and viruses",
+      "UV Lamp": "11 Watt â€” next-gen UV that deactivates bacteria and viruses",
       "UF Membrane": "Removes microbes and prevents particulate buildup on the UV lamp's quartz glass (prevents shielding effect)",
-      "Indicators": "LED Smart Indicators — Power ON, Process ON, Tank Full",
+      "Indicators": "LED Smart Indicators â€” Power ON, Process ON, Tank Full",
       "Mounting": "Wall-mounted to save kitchen counter space",
       "Suitable For": "Municipal corporation water and pre-treated water sources",
       "Standards": "Certified to USEPA and IS 10500 drinking water standards"
@@ -1063,7 +1063,7 @@ export const products: Product[] = [
       "Purification Technology": "UV + UF under-the-sink system",
       "Installation": "Under-the-sink; compact design with long-reach faucet on platform",
       "Operation": "Instant purification; SMPS ensures consistent performance during voltage fluctuations",
-      "Safety": "Electronic UV lamp monitoring — water flow stops automatically if lamp fails",
+      "Safety": "Electronic UV lamp monitoring â€” water flow stops automatically if lamp fails",
       "Standards": "USEPA and IS 10500 compliant",
       "Suitable For": "Modular kitchens; ideal for homes with limited counter space"
     },
@@ -1087,9 +1087,9 @@ export const products: Product[] = [
     ],
     "specs": {
       "Purification Technology": "UV with multi-stage filtration",
-      "Installation": "Under-the-sink; only faucet visible on kitchen platform — saves counter space",
+      "Installation": "Under-the-sink; only faucet visible on kitchen platform â€” saves counter space",
       "Flow Rate": "2 LPM (litres per minute)",
-      "Operation": "Instant purification — no waiting time; SMPS for stable performance during voltage fluctuations",
+      "Operation": "Instant purification â€” no waiting time; SMPS for stable performance during voltage fluctuations",
       "Safety": "Water flows only when UV lamp is confirmed ON; flow auto-stops if UV lamp fails",
       "Standards": "Meets USEPA and IS 10500 drinking water standards"
     },
@@ -1129,7 +1129,7 @@ export const products: Product[] = [
       "7-stage purification",
       "10 litres/hour flow rate",
       "6-litre detachable tank",
-      "90–95% salt rejection",
+      "90â€“95% salt rejection",
       "IS 10500 and USEPA certified"
     ],
     "specs": {
@@ -1137,10 +1137,10 @@ export const products: Product[] = [
       "Purification Stages": "7 stages",
       "Purification Flow Rate": "10 litres/hour",
       "Storage Tank": "6 litres (detachable, transparent, washable)",
-      "Water Recovery": "40–50%",
-      "Salt Rejection": "90–95%",
-      "Dimensions (L × W × H)": "28 × 20 × 37 cm",
-      "Indicators": "LED Smart Indicators — Power ON, Process ON, Tank Full",
+      "Water Recovery": "40â€“50%",
+      "Salt Rejection": "90â€“95%",
+      "Dimensions (L Ã— W Ã— H)": "28 Ã— 20 Ã— 37 cm",
+      "Indicators": "LED Smart Indicators â€” Power ON, Process ON, Tank Full",
       "Mounting": "Wall-mounted",
       "Standards": "IS 10500 and USEPA certified",
       "What it Removes": "Bacteria, viruses, heavy metals (arsenic, lead, fluoride), excess dissolved salts, pesticides, and harmful chemicals"
@@ -1164,7 +1164,7 @@ export const products: Product[] = [
       "USEPA and IS 10500 certified"
     ],
     "specs": {
-      "Purification Technology": "UV + ESS (Electrolytic Sanitizing System — Active Silver Technology)",
+      "Purification Technology": "UV + ESS (Electrolytic Sanitizing System â€” Active Silver Technology)",
       "Purification Stages": "5 to 6 stages",
       "Storage Tank": "6 litres detachable tank",
       "ESS Technology": "Active Silver releases ions post-UV purification; prevents microbial reactivation and recontamination for up to 7 days",
@@ -1182,7 +1182,7 @@ export const products: Product[] = [
     "brand": "Zero B",
     "category": "Water Treatment",
     "subCategory": "Dispensers",
-    "description": "Multi-function hot and cold water dispensers for commercial spaces — available in Neo, Jumbo, and Pro variants for different capacity requirements.",
+    "description": "Multi-function hot and cold water dispensers for commercial spaces â€” available in Neo, Jumbo, and Pro variants for different capacity requirements.",
     "image": "https://www.zerobonline.com/wp-content/uploads/2024/08/imgpsh_fullsize_anim-23.png-1-300x300.png",
     "features": [
       "Hot & Cold Water",
@@ -1244,7 +1244,7 @@ export const products: Product[] = [
     "brand": "Zero B",
     "category": "Water Treatment",
     "subCategory": "Dispensers",
-    "description": "All-in-one RO and UV water coolers and dispensers that purify and dispense chilled drinking water — ideal for offices, schools, and public spaces.",
+    "description": "All-in-one RO and UV water coolers and dispensers that purify and dispense chilled drinking water â€” ideal for offices, schools, and public spaces.",
     "image": "https://www.zerobonline.com/wp-content/uploads/2024/08/imgpsh_fullsize_anim-4-300x300.png",
     "features": [
       "Integrated RO + UV",
@@ -1445,7 +1445,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-ec-pro-storage",
-    "name": "V-Guard EC PRO Storage Series 10 – 100 L",
+    "name": "V-Guard EC PRO Storage Series 10 â€“ 100 L",
     "brand": "V-Guard",
     "category": "Water Heaters",
     "description": "Storage water heater series designed for efficient daily hot water use across multiple capacity options.",
@@ -1540,9 +1540,9 @@ export const products: Product[] = [
       "Improves bathing and laundering experience"
     ],
     "specs": {
-      "Flow Rate": "1000 LPH (1 m³/hour)",
+      "Flow Rate": "1000 LPH (1 mÂ³/hour)",
       "Technology": "Ion Exchange with Purple Resin Media (food-grade, patent technology)",
-      "Operation": "Fully automatic — no manual intervention required",
+      "Operation": "Fully automatic â€” no manual intervention required",
       "Regeneration": "Automatic, timer-based or volume-based",
       "Resin Type": "Food-grade Purple Resin (does not leach harmful chemicals)",
       "Application": "Ideal for individual homes and bathrooms in areas with hard water",
@@ -2198,11 +2198,11 @@ export const products: Product[] = [
     "specs": {
       "Technology": "RO + ESS (Active Silver) + Alkaline Crafter (patented mineralizer technology)",
       "Output": "Alkaline and hydrogen-rich water",
-      "Minera Logic": "Smart device that automatically selects whether to pass water through Alkaline Crafter based on inlet water TDS — ensures optimal alkaline and hydrogen levels at all times",
-      "Alkaline Crafter": "Patented cartridge — enhances alkalizer function by adding optimum minerals, especially for low TDS water",
-      "Water Recovery": "HRR Technology — 70% water saving compared to conventional RO systems",
-      "ESS Technology": "Releases Active Silver ions and Hydroxyl ions — completely denaturing paralyzed microbes by disrupting genetic cell walls",
-      "Form Factor": "Freestanding — can be supported from top or bottom; direct dispensing nozzle on unit",
+      "Minera Logic": "Smart device that automatically selects whether to pass water through Alkaline Crafter based on inlet water TDS â€” ensures optimal alkaline and hydrogen levels at all times",
+      "Alkaline Crafter": "Patented cartridge â€” enhances alkalizer function by adding optimum minerals, especially for low TDS water",
+      "Water Recovery": "HRR Technology â€” 70% water saving compared to conventional RO systems",
+      "ESS Technology": "Releases Active Silver ions and Hydroxyl ions â€” completely denaturing paralyzed microbes by disrupting genetic cell walls",
+      "Form Factor": "Freestanding â€” can be supported from top or bottom; direct dispensing nozzle on unit",
       "Application": "Home use for health-focused drinking water",
       "Key Benefits": "Antioxidant-rich alkaline water; improves hydration; neutralises free radicals; supports metabolism; India's first alkaline and hydrogen water crafter"
     },
@@ -2224,7 +2224,7 @@ export const products: Product[] = [
     ],
     "specs": {
       "Flow Rate": "Up to 18,000 L/hr",
-      "Power": "0.5–1.5 HP",
+      "Power": "0.5â€“1.5 HP",
       "Voltage": "230V / 50Hz",
       "Warranty": "12 Months"
     },
@@ -2245,7 +2245,7 @@ export const products: Product[] = [
       "Suitable for pools up to 50,000 L"
     ],
     "specs": {
-      "Tank Diameter": "400–600 mm",
+      "Tank Diameter": "400â€“600 mm",
       "Filter Media": "Silica Sand / Glass",
       "Connection": "1.5 inch",
       "Warranty": "18 Months"
@@ -2270,7 +2270,7 @@ export const products: Product[] = [
       "Active Ingredient": "TCCA 90%",
       "Tablet Size": "200g / 50g",
       "Pack Size": "1 kg / 5 kg",
-      "pH": "2.8–3.2"
+      "pH": "2.8â€“3.2"
     },
     "inStock": true
   },
@@ -2302,7 +2302,7 @@ export const products: Product[] = [
     "brand": "Bluewave India",
     "category": "Swimming Pool",
     "subCategory": "Pool Chemicals",
-    "description": "Granular pH increaser to raise pool water pH to the ideal range of 7.2–7.6. Prevents corrosion, eye irritation, and chlorine inefficiency caused by low pH.",
+    "description": "Granular pH increaser to raise pool water pH to the ideal range of 7.2â€“7.6. Prevents corrosion, eye irritation, and chlorine inefficiency caused by low pH.",
     "image": "https://5.imimg.com/data5/SELLER/Default/2024/10/460800859/KX/ZZ/DI/5789594/ph-plus-chemical-500x500.jpg",
     "features": [
       "Raises pH quickly",
@@ -2312,7 +2312,7 @@ export const products: Product[] = [
     ],
     "specs": {
       "Active Ingredient": "Sodium Carbonate",
-      "Target pH": "7.2–7.6",
+      "Target pH": "7.2â€“7.6",
       "Pack Size": "1 kg / 5 kg",
       "Dosage": "As per pool volume"
     },
@@ -2328,13 +2328,13 @@ export const products: Product[] = [
     "image": "https://5.imimg.com/data5/SELLER/Default/2024/11/469320532/UQ/IR/TU/5789594/ph-minus-chemical-500x500.jpg",
     "features": [
       "Lowers pH safely",
-      "Dry granular — safer than liquid acid",
+      "Dry granular â€” safer than liquid acid",
       "Fast dissolving",
       "Suitable for all pool types"
     ],
     "specs": {
       "Active Ingredient": "Sodium Bisulphate",
-      "Target pH": "7.2–7.6",
+      "Target pH": "7.2â€“7.6",
       "Pack Size": "1 kg / 5 kg",
       "Dosage": "As per pool volume"
     },
@@ -2379,7 +2379,7 @@ export const products: Product[] = [
     "specs": {
       "Type": "Clarifier + Flocculant",
       "Pack Size": "500 mL / 1 L",
-      "Action": "Fast (4–8 hrs)",
+      "Action": "Fast (4â€“8 hrs)",
       "Dosage": "As per water volume"
     },
     "inStock": true
@@ -2399,7 +2399,7 @@ export const products: Product[] = [
       "Includes easy-read guide"
     ],
     "specs": {
-      "Parameters": "Cl₂, pH, TA, CYA",
+      "Parameters": "Clâ‚‚, pH, TA, CYA",
       "Test Method": "Reagent Drop",
       "Tests per Kit": "100+",
       "Standard": "DPD"
@@ -2446,7 +2446,7 @@ export const products: Product[] = [
       "Thickness": "400 micron",
       "UV Resistance": "High",
       "Colour": "Blue / Clear",
-      "Lifespan": "3–5 seasons"
+      "Lifespan": "3â€“5 seasons"
     },
     "inStock": true
   },
@@ -2812,7 +2812,7 @@ export const products: Product[] = [
       "Engineering plastic water-contact parts with high corrosion resistance",
       "Protection action for safer and economical operation",
       "Suction available up to 8 meters",
-      "Suitable for clean water pH 6–8 with no foreign matter"
+      "Suitable for clean water pH 6â€“8 with no foreign matter"
     ],
     "specs": {
       "Model": "HiMulti5",
@@ -2822,7 +2822,7 @@ export const products: Product[] = [
       "Suction": "Up to 8 m",
       "Application": "Clean water pressure boosting from roof tank, break tank, ground tank, shallow well and static water supply",
       "Installation": "Indoor installation",
-      "Water Quality": "Clean water, pH 6–8, no foreign matter"
+      "Water Quality": "Clean water, pH 6â€“8, no foreign matter"
     },
     "inStock": true
   },
@@ -2844,7 +2844,7 @@ export const products: Product[] = [
     "specs": {
       "Model": "STAR-RS25/6",
       "Power": "1.5 HP",
-      "Product Family": "WILO Return Line Circulation Pump – STAR-RS with RLTC Controller",
+      "Product Family": "WILO Return Line Circulation Pump â€“ STAR-RS with RLTC Controller",
       "Application": "Return-line circulation and circulation pump use",
       "Speed Control": "Three preselectable speed stages",
       "Installation": "Horizontal shaft; terminal box selectable at 3-6-9-12 o'clock positions"
@@ -2869,7 +2869,7 @@ export const products: Product[] = [
     "specs": {
       "Model": "STAR-RS25/8",
       "Power": "1.5 HP",
-      "Product Family": "WILO Return Line Circulation Pump – STAR-RS with RLTC Controller",
+      "Product Family": "WILO Return Line Circulation Pump â€“ STAR-RS with RLTC Controller",
       "Application": "Return-line circulation and circulation pump use",
       "Speed Control": "Three preselectable speed stages",
       "Installation": "Horizontal shaft; terminal box selectable at 3-6-9-12 o'clock positions"
@@ -3555,23 +3555,23 @@ export const products: Product[] = [
     "image": "https://www.vguard.in/uploads/product/solrigo-3400-1p.jpg",
     "features": [
       "Free Wi-Fi dongle for real-time monitoring",
-      "Wide MPPT: 80–500 V DC input range, 97% efficiency",
+      "Wide MPPT: 80â€“500 V DC input range, 97% efficiency",
       "LCD displays daily & total energy saved",
-      "Operating temp: –25°C to 60°C",
+      "Operating temp: â€“25Â°C to 60Â°C",
       "8-year warranty",
-      "No storage loss — no battery required"
+      "No storage loss â€” no battery required"
     ],
     "specs": {
       "PV power (max)": "3600 W",
       "Max DC voltage": "500 V",
       "Start voltage": "80 V",
-      "MPP range": "80–500 V DC",
+      "MPP range": "80â€“500 V DC",
       "THD": "<3%",
       "Phase": "Single",
       "Efficiency": "97%",
       "DC surge": "TMOV",
       "AC surge": "TMOV",
-      "Dimensions": "297×223×117 mm",
+      "Dimensions": "297Ã—223Ã—117 mm",
       "Weight": "4.8 kg",
       "Warranty": "8 years"
     },
@@ -3582,13 +3582,13 @@ export const products: Product[] = [
     "name": "SOLRIGO 5000 1P",
     "brand": "V-Guard",
     "category": "On-Grid PV Inverters",
-    "description": "SOLRIGO 5000 single-phase On-Grid PV inverter with 6000 W input. Wide MPPT gives an input range of 100–550 V DC. Free Wi-Fi dongle, LCD display, advanced safety features, lightweight design.",
+    "description": "SOLRIGO 5000 single-phase On-Grid PV inverter with 6000 W input. Wide MPPT gives an input range of 100â€“550 V DC. Free Wi-Fi dongle, LCD display, advanced safety features, lightweight design.",
     "image": "https://www.vguard.in/uploads/product/solrigo-5000-1p.jpg",
     "features": [
       "Free Wi-Fi dongle for real-time monitoring",
-      "Wide MPPT: 100–550 V DC, 97.4% efficiency",
+      "Wide MPPT: 100â€“550 V DC, 97.4% efficiency",
       "LCD displays energy saved daily & total",
-      "Operating temp: –25°C to 60°C",
+      "Operating temp: â€“25Â°C to 60Â°C",
       "8-year warranty",
       "Lightweight compact design"
     ],
@@ -3596,13 +3596,13 @@ export const products: Product[] = [
       "PV power (max)": "6000 W",
       "Max DC voltage": "550 V",
       "Start voltage": "100 V",
-      "MPP range": "100–550 V DC",
+      "MPP range": "100â€“550 V DC",
       "THD": "<3%",
       "Phase": "Single",
       "Efficiency": "97.4%",
       "DC surge": "TMOV",
       "AC surge": "TMOV",
-      "Dimensions": "395×328×154 mm",
+      "Dimensions": "395Ã—328Ã—154 mm",
       "Weight": "10 kg",
       "Warranty": "8 years"
     },
@@ -3617,9 +3617,9 @@ export const products: Product[] = [
     "image": "https://www.vguard.in/uploads/product/SOLRIGO-5000.jpg",
     "features": [
       "98% max conversion efficiency",
-      "Wide MPPT + low startup voltage — optimal energy on cloudy days",
+      "Wide MPPT + low startup voltage â€” optimal energy on cloudy days",
       "10-year product warranty",
-      "IP65 rated — outdoor installation safe",
+      "IP65 rated â€” outdoor installation safe",
       "Surge protection, anti-islanding, residual current detection",
       "Wi-Fi + mobile app + LCD real-time monitoring"
     ],
@@ -3643,7 +3643,7 @@ export const products: Product[] = [
     "features": [
       "Free Wi-Fi dongle for real-time monitoring",
       "Wide MPPT range, high solar yield",
-      "–25°C to 60°C operating range",
+      "â€“25Â°C to 60Â°C operating range",
       "LCD energy display",
       "Lightweight compact form",
       "8-year warranty"
@@ -3666,7 +3666,7 @@ export const products: Product[] = [
     "features": [
       "Free Wi-Fi dongle for real-time monitoring",
       "Wide MPPT range, high solar yield",
-      "–25°C to 60°C operating range",
+      "â€“25Â°C to 60Â°C operating range",
       "LCD energy display",
       "8-year warranty",
       "No battery storage loss"
@@ -3688,7 +3688,7 @@ export const products: Product[] = [
     "features": [
       "Free Wi-Fi dongle for real-time monitoring",
       "Wide MPPT range, high solar yield",
-      "–25°C to 60°C operating range",
+      "â€“25Â°C to 60Â°C operating range",
       "LCD energy display",
       "8-year warranty",
       "Lightweight compact form"
@@ -3756,7 +3756,7 @@ export const products: Product[] = [
     "features": [
       "Free Wi-Fi dongle for real-time monitoring",
       "Wide MPPT range, high solar yield",
-      "–25°C to 60°C operating range",
+      "â€“25Â°C to 60Â°C operating range",
       "LCD energy display",
       "8-year warranty",
       "Surplus exported to grid"
@@ -3778,7 +3778,7 @@ export const products: Product[] = [
     "features": [
       "Free Wi-Fi dongle for real-time monitoring",
       "Wide MPPT range, high solar yield",
-      "–25°C to 60°C operating range",
+      "â€“25Â°C to 60Â°C operating range",
       "LCD energy display",
       "8-year warranty",
       "No battery storage loss"
@@ -3800,7 +3800,7 @@ export const products: Product[] = [
     "features": [
       "Free Wi-Fi dongle for real-time monitoring",
       "Wide MPPT range, high solar yield",
-      "–25°C to 60°C operating range",
+      "â€“25Â°C to 60Â°C operating range",
       "LCD energy display",
       "8-year warranty",
       "Surplus exported to grid"
@@ -3822,7 +3822,7 @@ export const products: Product[] = [
     "features": [
       "Free Wi-Fi dongle for real-time monitoring",
       "Wide MPPT range, high solar yield",
-      "–25°C to 60°C operating range",
+      "â€“25Â°C to 60Â°C operating range",
       "LCD energy display",
       "8-year warranty",
       "No battery storage loss"
@@ -3844,7 +3844,7 @@ export const products: Product[] = [
     "features": [
       "Free Wi-Fi dongle for real-time monitoring",
       "Wide MPPT range, high solar yield",
-      "–25°C to 60°C operating range",
+      "â€“25Â°C to 60Â°C operating range",
       "LCD energy display",
       "8-year warranty",
       "Cleaner greener power generation"
@@ -3867,7 +3867,7 @@ export const products: Product[] = [
       "97.60% max efficiency",
       "Free Wi-Fi dongle for monitoring",
       "Wide MPPT range, high solar yield",
-      "–25°C to 60°C operating range",
+      "â€“25Â°C to 60Â°C operating range",
       "LCD display + mobile app",
       "Surplus exported to grid"
     ],
@@ -3890,7 +3890,7 @@ export const products: Product[] = [
       "98.40% max efficiency",
       "Free Wi-Fi dongle for monitoring",
       "Wide MPPT range, high solar yield",
-      "–25°C to 60°C operating range",
+      "â€“25Â°C to 60Â°C operating range",
       "LCD display + mobile app",
       "Surplus exported to grid"
     ],
@@ -3912,7 +3912,7 @@ export const products: Product[] = [
     "features": [
       "Free Wi-Fi dongle for monitoring",
       "Wide MPPT, high energy conservation",
-      "–25°C to 60°C operating range",
+      "â€“25Â°C to 60Â°C operating range",
       "LCD display + mobile app",
       "8-year warranty",
       "Surplus exported to grid"
@@ -3934,7 +3934,7 @@ export const products: Product[] = [
     "features": [
       "Free Wi-Fi dongle for monitoring",
       "Wide MPPT, high energy conservation",
-      "–25°C to 60°C operating range",
+      "â€“25Â°C to 60Â°C operating range",
       "LCD display + mobile app",
       "8-year warranty",
       "Surplus exported to grid"
@@ -3956,7 +3956,7 @@ export const products: Product[] = [
     "features": [
       "Free Wi-Fi dongle for monitoring",
       "Wide MPPT, high energy conservation",
-      "–25°C to 60°C operating range",
+      "â€“25Â°C to 60Â°C operating range",
       "LCD display + mobile app",
       "8-year warranty",
       "Surplus exported to grid"
@@ -3978,7 +3978,7 @@ export const products: Product[] = [
     "features": [
       "Free Wi-Fi dongle for monitoring",
       "Wide MPPT, high energy conservation",
-      "–25°C to 60°C operating range",
+      "â€“25Â°C to 60Â°C operating range",
       "LCD display + mobile app",
       "8-year warranty",
       "Surplus exported to grid"
@@ -4000,7 +4000,7 @@ export const products: Product[] = [
     "features": [
       "MPPT high-efficiency solar charge controller",
       "Solar + grid dual charging",
-      "Wi-Fi & Bluetooth — V-Guard Smart App control",
+      "Wi-Fi & Bluetooth â€” V-Guard Smart App control",
       "Real-time status & energy generation tracking",
       "Pure sine wave output",
       "Compact home solar backup"
@@ -4021,7 +4021,7 @@ export const products: Product[] = [
     "image": "https://www.vguard.in/uploads/product/solsmart-1500-24v.jpg",
     "features": [
       "MPPT solar + grid dual charging",
-      "Wi-Fi & Bluetooth — V-Guard Smart App",
+      "Wi-Fi & Bluetooth â€” V-Guard Smart App",
       "Real-time energy generation insights",
       "Uninterrupted power supply",
       "Pure sine wave output",
@@ -4044,7 +4044,7 @@ export const products: Product[] = [
     "features": [
       "MPPT high-efficiency solar charge controller",
       "Solar + grid dual charging",
-      "Wi-Fi & Bluetooth — V-Guard Smart App",
+      "Wi-Fi & Bluetooth â€” V-Guard Smart App",
       "Uninterrupted power supply",
       "Pure sine wave output",
       "Simple monitoring & control"
@@ -4067,7 +4067,7 @@ export const products: Product[] = [
       "Inbuilt high-efficiency solar charge controller",
       "Appliance mode via V-Guard Smart App",
       "Support for inverter-tech appliances (AC/refrigerator)",
-      "Multiple model options (1250–8750 VA)",
+      "Multiple model options (1250â€“8750 VA)",
       "Pure sine wave output",
       "Wi-Fi + Bluetooth monitoring"
     ],
@@ -4086,7 +4086,7 @@ export const products: Product[] = [
     "description": "V-Guard SolSmart 2750 Solar Hybrid Inverter. Epitome of innovation and technology. Smart App control, solar savings tracker, app-based appliance mode management.",
     "image": "https://www.vguard.in/uploads/product/solsmart-2750-bg.jpg",
     "features": [
-      "Wi-Fi & Bluetooth — V-Guard Smart App",
+      "Wi-Fi & Bluetooth â€” V-Guard Smart App",
       "Solar savings tracker (today/yesterday/total)",
       "App-based mode & settings control",
       "Pure sine wave output (DSC-based)",
@@ -4108,7 +4108,7 @@ export const products: Product[] = [
     "description": "V-Guard SolSmart 3750 Solar Hybrid Inverter. Packed with industry-leading features. Smart App control, real-time monitoring, solar savings display.",
     "image": "https://www.vguard.in/uploads/product/solsmart-3750-bg.jpg",
     "features": [
-      "Wi-Fi & Bluetooth — V-Guard Smart App",
+      "Wi-Fi & Bluetooth â€” V-Guard Smart App",
       "Solar savings tracker (today/yesterday/total)",
       "App-based mode & settings control",
       "Pure sine wave output (DSC-based)",
@@ -4129,7 +4129,7 @@ export const products: Product[] = [
     "description": "V-Guard SolSmart 4750 Solar Hybrid Inverter. Innovation and technology epitome. Smart App, savings tracker, appliance mode, pure sine wave.",
     "image": "https://www.vguard.in/uploads/product/solsmart-4750-bg.jpg",
     "features": [
-      "Wi-Fi & Bluetooth — V-Guard Smart App",
+      "Wi-Fi & Bluetooth â€” V-Guard Smart App",
       "Solar savings tracker (today/yesterday/total)",
       "App-based appliance & settings control",
       "Pure sine wave output (DSC-based)",
@@ -4151,8 +4151,8 @@ export const products: Product[] = [
     "image": "https://www.vguard.in/uploads/product/solsmart-6750.jpg",
     "features": [
       "5600 VA / 4500 W output capacity",
-      "Pure sine wave (DSC-based) — safe for sensitive electronics",
-      "Wi-Fi & Bluetooth — V-Guard Smart App",
+      "Pure sine wave (DSC-based) â€” safe for sensitive electronics",
+      "Wi-Fi & Bluetooth â€” V-Guard Smart App",
       "Solar savings tracker (today/yesterday/total)",
       "Heavy-load capable solar hybrid UPS",
       "Real-time solar consumption analytics"
@@ -4232,7 +4232,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-panel-110w",
-    "name": "110W – 12V (36 Cells)",
+    "name": "110W â€“ 12V (36 Cells)",
     "brand": "V-Guard",
     "category": "Solar Panels",
     "description": "V-Guard 110 W 12V Polycrystalline Solar Panel. Generates energy from sunrise to sunset. AR-coated tempered glass, waterproof and corrosion resistant, salt-mist and sand resistant.",
@@ -4257,7 +4257,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-panel-270w",
-    "name": "270W – 24V (60 Cells)",
+    "name": "270W â€“ 24V (60 Cells)",
     "brand": "V-Guard",
     "category": "Solar Panels",
     "description": "V-Guard 270W 24V Polycrystalline Solar Panel. Perfect embodiment of bringing home a better tomorrow. Excellent temperature performance, improved low-light energy generation.",
@@ -4304,7 +4304,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-panel-400w",
-    "name": "400W – 24V (72 Cells)",
+    "name": "400W â€“ 24V (72 Cells)",
     "brand": "V-Guard",
     "category": "Solar Panels",
     "description": "V-Guard 400W MonoPERC 72-cell solar panel. Harness the best of the sun. Excellent low-light performance, high efficiency in small roof space, PID resistance.",
@@ -4334,7 +4334,7 @@ export const products: Product[] = [
     "description": "V-Guard 50 Wp 12V MonoPERC Solar Panel. Turn even a small rooftop corner into your personal power station. High efficiency, compact size, low-light performance.",
     "image": "https://www.vguard.in/uploads/product/Panel-540-Monoperc-Half-Cut.jpg",
     "features": [
-      "MonoPERC — higher efficiency per sq ft",
+      "MonoPERC â€” higher efficiency per sq ft",
       "Compact, easy installation",
       "Better low-light performance",
       "Works in mornings, evenings, cloudy conditions",
@@ -4356,7 +4356,7 @@ export const products: Product[] = [
     "description": "V-Guard 120 Wp 12V MonoPERC Solar Panel. Ideal choice for taking control of electricity bills. High efficiency, compact form, excellent low-light performance.",
     "image": "https://www.vguard.in/uploads/product/Panel-540-Monoperc-Half-Cut.jpg",
     "features": [
-      "MonoPERC — higher efficiency per sq ft",
+      "MonoPERC â€” higher efficiency per sq ft",
       "Compact, easy installation",
       "Better low-light performance",
       "Works in mornings, evenings, cloudy conditions",
@@ -4378,7 +4378,7 @@ export const products: Product[] = [
     "description": "V-Guard 200 Wp 12V MonoPERC Solar Panel. Rooftop quietly works 24/7 to slash electricity bills. High efficiency, compact, excellent low-light performance.",
     "image": "https://www.vguard.in/uploads/product/Panel-540-Monoperc-Half-Cut.jpg",
     "features": [
-      "MonoPERC — higher efficiency per sq ft",
+      "MonoPERC â€” higher efficiency per sq ft",
       "Compact, easy installation",
       "Better low-light performance",
       "Rooftop savings round the clock",
@@ -4400,7 +4400,7 @@ export const products: Product[] = [
     "description": "V-Guard 200 Wp 24V MonoPERC Solar Panel. Imagine seeing electricity bills drop significantly. High efficiency, compact, low-light optimized.",
     "image": "https://www.vguard.in/uploads/product/Panel-540-Monoperc-Half-Cut.jpg",
     "features": [
-      "MonoPERC — higher efficiency per sq ft",
+      "MonoPERC â€” higher efficiency per sq ft",
       "Compact, easy installation",
       "Better low-light performance",
       "Works in mornings, evenings, cloudy conditions",
@@ -4422,9 +4422,9 @@ export const products: Product[] = [
     "description": "V-Guard 545 Wp MonoPERC Half-Cut Solar Panel. Unmatched solar efficiency. AR-coated tempered glass, anti-reflective surface, microcrack-free EL-tested quality.",
     "image": "https://www.vguard.in/uploads/product/panel-545.jpg",
     "features": [
-      "AR-coated glass + anti-reflective surface — max sunlight absorption",
+      "AR-coated glass + anti-reflective surface â€” max sunlight absorption",
       "Superior low-light performance",
-      "100% pre & post EL-tested — microcrack-free",
+      "100% pre & post EL-tested â€” microcrack-free",
       "High module efficiency",
       "Half-cut cell technology for reduced power loss",
       "Long-lasting reliability"
@@ -4491,7 +4491,7 @@ export const products: Product[] = [
     "description": "Panel 540 (AX) Bifacial DCR. Generates power from both sides. MonoPERC bifacial technology captures direct sunlight and reflected ground light. 25-yr linear, 10-yr product warranty.",
     "image": "https://www.vguard.in/uploads/product/Panel-540-Monoperc-Half-Cut.jpg",
     "features": [
-      "Bifacial — power from both front & rear sides",
+      "Bifacial â€” power from both front & rear sides",
       "AR coating for maximum absorption",
       "25-yr linear power output warranty",
       "10-yr product warranty",
@@ -4514,7 +4514,7 @@ export const products: Product[] = [
     "description": "Panel 550 (AX) Bifacial DCR. Saves money, reduces bills, powers home with clean energy. Bifacial MonoPERC generating from both sides, 25-yr linear, 10-yr product warranty.",
     "image": "https://www.vguard.in/uploads/product/Panel-550_-Bi-Facial-Non-DC.jpg",
     "features": [
-      "Bifacial — power from both front & rear sides",
+      "Bifacial â€” power from both front & rear sides",
       "AR coating for maximum absorption",
       "25-yr linear power output warranty",
       "10-yr product warranty",
@@ -4537,7 +4537,7 @@ export const products: Product[] = [
     "description": "Panel 545 (RS) Bifacial DCR. More power and better long-term value. MonoPERC bifacial, AR coating, 30-yr linear power warranty, 12-yr product warranty.",
     "image": "https://www.vguard.in/uploads/product/Panel-545-Bi-Facial-DCR-GS.jpg",
     "features": [
-      "Bifacial — power from both front & rear sides",
+      "Bifacial â€” power from both front & rear sides",
       "AR coating for maximum absorption",
       "30-yr linear power output warranty",
       "12-yr product warranty",
@@ -4554,13 +4554,13 @@ export const products: Product[] = [
   },
   {
     "id": "vg-panel-550-1n",
-    "name": "Panel 550–1N (AX) MPHC Non-DCR",
+    "name": "Panel 550â€“1N (AX) MPHC Non-DCR",
     "brand": "V-Guard",
     "category": "Solar Panels",
-    "description": "Panel 550–1N (AX) MPHC Non-DCR. Strong performance and smart engineering. TOPCon bifacial, AR coating, 15-year product warranty.",
+    "description": "Panel 550â€“1N (AX) MPHC Non-DCR. Strong performance and smart engineering. TOPCon bifacial, AR coating, 15-year product warranty.",
     "image": "https://www.vguard.in/uploads/product/Panel-540-Monoperc-Half-Cut.jpg",
     "features": [
-      "TOPCon bifacial — higher efficiency, better heat perf, longer lifespan",
+      "TOPCon bifacial â€” higher efficiency, better heat perf, longer lifespan",
       "AR coating for max solar absorption",
       "15-yr product warranty on materials/workmanship",
       "Strong performance, smart engineering",
@@ -4582,7 +4582,7 @@ export const products: Product[] = [
     "description": "Panel 580 (SW) TOPCon N-Type GG Non-DCR. More power from the same sunlight. TOPCon bifacial, AR coating, 30-yr linear power warranty, 12-yr product warranty.",
     "image": "https://www.vguard.in/uploads/product/Panel-580-N-Type-Topcon-Bi.jpg",
     "features": [
-      "TOPCon bifacial — higher efficiency & better heat performance",
+      "TOPCon bifacial â€” higher efficiency & better heat performance",
       "AR coating for max absorption",
       "30-yr linear power output warranty",
       "12-yr product warranty",
@@ -4628,7 +4628,7 @@ export const products: Product[] = [
     "description": "Panel 585 (RS) TOPCon N-Type GG Non-DCR. Stronger performance and higher power generation every day. TOPCon bifacial, AR coating, 30-yr linear, 15-yr product warranty.",
     "image": "https://www.vguard.in/uploads/product/Panel-540-Monoperc-Half-Cut.jpg",
     "features": [
-      "TOPCon bifacial — higher efficiency, heat perf & longer lifespan",
+      "TOPCon bifacial â€” higher efficiency, heat perf & longer lifespan",
       "AR coating for max solar absorption",
       "30-yr linear power output warranty",
       "12-yr product warranty on Panel 580 / 15-yr on Panel 585",
@@ -4651,7 +4651,7 @@ export const products: Product[] = [
     "description": "V-Guard SPST4036 Solar Battery. High efficiency eco-friendly design. High-purity lead with low self-discharge, long cycle life, fast charge acceptance. Specially designed for solar applications.",
     "image": "https://www.vguard.in/uploads/product/spst4036.jpg",
     "features": [
-      "High-purity lead — long life, very low self-discharge",
+      "High-purity lead â€” long life, very low self-discharge",
       "Long cycle life: 1200 cycles @ 80% DOD",
       "Nature-friendly design",
       "Tubular positive plates for rugged performance",
@@ -4677,7 +4677,7 @@ export const products: Product[] = [
       "Specially designed for solar applications",
       "Nature-friendly design",
       "Tubular positive plates for long life",
-      "High-purity lead — low self-discharge",
+      "High-purity lead â€” low self-discharge",
       "No power cut concerns"
     ],
     "specs": {
@@ -4738,10 +4738,10 @@ export const products: Product[] = [
     "name": "SPST20036",
     "brand": "V-Guard",
     "category": "Solar Battery",
-    "description": "V-Guard SPST20036 Solar Battery. 12V/200Ah — highest capacity in this range. Best for large loads and rugged usage. 60-month warranty, deep cyclic performance.",
+    "description": "V-Guard SPST20036 Solar Battery. 12V/200Ah â€” highest capacity in this range. Best for large loads and rugged usage. 60-month warranty, deep cyclic performance.",
     "image": "https://www.vguard.in/uploads/product/spst20036-bg.jpg",
     "features": [
-      "12V / 200 Ah @ C10 rating — highest in this range",
+      "12V / 200 Ah @ C10 rating â€” highest in this range",
       "60-month warranty: 36M free replacement + 24M pro-rata",
       "Best choice for larger loads & rugged usage",
       "Deep cyclic application performance",
@@ -4781,16 +4781,16 @@ export const products: Product[] = [
   },
   {
     "id": "vg-nextgen-900",
-    "name": "Nextgen Pro 900 — 750VA 12V (600Wp)",
+    "name": "Nextgen Pro 900 â€” 750VA 12V (600Wp)",
     "brand": "V-Guard",
     "category": "Solar Off-Grid System with Battery and Panel",
     "description": "Nextgen Pro 900 bundled solar system (inverter + battery + panel). 750 VA, 12V. Up to 600 Wp solar panel. DSC-based trapezoidal wave, multiple battery technology modes.",
     "image": "https://www.vguard.in/uploads/product/nextgen-pro-900-bg.jpg",
     "features": [
       "Inbuilt high-efficiency solar charge controller (600W panel compatible)",
-      "DSC-based trapezoidal wave output — wide application range",
+      "DSC-based trapezoidal wave output â€” wide application range",
       "Multiple charging modes: Tubular / Flat / Local Battery",
-      "Controlled 220–230V output in inverter mode",
+      "Controlled 220â€“230V output in inverter mode",
       "Power Saver Max / Normal mode selection",
       "Fuzzy logic battery water-topping reminder"
     ],
@@ -4805,13 +4805,13 @@ export const products: Product[] = [
   },
   {
     "id": "vg-nextgen-1200",
-    "name": "Nextgen Pro 1200 — 900VA 12V (600Wp)",
+    "name": "Nextgen Pro 1200 â€” 900VA 12V (600Wp)",
     "brand": "V-Guard",
     "category": "Solar Off-Grid System with Battery and Panel",
-    "description": "Nextgen Pro 1200 bundled system. 900 VA, 12V. Up to 600 Wp solar. Power Saver Max / Normal mode, fuzzy logic water-topping reminder, controlled 220–230V output.",
+    "description": "Nextgen Pro 1200 bundled system. 900 VA, 12V. Up to 600 Wp solar. Power Saver Max / Normal mode, fuzzy logic water-topping reminder, controlled 220â€“230V output.",
     "image": "https://www.vguard.in/uploads/product/nextgen-pro-1200-bg.jpg",
     "features": [
-      "Controlled 220–230V output in inverter mode",
+      "Controlled 220â€“230V output in inverter mode",
       "Power Saver Max / Normal mode selection",
       "Fuzzy logic battery water-topping reminder",
       "Inbuilt high-efficiency solar charge controller (600W)",
@@ -4828,7 +4828,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-nextgen-1400",
-    "name": "Nextgen Pro 1400 — 1100VA 12V (600Wp)",
+    "name": "Nextgen Pro 1400 â€” 1100VA 12V (600Wp)",
     "brand": "V-Guard",
     "category": "Solar Off-Grid System with Battery and Panel",
     "description": "Nextgen Pro 1400 bundled system. 1100 VA, 12V. Simple and smart decision. 600Wp solar panel, DSC trapezoidal wave, multiple battery mode support.",
@@ -4837,7 +4837,7 @@ export const products: Product[] = [
       "Inbuilt high-efficiency solar charge controller (600W)",
       "DSC-based trapezoidal wave output",
       "Multiple battery technology modes",
-      "Controlled 220–230V inverter output",
+      "Controlled 220â€“230V inverter output",
       "Power Saver Max / Normal mode",
       "Water-topping & panel cleaning reminders"
     ],
@@ -4851,7 +4851,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-synergy-1150",
-    "name": "Synergy Smart 1150 — 950VA 12V (640Wp)",
+    "name": "Synergy Smart 1150 â€” 950VA 12V (640Wp)",
     "brand": "V-Guard",
     "category": "Solar Off-Grid System with Battery and Panel",
     "description": "Synergy Smart 1150 bundled solar system. Innovation marvel. Interact via mobile phone, Smart App Wi-Fi & Bluetooth, solar savings tracker, Battery Gravity Builder.",
@@ -4874,7 +4874,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-synergy-1800",
-    "name": "Synergy Smart 1800 — 1550VA 24V (1280Wp)",
+    "name": "Synergy Smart 1800 â€” 1550VA 24V (1280Wp)",
     "brand": "V-Guard",
     "category": "Solar Off-Grid System with Battery and Panel",
     "description": "Synergy Smart 1800 bundled system. Truly defines smart in every way. Smart App, appliance settings, temperature-based cooling fan, Battery Gravity Builder.",
@@ -4897,7 +4897,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-synergy-2750",
-    "name": "Synergy Smart 2750 — 2200VA 24V (1620Wp)",
+    "name": "Synergy Smart 2750 â€” 2200VA 24V (1620Wp)",
     "brand": "V-Guard",
     "category": "Solar Off-Grid System with Battery and Panel",
     "description": "Synergy Smart 2750 bundled system. Epitome of innovation and technology. Smart App, Battery Gravity Builder, temperature-based fan, first-in-class features.",
@@ -4920,7 +4920,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-solsmart-3750-bundle",
-    "name": "SolSmart 3750 — 3200VA 36V (2640Wp)",
+    "name": "SolSmart 3750 â€” 3200VA 36V (2640Wp)",
     "brand": "V-Guard",
     "category": "Solar Off-Grid System with Battery and Panel",
     "description": "SolSmart 3750 bundled system. Industry standards raised for customer convenience. Smart App, Battery Gravity Builder, load & temperature-based cooling, 2640 Wp solar panel.",
@@ -4957,7 +4957,7 @@ export const products: Product[] = [
       "Reduces soap and detergent consumption"
     ],
     "specs": {
-      "Flow Rate": "2000 LPH (2 m³/hour)",
+      "Flow Rate": "2000 LPH (2 mÂ³/hour)",
       "Technology": "Ion Exchange with Purple Resin Media",
       "Operation": "Fully automatic",
       "Regeneration": "Automatic, programmable valve",
@@ -4983,11 +4983,11 @@ export const products: Product[] = [
       "Improves bathing comfort and washing results"
     ],
     "specs": {
-      "Flow Rate": "3000 LPH (3 m³/hour)",
+      "Flow Rate": "3000 LPH (3 mÂ³/hour)",
       "Technology": "Ion Exchange with Purple Resin Media",
       "Operation": "Fully automatic, zero manual intervention",
       "Regeneration": "Automatic, self-cleaning based on water consumption or programmed days",
-      "Application": "Larger homes and light commercial use (apartments up to 4–6 flats)",
+      "Application": "Larger homes and light commercial use (apartments up to 4â€“6 flats)",
       "Key Benefits": "Removes hardness-causing calcium and magnesium; prevents scale deposition on bathroom fittings; improves bathing comfort and washing results"
     },
     "image": "/products/water-treatment/autosoft-3.webp",
@@ -5009,7 +5009,7 @@ export const products: Product[] = [
       "Saves soap, detergent, and gas consumption"
     ],
     "specs": {
-      "Flow Rate": "6000 LPH (6 m³ in approximately 1.5 hours)",
+      "Flow Rate": "6000 LPH (6 mÂ³ in approximately 1.5 hours)",
       "Technology": "Ion Exchange with Purple Resin Media",
       "Operation": "Fully automatic, truly zero manual intervention",
       "Regeneration": "Automatic, self-regulating based on consumption",
@@ -5032,14 +5032,14 @@ export const products: Product[] = [
       "Automatic programmed backwash",
       "Removes turbidity and suspended solids",
       "RO pre-treatment compatible",
-      "3.5 kg/cm² max working pressure"
+      "3.5 kg/cmÂ² max working pressure"
     ],
     "specs": {
       "Flow Rate": "3000 LPH",
       "Filter Media": "High-grade Sand, Garnet, and Silex",
       "Function": "Removes turbidity, suspended particles, mud, silt, and sediment from raw water",
       "Operation": "Fully automatic with programmed backwash cycle",
-      "Max Working Pressure": "3.5 kg/cm²",
+      "Max Working Pressure": "3.5 kg/cmÂ²",
       "Application": "Pre-treatment for drinking water in housing societies, hotels, shopping malls; pre-treatment for RO systems and cooling towers"
     },
     "image": "/products/water-treatment/auto-sand-filter.webp",
@@ -5116,7 +5116,7 @@ export const products: Product[] = [
       "RO Product Output": "250 liters per recharge",
       "Backwash Frequency": "Daily",
       "Valve Type": "User-friendly backwash valve that regulates all functions",
-      "Application": "Exclusively designed for Indian households — India's first dedicated household iron remover",
+      "Application": "Exclusively designed for Indian households â€” India's first dedicated household iron remover",
       "Key Benefits": "Effective shield against iron contamination; leaves skin soft and healthy; retains colour and texture of fabric; saves cooking gas; removes foul metallic taste from water"
     },
     "image": "/products/water-treatment/d-ferrous-iron-remover.webp",
@@ -5141,8 +5141,8 @@ export const products: Product[] = [
       "Purification Technology": "HRR (High Recovery RO) + ESS Active Silver Technology",
       "Purification Flow Rate": "9 litres/hour",
       "Storage Tank": "6 litres",
-      "Water Recovery": "Significantly higher than conventional RO — minimises water wastage",
-      "Inlet Pressure": "0.5–2.0 kg/cm²",
+      "Water Recovery": "Significantly higher than conventional RO â€” minimises water wastage",
+      "Inlet Pressure": "0.5â€“2.0 kg/cmÂ²",
       "Mounting": "Wall-mounted",
       "ESS Technology": "Active Silver ions maintain purity in storage tank; prevents recontamination",
       "Indicators": "LED Smart Indicators",
@@ -5171,9 +5171,9 @@ export const products: Product[] = [
       "Purification Technology": "RO + UF (Ultra-Filtration)",
       "Purification Stages": "7 stages",
       "Storage Capacity": "8 litres (pressurized, high dispensing flow rate from faucet)",
-      "UF Membrane": "Low-pressure operation — minimises membrane fouling and extends service life",
+      "UF Membrane": "Low-pressure operation â€” minimises membrane fouling and extends service life",
       "Installation": "Under-the-sink with long-reach faucet on counter",
-      "Auto Tank Fill": "Yes — continuous supply maintained",
+      "Auto Tank Fill": "Yes â€” continuous supply maintained",
       "What it Removes": "Dissolved salts, bacteria, viruses, harmful chemicals, and microbes",
       "Standards": "USEPA and IS 10500 compliant"
     },
@@ -5200,7 +5200,7 @@ export const products: Product[] = [
       "Purification Stages": "8 stages",
       "Output Flow Rate": "25 litres/hour",
       "Storage Capacity": "8 litres",
-      "Digital Monitor": "Intelligent digital display with cartridge life alarm and status indicators — alerts when filter replacement is due",
+      "Digital Monitor": "Intelligent digital display with cartridge life alarm and status indicators â€” alerts when filter replacement is due",
       "Mineral Retention": "MIN-TECH retains essential natural minerals and taste after RO purification",
       "Installation": "Under-the-sink; only faucet visible; saves kitchen space",
       "Auto Tank Fill": "Yes",
@@ -5227,14 +5227,14 @@ export const products: Product[] = [
       "USEPA and IS 10500 compliant"
     ],
     "specs": {
-      "Technology": "RO + ESS (Active Silver) + Alkaline Crafter — under-the-sink configuration",
+      "Technology": "RO + ESS (Active Silver) + Alkaline Crafter â€” under-the-sink configuration",
       "Storage Capacity": "8 litres (pressurized Hydropneumatic / HN Tank)",
       "Dispensing": "Remote touch dispensing faucet installed on kitchen platform (swinging faucet for user-friendly operation)",
-      "Purification Modes": "RO Mode (full RO + ESS purification) or Non-RO Mode (ESS-only — requires inlet TDS below 150 ppm; diverter valve included for selection)",
-      "Continuous Operation": "Maximum 30 minutes continuous use — unit must rest between extended cycles",
+      "Purification Modes": "RO Mode (full RO + ESS purification) or Non-RO Mode (ESS-only â€” requires inlet TDS below 150 ppm; diverter valve included for selection)",
+      "Continuous Operation": "Maximum 30 minutes continuous use â€” unit must rest between extended cycles",
       "Pro Alkaline Cartridge": "Installed when target pH cannot be achieved with standard cartridge due to specific water constituents",
       "Installation": "Fully under-the-sink; saves kitchen space; only remote faucet visible on counter",
-      "Important Notes": "Warranty on electrolyzer is void if Non-RO mode is used with inlet TDS above 150 ppm; not for commercial use — designed for personal/limited home use",
+      "Important Notes": "Warranty on electrolyzer is void if Non-RO mode is used with inlet TDS above 150 ppm; not for commercial use â€” designed for personal/limited home use",
       "Standards": "ESS product water meets USEPA and IS 10500 drinking water standards"
     },
     "image": "/products/water-treatment/hydrolife-uts.webp",
@@ -5392,4 +5392,121 @@ export const products: Product[] = [
     "image": "https://www.pureenergy.co.in/assets/purepower/images/com-slider-3.png",
     "inStock": true
   }
+,
+  {
+    "id": "vguard-prime-1150-mili",
+    "name": "V-Guard Prime 1150 MILI Inverter for Home, Office",
+    "brand": "V-Guard",
+    "category": "Inverter",
+    "subCategory": "Inverter",
+    "description": "Premium digital sinewave inverter with superior performance. Provides long power backup for homes and offices.",
+    "image": "/Inverter/Prime1150MiLi.webp",
+    "features": [
+      "Digital Sinewave",
+      "Quick Charge Technology",
+      "Advanced Battery Management"
+    ],
+    "specs": {
+      "Price": "â‚¹ 6,799",
+      "Capacity": "1000VA"
+    },
+    "inStock": true
+  },
+  {
+    "id": "vguard-prime-1150-pure",
+    "name": "Prime 1150 Pure Sinewave 1000VA Inverter",
+    "brand": "V-Guard",
+    "category": "Inverter",
+    "subCategory": "Inverter",
+    "description": "Pure sinewave inverter delivering clean power suitable for sensitive electronics.",
+    "image": "/Inverter/INVFE56MKKQHMJEP_1.webp",
+    "features": [
+      "Pure Sinewave Output",
+      "In-built Battery Gravity Builder",
+      "High Load Handling"
+    ],
+    "specs": {
+      "Price": "â‚¹ 6,699",
+      "Capacity": "1000VA"
+    },
+    "inStock": true
+  },
+  {
+    "id": "aviolux-800-square",
+    "name": "Aviolux 800 Square Wave 775VA Inverter",
+    "brand": "V-Guard",
+    "category": "Inverter",
+    "subCategory": "Inverter",
+    "description": "Economical and reliable square wave inverter designed to handle heavy loads with ease.",
+    "image": "/Inverter/INVH63KEMJVN5NE8_1.webp",
+    "features": [
+      "Square Wave Technology",
+      "Overload Protection",
+      "Compact Design"
+    ],
+    "specs": {
+      "Price": "â‚¹ 4,729",
+      "Capacity": "775VA"
+    },
+    "inStock": true
+  },
+  {
+    "id": "vguard-prime-750-pure",
+    "name": "V-Guard Prime 750 Pure Sinewave Inverter",
+    "brand": "V-Guard",
+    "category": "Inverter",
+    "subCategory": "Inverter",
+    "description": "High-efficiency pure sinewave inverter that runs fans silently and protects sensitive gadgets.",
+    "image": "/Inverter/New_Project_3.webp",
+    "features": [
+      "Silent Operation",
+      "Selectable Charging",
+      "Battery Water Topping Reminder"
+    ],
+    "specs": {
+      "Price": "â‚¹ 4,949",
+      "Capacity": "750VA"
+    },
+    "inStock": true
+  },
+  {
+    "id": "smart-pro-1200",
+    "name": "Smart Pro 1200 S Pure Sine Wave 1000VA IoT",
+    "brand": "V-Guard",
+    "category": "Inverter",
+    "subCategory": "Inverter",
+    "description": "Smart IoT enabled pure sine wave inverter. Monitor and control your inverter from your smartphone.",
+    "image": "/Inverter/INVFE6KNMZSFZYCG_1.webp",
+    "features": [
+      "IoT Enabled (Wi-Fi)",
+      "App Control",
+      "Appliance Protection",
+      "Turbo Charge"
+    ],
+    "specs": {
+      "Price": "â‚¹ 8,599",
+      "Capacity": "1000VA"
+    },
+    "inStock": true
+  },
+  {
+    "id": "aviolux-1100-square",
+    "name": "Aviolux 1100 Square Wave 950VA Inverter",
+    "brand": "V-Guard",
+    "category": "Inverter",
+    "subCategory": "Inverter",
+    "description": "Powerful square wave inverter that ensures longer backup and reliable performance during power cuts.",
+    "image": "/Inverter/INVH63MTRANFGBYD_1.webp",
+    "features": [
+      "Rugged Design",
+      "Thermal Protection",
+      "Extra Backup"
+    ],
+    "specs": {
+      "Price": "â‚¹ 5,349",
+      "Capacity": "950VA"
+    },
+    "inStock": true
+  }
 ];
+
