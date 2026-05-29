@@ -5402,12 +5402,13 @@ export const products: Product[] = [
     "description": "Premium digital sinewave inverter with superior performance. Provides long power backup for homes and offices.",
     "image": "/Inverter/Prime1150MiLi.webp",
     "features": [
-      "Digital Sinewave",
-      "Quick Charge Technology",
-      "Advanced Battery Management"
+      "Pure Sine Wave Output",
+      "1000VA / 12V Capacity",
+      "LED Display for Status",
+      "Reliable Power Backup",
+      "3-Year Warranty"
     ],
     "specs": {
-      "Price": "â‚¹ 6,799",
       "Capacity": "1000VA"
     },
     "inStock": true
@@ -5421,12 +5422,12 @@ export const products: Product[] = [
     "description": "Pure sinewave inverter delivering clean power suitable for sensitive electronics.",
     "image": "/Inverter/INVFE56MKKQHMJEP_1.webp",
     "features": [
+      "Digital Inverter UPS",
       "Pure Sinewave Output",
       "In-built Battery Gravity Builder",
-      "High Load Handling"
+      "High Load Handling Capacity"
     ],
     "specs": {
-      "Price": "â‚¹ 6,699",
       "Capacity": "1000VA"
     },
     "inStock": true
@@ -5440,12 +5441,12 @@ export const products: Product[] = [
     "description": "Economical and reliable square wave inverter designed to handle heavy loads with ease.",
     "image": "/Inverter/INVH63KEMJVN5NE8_1.webp",
     "features": [
-      "Square Wave Technology",
+      "12V DC Square Wave Inverter",
+      "Thermal Protection",
       "Overload Protection",
-      "Compact Design"
+      "Compact & Rugged Design"
     ],
     "specs": {
-      "Price": "â‚¹ 4,729",
       "Capacity": "775VA"
     },
     "inStock": true
@@ -5459,12 +5460,12 @@ export const products: Product[] = [
     "description": "High-efficiency pure sinewave inverter that runs fans silently and protects sensitive gadgets.",
     "image": "/Inverter/New_Project_3.webp",
     "features": [
+      "Pure Sinewave Technology",
       "Silent Operation",
-      "Selectable Charging",
+      "Selectable Charging Modes",
       "Battery Water Topping Reminder"
     ],
     "specs": {
-      "Price": "â‚¹ 4,949",
       "Capacity": "750VA"
     },
     "inStock": true
@@ -5478,13 +5479,12 @@ export const products: Product[] = [
     "description": "Smart IoT enabled pure sine wave inverter. Monitor and control your inverter from your smartphone.",
     "image": "/Inverter/INVFE6KNMZSFZYCG_1.webp",
     "features": [
-      "IoT Enabled (Wi-Fi)",
-      "App Control",
-      "Appliance Protection",
-      "Turbo Charge"
+      "IoT Enabled (Wi-Fi App Control)",
+      "Pure Sine Wave 1000VA",
+      "Advanced Appliance Protection",
+      "Turbo Charge Technology"
     ],
     "specs": {
-      "Price": "â‚¹ 8,599",
       "Capacity": "1000VA"
     },
     "inStock": true
@@ -5498,12 +5498,12 @@ export const products: Product[] = [
     "description": "Powerful square wave inverter that ensures longer backup and reliable performance during power cuts.",
     "image": "/Inverter/INVH63MTRANFGBYD_1.webp",
     "features": [
-      "Rugged Design",
-      "Thermal Protection",
-      "Extra Backup"
+      "12V DC Square Wave Inverter",
+      "Extra Backup Performance",
+      "Thermal & Overload Protection",
+      "Rugged & Durable Build"
     ],
     "specs": {
-      "Price": "â‚¹ 5,349",
       "Capacity": "950VA"
     },
     "inStock": true
