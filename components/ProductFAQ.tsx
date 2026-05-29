@@ -116,22 +116,22 @@ export default function ProductFAQ({ category }: ProductFAQProps) {
                     hidden: { opacity: 0, y: 8 },
                     visible: { opacity: 1, y: 0, transition: { duration: 0.25 } },
                   }}
-                  className="border border-blue-50 rounded-2xl overflow-hidden bg-white"
+                  className="border border-slate-200/60 shadow-sm rounded-2xl overflow-hidden bg-white/70 backdrop-blur-md hover:shadow-md transition-all duration-300"
                 >
                   <button
                     onClick={() => toggleOpen(faq.id)}
-                    className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left hover:bg-blue-50/40 transition-colors"
+                    className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left hover:bg-slate-50/50 transition-colors"
                     aria-expanded={isOpen}
                   >
-                    <span className="text-sm font-black text-blue-950 leading-snug pr-2">
+                    <span className="text-[15px] font-bold text-slate-800 leading-snug pr-2">
                       {faq.question}
                     </span>
                     <motion.span
                       animate={{ rotate: isOpen ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="shrink-0 text-blue-400"
+                      transition={{ duration: 0.3, ease: 'easeInOut' }}
+                      className="shrink-0 text-blue-500 bg-blue-50 p-1.5 rounded-full"
                     >
-                      <ChevronDown size={16} />
+                      <ChevronDown size={18} />
                     </motion.span>
                   </button>
 
@@ -142,10 +142,10 @@ export default function ProductFAQ({ category }: ProductFAQProps) {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        transition={{ duration: 0.3, ease: [0.25, 1, 0.5, 1] }}
                         className="overflow-hidden"
                       >
-                        <p className="px-5 pb-5 text-sm text-slate-500 font-medium leading-relaxed border-t border-blue-50 pt-3">
+                        <p className="px-6 pb-6 text-[15px] text-slate-600 font-medium leading-relaxed">
                           {faq.answer}
                         </p>
                       </motion.div>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useMemo, Suspense, useCallback, useEffect } from 'react';
 import { products } from '@/lib/data';
@@ -6,6 +6,7 @@ import { getHierarchyNode, productHierarchy, productMatchesHierarchy, type Produ
 import { CATEGORY_SEO_BY_LABEL } from '@/lib/seo-categories';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import FAQAccordion from '@/components/FAQAccordion';
 import {
   Search,
   ChevronRight,
@@ -612,14 +613,7 @@ function ProductsContent({ initialCategory = null }: { initialCategory?: string 
                 <h2 className="text-lg font-black text-blue-950 tracking-tight mb-5">
                   Frequently Asked Questions
                 </h2>
-                <div className="grid gap-4">
-                  {categorySeo.faq.map((item) => (
-                    <div key={item.question} className="rounded-2xl bg-blue-50/50 p-4">
-                      <h3 className="text-sm font-black text-blue-950 mb-2">{item.question}</h3>
-                      <p className="text-sm text-slate-600 font-medium leading-relaxed">{item.answer}</p>
-                    </div>
-                  ))}
-                </div>
+                <FAQAccordion items={categorySeo.faq} />
               </section>
             ) : null}
 

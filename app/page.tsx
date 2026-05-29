@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import BrandMarquee from '@/components/BrandMarquee';
 import Footer from '@/components/Footer';
+import FAQAccordion from '@/components/FAQAccordion';
 
 const SectionLoading = () => (
   <section className="py-20 bg-white" aria-hidden="true">
@@ -284,26 +285,22 @@ export default function Home() {
 function AiFaqSection() {
   return (
     <section className="py-20 bg-slate-50 border-t border-slate-100" aria-label="Frequently Asked Questions">
-      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-24">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] mb-3 text-center">
-            FAQ
-          </h2>
-          <h3 className="text-3xl font-black text-blue-950 tracking-tight mb-12 text-center">
-            Frequently Asked Questions
-          </h3>
-          <dl className="space-y-8">
-            {faqJsonLd.mainEntity.map((item, i) => (
-              <div key={i} className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                <dt className="text-base font-bold text-blue-950 mb-2">{item.name}</dt>
-                <dd className="text-slate-600 font-medium leading-relaxed text-sm">
-                  {item.acceptedAnswer.text}
-                </dd>
-              </div>
-            ))}
-          </dl>
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-24">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] mb-3 text-center">
+              FAQ
+            </h2>
+            <h3 className="text-3xl font-black text-blue-950 tracking-tight mb-12 text-center">
+              Frequently Asked Questions
+            </h3>
+            <FAQAccordion 
+              items={faqJsonLd.mainEntity.map(item => ({
+                question: item.name,
+                answer: item.acceptedAnswer.text
+              }))} 
+            />
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
   );
 }

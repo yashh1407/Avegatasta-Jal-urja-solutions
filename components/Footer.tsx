@@ -5,7 +5,7 @@ import { Mail, Phone, MapPin, Linkedin, Instagram } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-// ─── Data ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const PRODUCT_CATEGORIES = [
   { name: 'Water Heating Solutions', href: '/products/water-heating-solutions' },
@@ -25,7 +25,7 @@ const QUICK_LINKS = [
   { name: 'Contact',    href: '/contact' },
 ];
 
-// ─── WhatsApp icon (inline SVG — not in Lucide) ────────────────────────────
+// â”€â”€â”€ WhatsApp icon (inline SVG â€” not in Lucide) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function WhatsAppIcon({ size = 18 }: { size?: number }) {
   return (
@@ -41,7 +41,7 @@ function WhatsAppIcon({ size = 18 }: { size?: number }) {
   );
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function Footer() {
   const [contact, setContact] = useState({
@@ -85,25 +85,25 @@ export default function Footer() {
   const instagramUrl = contact.social_instagram || '';
 
   return (
-    <footer className="bg-brand-950 text-slate-300 pt-14 sm:pt-20 pb-8 sm:pb-10">
+    <footer className="bg-brand-50 text-slate-600 pt-10 lg:pt-14 pb-6 lg:pb-8">
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-24">
 
-        {/* ── Main grid ──────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12 sm:mb-14">
+        {/* â”€â”€ Main grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-6 sm:mb-8">
 
-          {/* Col 1 — Brand info */}
+          {/* Col 1 â€” Brand info */}
           <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="block relative h-12 sm:h-14 w-48 sm:w-56 mb-6">
               <Image
                 src="/logo.webp"
                 alt="Avegatasta Jal-Urja Solutions"
                 fill
-                className="object-contain object-left brightness-0 invert"
+                className="object-contain object-left"
                 sizes="(max-width: 640px) 192px, 224px"
               />
             </Link>
 
-            <p className="text-slate-400 text-sm leading-relaxed mb-6 max-w-xs">
+            <p className="text-slate-600 text-sm leading-relaxed mb-6 max-w-xs">
               Authorized distributor of V-Guard, Zero B, and Wilo water solutions. Premium heat pumps, pumps, and water treatment for homes and industries across Nashik.
             </p>
 
@@ -113,20 +113,20 @@ export default function Footer() {
                 href={`https://wa.me/${waNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-slate-300 hover:bg-green-500 hover:text-white transition-all"
+                className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 hover:bg-green-500 hover:text-white hover:shadow-md transition-all"
                 aria-label="WhatsApp"
               >
-                <WhatsAppIcon size={16} />
+                <WhatsAppIcon size={18} />
               </a>
               {linkedinUrl && (
                 <a
                   href={linkedinUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-slate-300 hover:bg-blue-600 hover:text-white transition-all"
+                  className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white hover:shadow-md transition-all"
                   aria-label="LinkedIn"
                 >
-                  <Linkedin size={16} />
+                  <Linkedin size={18} />
                 </a>
               )}
               {instagramUrl && (
@@ -134,18 +134,18 @@ export default function Footer() {
                   href={instagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-slate-300 hover:bg-pink-600 hover:text-white transition-all"
+                  className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 hover:bg-pink-600 hover:text-white hover:shadow-md transition-all"
                   aria-label="Instagram"
                 >
-                  <Instagram size={16} />
+                  <Instagram size={18} />
                 </a>
               )}
             </div>
           </div>
 
-          {/* Col 2 — Product categories */}
+          {/* Col 2 - Product categories */}
           <div>
-            <h4 className="text-sm font-black text-white uppercase tracking-widest mb-6">
+            <h4 className="text-sm font-black text-brand-950 uppercase tracking-widest mb-6">
               Products
             </h4>
             <ul className="space-y-3">
@@ -153,7 +153,7 @@ export default function Footer() {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className="text-sm text-slate-400 hover:text-white transition-colors"
+                    className="text-sm text-slate-600 hover:text-brand-600 transition-colors"
                   >
                     {item.name}
                   </Link>
@@ -162,9 +162,9 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Col 3 — Quick links */}
+          {/* Col 3 - Quick links */}
           <div>
-            <h4 className="text-sm font-black text-white uppercase tracking-widest mb-6">
+            <h4 className="text-sm font-black text-brand-950 uppercase tracking-widest mb-6">
               Quick Links
             </h4>
             <ul className="space-y-3">
@@ -172,7 +172,7 @@ export default function Footer() {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className="text-sm text-slate-400 hover:text-white transition-colors"
+                    className="text-sm text-slate-600 hover:text-brand-600 transition-colors"
                   >
                     {item.name}
                   </Link>
@@ -183,32 +183,32 @@ export default function Footer() {
 
           {/* Col 4 — Contact + Map */}
           <div>
-            <h4 className="text-sm font-black text-white uppercase tracking-widest mb-6">
+            <h4 className="text-sm font-black text-brand-950 uppercase tracking-widest mb-6">
               Contact Us
             </h4>
             <ul className="space-y-4 mb-6">
               {address && (
                 <li className="flex items-start gap-3">
-                  <MapPin size={16} className="text-brand-400 shrink-0 mt-0.5" />
-                  <span className="text-sm text-slate-400 leading-relaxed">
+                  <MapPin size={16} className="text-brand-600 shrink-0 mt-0.5" />
+                  <span className="text-sm text-slate-600 leading-relaxed">
                     {address}
                   </span>
                 </li>
               )}
               <li className="flex items-center gap-3">
-                <Phone size={16} className="text-brand-400 shrink-0" />
+                <Phone size={16} className="text-brand-600 shrink-0" />
                 <a
                   href={`tel:${phone}`}
-                  className="text-sm text-slate-400 hover:text-white transition-colors"
+                  className="text-sm text-slate-600 hover:text-brand-600 transition-colors"
                 >
                   {phone}
                 </a>
               </li>
               <li className="flex items-center gap-3">
-                <Mail size={16} className="text-brand-400 shrink-0" />
+                <Mail size={16} className="text-brand-600 shrink-0" />
                 <a
                   href={`mailto:${email}`}
-                  className="text-sm text-slate-400 hover:text-white transition-colors"
+                  className="text-sm text-slate-600 hover:text-brand-600 transition-colors"
                 >
                   {email}
                 </a>
@@ -220,7 +220,7 @@ export default function Footer() {
               href="https://maps.google.com/?q=Avegatasta+Jal+Urja+Solutions+Nashik"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-xs font-bold text-brand-400 hover:text-brand-300 transition-colors border border-white/10 rounded-xl px-3 py-2 hover:border-white/20"
+              className="inline-flex items-center gap-2 text-xs font-bold text-brand-600 hover:text-brand-700 transition-colors border border-slate-200 bg-white rounded-xl px-3 py-2 hover:border-slate-300"
             >
               <MapPin size={12} />
               View on Google Maps
@@ -228,36 +228,55 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* ── Brands strip ───────────────────────────────────────────────── */}
-        <div className="border-t border-white/8 pt-10 pb-8">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 text-center">
-            Authorized Distributor
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-8 opacity-40">
-            {['V-Guard', 'Zero B', 'Wilo'].map((brand) => (
-              <span key={brand} className="text-sm font-black text-white tracking-wider">
-                {brand}
-              </span>
-            ))}
+        {/* Premium Brands strip */}
+        <div className="relative border-t border-slate-200/60 pt-12 pb-10 mt-4 overflow-hidden">
+          {/* Subtle background glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl h-full bg-gradient-to-r from-blue-50/0 via-blue-100/30 to-blue-50/0 blur-xl -z-10 rounded-full" />
+          
+          <div className="max-w-4xl mx-auto">
+            {/* Title with delicate lines */}
+            <div className="flex items-center gap-4 mb-8">
+              <div className="h-px bg-gradient-to-r from-transparent to-slate-200 flex-1" />
+              <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400 text-center">
+                Authorized Distributor
+              </p>
+              <div className="h-px bg-gradient-to-l from-transparent to-slate-200 flex-1" />
+            </div>
+            
+            {/* Brands with diamonds */}
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4 sm:gap-x-10 text-slate-700">
+              {['V-Guard', 'Zero B', 'Wilo', 'Bluewave'].map((brand, index, array) => (
+                <React.Fragment key={brand}>
+                  <span className="text-xl sm:text-2xl font-black tracking-tight text-brand-950">
+                    {brand}
+                  </span>
+                  {index < array.length - 1 && (
+                    <span className="text-slate-300 text-sm hidden sm:inline-block" aria-hidden="true">
+                      ✦
+                    </span>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* ── Bottom bar ─────────────────────────────────────────────────── */}
-        <div className="border-t border-white/8 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-slate-500">
+        {/* Bottom bar */}
+        <div className="border-t border-slate-200/60 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-xs font-medium text-slate-500">
             &copy; {new Date().getFullYear()} Avegatasta Jal Urja Solutions. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            <Link href="/privacy-policy" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+            <Link href="/privacy-policy" className="text-xs font-medium text-slate-500 hover:text-brand-600 transition-colors">
               Privacy Policy
             </Link>
-            <Link href="/terms-of-service" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+            <Link href="/terms-of-service" className="text-xs font-medium text-slate-500 hover:text-brand-600 transition-colors">
               Terms of Service
             </Link>
-            <Link href="/cookies" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+            <Link href="/cookies" className="text-xs font-medium text-slate-500 hover:text-brand-600 transition-colors">
               Cookies
             </Link>
-            <Link href="/sitemap" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+            <Link href="/sitemap" className="text-xs font-medium text-slate-500 hover:text-brand-600 transition-colors">
               Sitemap
             </Link>
           </div>
@@ -266,3 +285,4 @@ export default function Footer() {
     </footer>
   );
 }
+

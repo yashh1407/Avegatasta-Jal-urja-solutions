@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
@@ -18,7 +18,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import FAQAccordion from '@/components/FAQAccordion';
 
 const faqs = [
   {
@@ -352,33 +352,8 @@ export default function ContactPageClient() {
             <h2 className="text-sm font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Common Questions</h2>
             <h3 className="text-3xl sm:text-4xl font-black text-blue-950 tracking-tight">Frequently Asked Questions</h3>
           </div>
-          
-          <div className="max-w-3xl mx-auto space-y-4">
-            {faqs.map((faq, i) => (
-              <div 
-                key={i} 
-                className="bg-white rounded-3xl border border-slate-100 overflow-hidden transition-all"
-              >
-                <button 
-                  onClick={() => setActiveFaq(activeFaq === i ? null : i)}
-                  className="w-full p-6 flex items-center justify-between text-left group"
-                >
-                  <span className="text-lg font-bold text-blue-950 group-hover:text-blue-600 transition-colors">{faq.question}</span>
-                  <div className={`w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-blue-600 transition-transform duration-300 ${activeFaq === i ? 'rotate-180' : ''}`}>
-                    <ChevronDown size={20} />
-                  </div>
-                </button>
-                <motion.div 
-                  initial={false}
-                  animate={{ height: activeFaq === i ? 'auto' : 0, opacity: activeFaq === i ? 1 : 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="p-6 pt-0 text-slate-500 font-medium leading-relaxed border-t border-slate-50">
-                    {faq.answer}
-                  </div>
-                </motion.div>
-              </div>
-            ))}
+          <div className="max-w-3xl mx-auto">
+            <FAQAccordion items={faqs} />
           </div>
         </div>
       </section>
@@ -460,3 +435,4 @@ export default function ContactPageClient() {
     </div>
   );
 }
+
