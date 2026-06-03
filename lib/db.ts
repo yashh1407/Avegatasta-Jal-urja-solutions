@@ -312,9 +312,11 @@ export async function initDB() {
         dp_price DECIMAL(10,2),
         mrp_price DECIMAL(10,2),
         notes TEXT,
+        description LONGTEXT,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
     `);
+    try { await connection.query(`ALTER TABLE product_pricing MODIFY COLUMN description LONGTEXT`); } catch (e: any) { if (e.code !== 'ER_DUP_FIELDNAME') throw e; }
 
     // Sales Team
     await connection.query(`
@@ -1000,6 +1002,19 @@ export async function initDB() {
         INDEX idx_ple_type (event_type)
       )
     `);
+
+      // Canvas Quotations
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS canvas_quotations (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          quote_number VARCHAR(50) NOT NULL UNIQUE,
+          client_name VARCHAR(255),
+          canvas_data LONGTEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX idx_cq_quote_number (quote_number)
+        )
+      `);
 
     // Performance indexes for high-traffic public reads and admin dashboard summaries.
     for (const ddl of [

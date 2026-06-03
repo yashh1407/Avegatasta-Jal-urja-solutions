@@ -25,6 +25,7 @@ export async function GET() {
         image: p.image,
         dp_price: pricing?.dp_price ?? null,
         mrp_price: pricing?.mrp_price ?? null,
+        description: (pricing as any)?.description ?? null,
       };
     });
 
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { product_id, dp_price, mrp_price, notes } = body as Record<string, unknown>;
+  const { product_id, dp_price, mrp_price, notes, description } = body as Record<string, unknown>;
 
   if (!product_id) {
     return NextResponse.json({ error: 'product_id is required' }, { status: 422 });
@@ -55,10 +56,10 @@ export async function POST(request: Request) {
   try {
     await initDB();
     await pool.query(
-      `INSERT INTO product_pricing (product_id, dp_price, mrp_price, notes)
-       VALUES (?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE dp_price = VALUES(dp_price), mrp_price = VALUES(mrp_price), notes = VALUES(notes)`,
-      [product_id, dp_price ?? null, mrp_price ?? null, notes ?? null]
+      `INSERT INTO product_pricing (product_id, dp_price, mrp_price, notes, description)
+       VALUES (?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE dp_price = VALUES(dp_price), mrp_price = VALUES(mrp_price), notes = VALUES(notes), description = VALUES(description)`,
+      [product_id, dp_price ?? null, mrp_price ?? null, notes ?? null, description ?? null]
     );
     const [rows] = await pool.query('SELECT * FROM product_pricing WHERE product_id = ?', [product_id]);
     return NextResponse.json((rows as unknown[])[0]);

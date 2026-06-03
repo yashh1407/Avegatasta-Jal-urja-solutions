@@ -23,21 +23,21 @@ export default function AdminLayout({
 
   return (
     <SessionProvider>
-    <div data-admin-shell className="flex h-screen bg-slate-50 overflow-hidden relative">
+    <div data-admin-shell className="flex h-screen bg-slate-50 overflow-hidden relative print:block print:h-auto print:overflow-visible">
       {/* Sidebar - Desktop */}
-      <div className="hidden lg:flex w-80 fixed left-0 top-0 h-screen z-40 flex-col">
+      <div className="hidden lg:flex w-80 fixed left-0 top-0 h-screen z-40 flex-col print:hidden">
         <AdminSidebar />
       </div>
 
       {/* Global Notification Bell */}
-      <div className="fixed top-6 right-6 lg:right-12 z-50">
+      <div className="fixed top-6 right-6 lg:right-12 z-50 print:hidden">
         <NotificationBell />
       </div>
 
       {/* Mobile Menu Button */}
       <button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="lg:hidden fixed top-6 left-6 z-50 p-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all"
+        className="lg:hidden fixed top-6 left-6 z-50 p-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all print:hidden"
         aria-label="Toggle menu"
       >
         {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -68,9 +68,9 @@ export default function AdminLayout({
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="flex-1 min-w-0 flex flex-col lg:ml-80">
+      <div className="flex-1 min-w-0 flex flex-col lg:ml-80 print:ml-0 print:block print:h-auto print:overflow-visible">
         {/* Content Area */}
-        <div className="flex-1 min-w-0 overflow-auto">
+        <div className="flex-1 min-w-0 overflow-auto print:block print:overflow-visible">
           {children}
         </div>
       </div>

@@ -35,6 +35,12 @@ const ADMIN_SECTIONS = [
     category: 'main'
   },
   {
+    label: 'Quotations',
+    href: '/admin/quotations',
+    icon: FileText,
+    category: 'main'
+  },
+  {
     label: 'Messages',
     href: '/admin/messages',
     icon: MessageSquare,
