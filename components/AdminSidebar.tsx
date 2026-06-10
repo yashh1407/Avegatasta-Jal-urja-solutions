@@ -185,7 +185,14 @@ const ADMIN_SECTIONS = [
     label: 'Employees',
     href: '/admin/employees',
     icon: Users,
-    category: 'config',
+    category: 'staff',
+    module: 'employees'
+  },
+  {
+    label: 'Roles & Access',
+    href: '/admin/roles',
+    icon: Shield,
+    category: 'staff',
     module: 'employees'
   },
   {
@@ -203,6 +210,7 @@ const CATEGORIES = {
   management: 'Management',
   sales: 'Sales',
   content: 'Content',
+  staff: 'Staff Management',
   config: 'Configuration',
 };
 

@@ -25,6 +25,42 @@ export async function initDB() {
   if (dbInitialized) return;
   const connection = await pool.getConnection();
   try {
+    // Admin Roles
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS admin_roles (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL UNIQUE,
+        permissions JSON DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Migrate existing admin_users.role column from ENUM to VARCHAR
+    try {
+      await connection.query(`
+        ALTER TABLE admin_users MODIFY COLUMN role VARCHAR(255) NOT NULL DEFAULT 'employee'
+      `);
+    } catch (e: any) {
+      console.warn('[initDB] Failed to modify admin_users.role column:', e.message);
+    }
+
+    // Seed default roles if empty
+    const [rolesCheck] = await connection.query('SELECT COUNT(*) as count FROM admin_roles');
+    const rolesCount = (rolesCheck as any[])[0].count;
+    if (rolesCount === 0) {
+      await connection.query(
+        "INSERT INTO admin_roles (name, permissions) VALUES (?, ?), (?, ?)",
+        [
+          'employee', 
+          JSON.stringify([]), 
+          'sales', 
+          JSON.stringify(['inquiries', 'sales', 'sales-team'])
+        ]
+      );
+      console.log('[initDB] Seeded default roles: employee, sales');
+    }
+
     // Admin Users
     await connection.query(`
       CREATE TABLE IF NOT EXISTS admin_users (
@@ -33,7 +69,7 @@ export async function initDB() {
         email VARCHAR(255) NOT NULL UNIQUE,
         mobile_number VARCHAR(20) DEFAULT NULL,
         password_hash VARCHAR(255) NOT NULL,
-        role ENUM('admin', 'superadmin', 'employee', 'sales') NOT NULL DEFAULT 'employee',
+        role VARCHAR(255) NOT NULL DEFAULT 'employee',
         permissions JSON DEFAULT NULL,
         last_login TIMESTAMP NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

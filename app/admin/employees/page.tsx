@@ -43,6 +43,15 @@ interface EmployeeForm {
   permissions: string[];
 }
 
+const EMPTY_FORM: EmployeeForm = {
+  name: '',
+  email: '',
+  mobile_number: '',
+  password: '',
+  role: 'employee',
+  permissions: [],
+};
+
 const AVAILABLE_MODULES = [
   { key: 'quotations', label: 'Quotations', category: 'Main', desc: 'View and manage quotation requests' },
   
@@ -74,21 +83,6 @@ const AVAILABLE_MODULES = [
   { key: 'employees', label: 'Employees', category: 'Configuration', desc: 'Manage other staff logins and permission access' },
 ];
 
-const DEFAULT_PERMISSIONS = {
-  superadmin: AVAILABLE_MODULES.map(m => m.key),
-  employee: ['quotations', 'clients', 'products', 'orders', 'inquiries', 'messages', 'testimonials'],
-  sales: ['sales', 'sales-team', 'inquiries', 'orders', 'analytics']
-};
-
-const EMPTY_FORM: EmployeeForm = {
-  name: '',
-  email: '',
-  mobile_number: '',
-  password: '',
-  role: 'employee',
-  permissions: DEFAULT_PERMISSIONS.employee,
-};
-
 // Group modules by category for the permissions checklist layout
 const MODULE_CATEGORIES = AVAILABLE_MODULES.reduce((acc, mod) => {
   if (!acc[mod.category]) acc[mod.category] = [];
@@ -103,13 +97,15 @@ function EmployeeModal({
   initial,
   onClose,
   onSaved,
-  currentUserId
+  currentUserId,
+  roles
 }: {
   open: boolean;
   initial: (EmployeeForm & { id?: number }) | null;
   onClose: () => void;
   onSaved: () => void;
   currentUserId?: string;
+  roles: any[];
 }) {
   const [form, setForm] = useState<EmployeeForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
@@ -299,11 +295,20 @@ function EmployeeModal({
                     className={inputClass}
                     value={form.role}
                     onChange={(e) => {
-                      const newRole = e.target.value as 'superadmin' | 'employee' | 'sales';
+                      const newRole = e.target.value;
+                      let rolePermissions = form.permissions;
+                      if (newRole === 'superadmin') {
+                        rolePermissions = AVAILABLE_MODULES.map(m => m.key);
+                      } else {
+                        const matchedRole = roles.find(r => r.name === newRole);
+                        if (matchedRole) {
+                          rolePermissions = matchedRole.permissions || [];
+                        }
+                      }
                       setForm((prev) => ({
                         ...prev,
-                        role: newRole,
-                        permissions: DEFAULT_PERMISSIONS[newRole]
+                        role: newRole as any,
+                        permissions: rolePermissions
                       }));
                     }}
                     disabled={isSelf} // Prevent demoting yourself
@@ -311,8 +316,11 @@ function EmployeeModal({
                     {form.role === 'superadmin' && (
                       <option value="superadmin">Superadmin</option>
                     )}
-                    <option value="employee">Employee</option>
-                    <option value="sales">Sales</option>
+                    {roles.map((r) => (
+                      <option key={r.id} value={r.name}>
+                        {r.name.charAt(0).toUpperCase() + r.name.slice(1)}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -435,6 +443,7 @@ export default function EmployeesPage() {
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalInitial, setModalInitial] = useState<(EmployeeForm & { id?: number }) | null>(null);
+  const [roles, setRoles] = useState<any[]>([]);
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
@@ -453,6 +462,18 @@ export default function EmployeesPage() {
     }
   }, []);
 
+  const fetchRoles = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/roles');
+      if (res.ok) {
+        const data = await res.json();
+        setRoles(Array.isArray(data) ? data : []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch roles:', error);
+    }
+  }, []);
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/admin/login');
@@ -460,9 +481,10 @@ export default function EmployeesPage() {
       const userRole = (session?.user as any)?.role;
       if (userRole === 'superadmin' || userRole === 'admin') {
         fetchEmployees();
+        fetchRoles();
       }
     }
-  }, [status, router, fetchEmployees, session]);
+  }, [status, router, fetchEmployees, fetchRoles, session]);
 
   if (status === 'loading') {
     return (
@@ -761,6 +783,7 @@ export default function EmployeesPage() {
         onClose={() => setModalOpen(false)}
         onSaved={fetchEmployees}
         currentUserId={currentUser?.id}
+        roles={roles}
       />
     </div>
   );

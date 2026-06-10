@@ -48,7 +48,12 @@ function getRequiredModule(pathname: string): string | null {
     pathname.startsWith('/api/admin/enterprise-inquiries')
   ) return 'enterprise';
   
-  if (pathname.startsWith('/admin/employees') || pathname.startsWith('/api/admin/employees')) return 'employees';
+  if (
+    pathname.startsWith('/admin/employees') || 
+    pathname.startsWith('/api/admin/employees') ||
+    pathname.startsWith('/admin/roles') ||
+    pathname.startsWith('/api/admin/roles')
+  ) return 'employees';
   if (pathname.startsWith('/admin/site-settings') || pathname.startsWith('/api/admin/site-settings')) return 'site-settings';
   
   return null;
