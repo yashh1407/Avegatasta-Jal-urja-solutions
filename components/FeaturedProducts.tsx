@@ -174,11 +174,24 @@ function InquiryDialog({ product, onClose }: InquiryDialogProps) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function FeaturedProducts() {
+interface FeaturedProductsProps {
+  badge?: string;
+  titleHtml?: string;
+  description?: string;
+  featuredIds?: string[];
+}
+
+export default function FeaturedProducts(props: FeaturedProductsProps) {
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
   
+  const badge = props.badge || 'Featured Products';
+  const titleHtml = props.titleHtml || 'Top Picks for You';
+  const description = props.description || 'Handpicked water solutions from V-Guard, Zero B, and Wilo.';
+  
   // Custom selection for "Top Picks" based on user request
-  const featuredIds = ['vg-hp-vhp150', 'zb-softener-as1', 'wilo-fmhil-booster', 'zb-zenora-ro-uf'];
+  const defaultFeaturedIds = ['vg-hp-vhp150', 'zb-softener-as1', 'wilo-fmhil-booster', 'zb-zenora-ro-uf'];
+  const featuredIds = props.featuredIds && props.featuredIds.length > 0 ? props.featuredIds : defaultFeaturedIds;
+  
   const featured = featuredIds
     .map(id => products.find(p => p.id === id))
     .filter(Boolean) as Product[];
@@ -191,13 +204,11 @@ export default function FeaturedProducts() {
           <div className="flex items-end justify-between mb-12">
             <div>
               <p className="text-xs font-black text-brand-500 uppercase tracking-[0.2em] mb-2">
-                Featured Products
+                {badge}
               </p>
-              <h2 className="text-3xl font-black text-brand-950 tracking-tight">
-                Top Picks for You
-              </h2>
+              <h2 className="text-3xl font-black text-brand-950 tracking-tight" dangerouslySetInnerHTML={{ __html: titleHtml }} />
               <p className="text-brand-500 font-medium mt-2">
-                Handpicked water solutions from V-Guard, Zero B, and Wilo.
+                {description}
               </p>
             </div>
             <Link

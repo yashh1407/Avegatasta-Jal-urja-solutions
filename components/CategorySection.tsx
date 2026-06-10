@@ -7,7 +7,17 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getTopLevelCategories } from '@/lib/productHierarchy';
 
-export default function CategorySection() {
+interface CategorySectionProps {
+  badge?: string;
+  titleHtml?: string;
+  description?: string;
+}
+
+export default function CategorySection(props: CategorySectionProps) {
+  const badge = props.badge || 'Our Solutions';
+  const titleHtml = props.titleHtml || 'Specialized Water &amp; Energy Solutions';
+  const description = props.description || 'From heat pumps to water purifiers — complete solutions for every need.';
+  
   const categories = getTopLevelCategories();
 
   return (
@@ -26,17 +36,16 @@ export default function CategorySection() {
               variants={fadeUp}
               className="text-xs font-black text-brand-500 uppercase tracking-[0.2em] mb-3"
             >
-              Our Solutions
+              {badge}
             </motion.p>
             <motion.h2
               variants={fadeUp}
               className="text-4xl font-black text-brand-950 tracking-tight"
-            >
-              Specialized Water &amp; Energy Solutions
-            </motion.h2>
+              dangerouslySetInnerHTML={{ __html: titleHtml }}
+            />
           </div>
           <motion.p variants={fadeUp} className="text-brand-500 max-w-md font-medium">
-            From heat pumps to water purifiers — complete solutions for every need.
+            {description}
           </motion.p>
         </motion.div>
 

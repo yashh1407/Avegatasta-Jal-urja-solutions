@@ -1,36 +1,36 @@
 import Image from 'next/image';
 
-const BRANDS = [
-  {
-    name: 'V-Guard',
-    logo: '/brands/vguard.png',
-    tagline: 'Water Heating & Solar',
-  },
-  {
-    name: 'Zero B',
-    logo: '/brands/zerob.png',
-    tagline: 'Water Treatment',
-  },
-  {
-    name: 'Bluewave India',
-    logo: '/brands/bluewave.png',
-    tagline: 'Pool Equipment & Chemicals',
-  },
-  {
-    name: 'Wilo',
-    logo: '/brands/wilo.png',
-    tagline: 'Wilo pump dealer Nashik',
-  },
-];
 
-// Duplicate for seamless infinite scroll
-const TRACK = [...BRANDS, ...BRANDS, ...BRANDS, ...BRANDS];
+interface Brand {
+  name: string;
+  logo: string;
+  tagline: string;
+}
 
-export default function BrandMarquee() {
+interface BrandMarqueeProps {
+  title?: string;
+  brands?: Brand[];
+}
+
+export default function BrandMarquee(props: BrandMarqueeProps) {
+  const title = props.title || 'Authorized Distributor';
+  
+  const defaultBrands = [
+    { name: 'V-Guard', logo: '/brands/vguard.png', tagline: 'Water Heating & Solar' },
+    { name: 'Zero B', logo: '/brands/zerob.png', tagline: 'Water Treatment' },
+    { name: 'Bluewave India', logo: '/brands/bluewave.png', tagline: 'Pool Equipment & Chemicals' },
+    { name: 'Wilo', logo: '/brands/wilo.png', tagline: 'Wilo pump dealer Nashik' },
+  ];
+
+  const brands = props.brands && props.brands.length > 0 ? props.brands : defaultBrands;
+
+  // Duplicate for seamless infinite scroll
+  const track = [...brands, ...brands, ...brands, ...brands];
+
   return (
     <section className="py-10 sm:py-14 bg-surface-subtle border-y border-brand-100/60 overflow-hidden">
       <p className="text-center text-xs font-black uppercase tracking-[0.2em] text-brand-400 mb-8">
-        Authorized Distributor
+        {title}
       </p>
 
       <div className="relative overflow-hidden">
@@ -47,7 +47,7 @@ export default function BrandMarquee() {
         />
 
         <div className="flex animate-marquee gap-6 sm:gap-16 w-max">
-          {TRACK.map((brand, i) => (
+          {track.map((brand, i) => (
             <div
               key={`${brand.name}-${i}`}
               className="flex items-center gap-3 sm:gap-4 px-5 sm:px-8 py-3 bg-white rounded-2xl border border-brand-100/60 shadow-sm shrink-0"

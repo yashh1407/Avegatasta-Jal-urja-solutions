@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
+import toast, { Toaster } from 'react-hot-toast';
 import {
   Search,
   RefreshCw,
@@ -44,6 +45,20 @@ export default function AdminPage() {
       fetchData();
     }
   }, [status, router]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('error') === 'forbidden') {
+        toast.error('Access Denied: You do not have permission to view that module.', {
+          duration: 4000,
+          id: 'forbidden-access-toast'
+        });
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -111,6 +126,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <Toaster position="top-right" />
       <main className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-24 py-8">
         
         {/* Notifications Banner */}

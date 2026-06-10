@@ -29,9 +29,12 @@ export async function initDB() {
     await connection.query(`
       CREATE TABLE IF NOT EXISTS admin_users (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(255) NOT NULL UNIQUE,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        mobile_number VARCHAR(20) DEFAULT NULL,
         password_hash VARCHAR(255) NOT NULL,
-        role ENUM('admin', 'superadmin') NOT NULL DEFAULT 'admin',
+        role ENUM('admin', 'superadmin', 'employee', 'sales') NOT NULL DEFAULT 'employee',
+        permissions JSON DEFAULT NULL,
         last_login TIMESTAMP NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -44,8 +47,8 @@ export async function initDB() {
       const bcrypt = await import('bcryptjs');
       const hash = await bcrypt.hash(process.env.ADMIN_INITIAL_PASSWORD, 12);
       await connection.query(
-        'INSERT INTO admin_users (username, password_hash, role) VALUES (?, ?, ?)',
-        [process.env.ADMIN_INITIAL_USERNAME, hash, 'superadmin']
+        'INSERT INTO admin_users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
+        ['Superadmin', process.env.ADMIN_INITIAL_USERNAME, hash, 'superadmin']
       );
       console.log(`[initDB] Seeded initial admin user: ${process.env.ADMIN_INITIAL_USERNAME}`);
     }
@@ -1037,6 +1040,11 @@ export async function initDB() {
   } finally {
     connection.release();
   }
+}
+
+export async function query(sql: string, params: any[] = []): Promise<any> {
+  const [rows] = await pool.query(sql, params);
+  return rows;
 }
 
 export default pool;

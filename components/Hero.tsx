@@ -1,57 +1,72 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { fadeUp, staggerContainer, staggerFast, wordReveal } from '@/lib/motion';
+import { fadeUp, staggerContainer, staggerFast } from '@/lib/motion';
 import { ArrowRight, MessageCircle, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-const STAT_KEYS = [
-  { key: 'established_year', label: 'Established' },
-  { key: 'total_clients',    label: 'Corporate Clients' },
-  { key: 'units_installed',  label: 'Units Installed' },
-  { key: 'industry_sectors', label: 'Industry Sectors' },
-];
+interface Stat {
+  label: string;
+  value: string;
+}
 
-const HERO_HEADLINE: Array<Array<{ text: string; accent?: boolean }>> = [
-  [{ text: 'Enterprise' }, { text: 'Water,' }],
-  [{ text: 'Energy', accent: true }, { text: '&', accent: true }, { text: 'Pool', accent: true }],
-  [{ text: 'Solutions' }],
-];
+interface HeroProps {
+  badge?: string;
+  title?: string;
+  subtitle?: string;
+  content?: string;
+  hero_image_1?: string;
+  hero_image_2?: string;
+  hero_image_3?: string;
+  hero_image_4?: string;
+  stats?: Stat[];
+  primaryButtonText?: string;
+  primaryButtonUrl?: string;
+  secondaryButtonText?: string;
+  secondaryButtonUrl?: string;
+  trustStripText?: string;
+  image1Label?: string;
+  image2Label?: string;
+  image3Label?: string;
+  image4Label?: string;
+  floatingBadgeEyebrow?: string;
+  floatingBadgeText?: string;
+}
 
-export default function Hero() {
-  const [statsSettings, setStatsSettings] = useState<Record<string, string>>({
-    established_year: '2015',
-    total_clients: '1000+',
-    units_installed: '5000+',
-    industry_sectors: '10+',
-  });
+export default function Hero(props: HeroProps) {
+  // Map standard props and provide defaults
+  const badge = props.badge || props.subtitle || 'Avegatasta Jal-Urja Solutions · Nashik';
+  const titleHtml = props.title || 'Enterprise Water, <br/><span class="text-accent-400">Energy & Pool</span><br/>Solutions';
+  const description = props.content || 'Authorized channel partner for V-Guard, Wilo, Zero B, and Bluewave India. End-to-end B2B solutions — water heating, pumping, treatment, solar, and swimming pool systems — for industrial, commercial, and large-scale residential projects across Nashik.';
+  
+  const hero_image_1 = props.hero_image_1 || '/hero/solar-field.jpg';
+  const hero_image_2 = props.hero_image_2 || '/hero/water-pump.png';
+  const hero_image_3 = props.hero_image_3 || '/hero/partner-team.jpg';
+  const hero_image_4 = props.hero_image_4 || '/hero/water-solutions.jpg';
 
-  useEffect(() => {
-    const loadSettings = () => {
-      fetch('/api/site-settings?group=hero')
-        .then(r => r.json())
-        .then(data => { if (data && typeof data === 'object') setStatsSettings(prev => ({ ...prev, ...data })); })
-        .catch(console.error);
-    };
+  const primaryButtonText = props.primaryButtonText || 'Explore Products';
+  const primaryButtonUrl = props.primaryButtonUrl || '/products';
+  const secondaryButtonText = props.secondaryButtonText || 'Get Free Advice';
+  const secondaryButtonUrl = props.secondaryButtonUrl || '/contact';
+  const trustStripText = props.trustStripText || 'Enterprise-grade products · B2B project specialists · Multi-sector experience';
+  
+  const image1Label = props.image1Label || 'Solar';
+  const image2Label = props.image2Label || 'Pumping';
+  const image3Label = props.image3Label || 'Partner';
+  const image4Label = props.image4Label || 'Water';
 
-    const requestIdle = window.requestIdleCallback;
-    const cancelIdle = window.cancelIdleCallback;
+  const floatingBadgeEyebrow = props.floatingBadgeEyebrow || 'Authorized Partner';
+  const floatingBadgeText = props.floatingBadgeText || 'V-Guard · Wilo · Zero B · Bluewave';
 
-    if (typeof requestIdle === 'function' && typeof cancelIdle === 'function') {
-      const id = requestIdle(loadSettings, { timeout: 2000 });
-      return () => cancelIdle(id);
-    }
-
-    const id = window.setTimeout(loadSettings, 1200);
-    return () => window.clearTimeout(id);
-  }, []);
-
-  const stats = STAT_KEYS.map(({ key, label }) => ({
-    value: statsSettings[key] ?? '—',
-    label,
-  }));
+  const defaultStats = [
+    { label: 'Established', value: '2015' },
+    { label: 'Corporate Clients', value: '1000+' },
+    { label: 'Units Installed', value: '5000+' },
+    { label: 'Industry Sectors', value: '10+' },
+  ];
+  
+  const stats = props.stats && props.stats.length > 0 ? props.stats : defaultStats;
 
   return (
     <section className="relative min-h-svh flex flex-col justify-center overflow-hidden bg-brand-950 pt-20 pb-4 lg:pt-24 lg:pb-8">
@@ -76,56 +91,41 @@ export default function Hero() {
             className="inline-flex items-center gap-2.5 px-3 sm:px-4 py-2 rounded-full bg-brand-800/60 border border-brand-700/50 text-accent-400 text-xs sm:text-sm font-semibold tracking-wide mb-6 sm:mb-8"
           >
             <span className="w-2 h-2 bg-accent-400 rounded-full animate-pulse" />
-            Avegatasta Jal-Urja Solutions · Nashik
+            {badge}
           </motion.div>
 
           {/* Headline */}
           <motion.h1
             variants={staggerFast}
-            className="font-black tracking-tight text-white leading-[1.05] mb-6"
+            className="font-black tracking-tight text-white leading-[1.05] mb-6 [&_span.text-accent-400]:text-accent-400"
             style={{ fontSize: 'clamp(2.15rem, 9vw, 5rem)' }}
-          >
-            {HERO_HEADLINE.map((line, lineIndex) => (
-              <span key={lineIndex} className="block overflow-hidden pb-1">
-                {line.map((word, wordIndex) => (
-                  <motion.span
-                    key={word.text}
-                    variants={wordReveal}
-                    className={`inline-block ${word.accent ? 'text-accent-400' : ''} ${wordIndex > 0 ? 'ml-[0.18em]' : ''}`}
-                  >
-                    {word.text}
-                  </motion.span>
-                ))}
-              </span>
-            ))}
-          </motion.h1>
+            dangerouslySetInnerHTML={{ __html: titleHtml.replace(/\n/g, '<br/>') }}
+          />
 
           {/* Description */}
           <motion.p
             variants={fadeUp}
             className="text-base sm:text-lg text-brand-300 font-medium leading-relaxed max-w-lg mb-8 sm:mb-10"
           >
-            Authorized channel partner for V&#8209;Guard, Wilo, Zero&nbsp;B, and Bluewave India.
-            End-to-end B2B solutions — water heating, pumping, treatment, solar, and swimming pool
-            systems — for industrial, commercial, and large-scale residential projects across Nashik.
+            {description}
           </motion.p>
 
           {/* CTAs */}
           <motion.div variants={fadeUp} className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-10 sm:mb-12">
             <Link
-              href="/products"
+              href={primaryButtonUrl}
               className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
               style={{ boxShadow: '0 16px 48px -8px oklch(47% 0.18 250 / 0.40)' }}
             >
-              Explore Products
+              {primaryButtonText}
               <ArrowRight size={18} />
             </Link>
             <Link
-              href="/contact"
+              href={secondaryButtonUrl}
               className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 bg-white/10 hover:bg-white/15 border border-white/20 text-white rounded-2xl font-bold backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
             >
               <MessageCircle size={18} />
-              Get Free Advice
+              {secondaryButtonText}
             </Link>
           </motion.div>
 
@@ -133,7 +133,7 @@ export default function Hero() {
           <motion.div variants={fadeUp} className="flex items-start sm:items-center gap-2 text-brand-400">
             <ShieldCheck size={16} className="text-accent-400 shrink-0" />
             <span className="text-sm font-semibold">
-              Enterprise-grade products · B2B project specialists · Multi-sector experience
+              {trustStripText}
             </span>
           </motion.div>
         </motion.div>
@@ -152,47 +152,47 @@ export default function Hero() {
             <div className="grid grid-cols-2 grid-rows-2 gap-2 h-full">
               <div className="relative rounded-2xl overflow-hidden">
                 <Image
-                  src="/hero/solar-field.jpg"
-                  alt="Solar Energy Solutions"
+                  src={hero_image_1}
+                  alt={image1Label}
                   fill
                   className="object-cover"
                   referrerPolicy="no-referrer"
                   sizes="(min-width: 1024px) 25vw, 0px"
                 />
-                <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg">Solar</div>
+                <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg">{image1Label}</div>
               </div>
               <div className="relative rounded-2xl overflow-hidden">
                 <Image
-                  src="/hero/water-pump.png"
-                  alt="Industrial Pumping Systems"
+                  src={hero_image_2}
+                  alt={image2Label}
                   fill
                   className="object-cover"
                   referrerPolicy="no-referrer"
                   sizes="(min-width: 1024px) 25vw, 0px"
                 />
-                <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg">Pumping</div>
+                <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg">{image2Label}</div>
               </div>
               <div className="relative rounded-2xl overflow-hidden">
                 <Image
-                  src="/hero/partner-team.jpg"
-                  alt="Authorized partnership and teamwork"
+                  src={hero_image_3}
+                  alt={image3Label}
                   fill
                   className="object-cover"
                   referrerPolicy="no-referrer"
                   sizes="(min-width: 1024px) 25vw, 0px"
                 />
-                <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg">Partner</div>
+                <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg">{image3Label}</div>
               </div>
               <div className="relative rounded-2xl overflow-hidden bg-white">
                 <Image
-                  src="/hero/water-solutions.jpg"
-                  alt="Water Heating & Treatment"
+                  src={hero_image_4}
+                  alt={image4Label}
                   fill
                   className="object-contain p-2"
                   referrerPolicy="no-referrer"
                   sizes="(min-width: 1024px) 25vw, 0px"
                 />
-                <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg">Water</div>
+                <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-lg">{image4Label}</div>
               </div>
             </div>
           </div>
@@ -200,9 +200,9 @@ export default function Hero() {
           {/* Floating partnership badge */}
           <div className="absolute -bottom-5 -left-6 bg-white rounded-2xl px-5 py-4 shadow-xl">
             <p className="text-xs font-black text-brand-950 uppercase tracking-widest mb-1">
-              Authorized Partner
+              {floatingBadgeEyebrow}
             </p>
-            <p className="text-sm font-bold text-brand-600">V-Guard · Wilo · Zero B · Bluewave</p>
+            <p className="text-sm font-bold text-brand-600">{floatingBadgeText}</p>
           </div>
         </motion.div>
       </div>

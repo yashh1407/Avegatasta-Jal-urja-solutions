@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { signOut } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import {
   BarChart3,
   Users,
@@ -38,127 +38,162 @@ const ADMIN_SECTIONS = [
     label: 'Quotations',
     href: '/admin/quotations',
     icon: FileText,
-    category: 'main'
+    category: 'main',
+    module: 'quotations'
   },
   {
     label: 'Messages',
     href: '/admin/messages',
     icon: MessageSquare,
-    category: 'content'
+    category: 'content',
+    module: 'messages'
+  },
+  {
+    label: 'Pages',
+    href: '/admin/content/pages',
+    icon: BookOpen,
+    category: 'content',
+    module: 'pages'
   },
   {
     label: 'Analytics',
     href: '/admin/analytics',
     icon: BarChart3,
-    category: 'analytics'
+    category: 'analytics',
+    module: 'analytics'
   },
   {
     label: 'Clients',
     href: '/admin/clients',
     icon: Users,
-    category: 'management'
+    category: 'management',
+    module: 'clients'
   },
   {
     label: 'Products',
     href: '/admin/products',
     icon: Package,
-    category: 'management'
+    category: 'management',
+    module: 'products'
   },
   {
     label: 'Vendors',
     href: '/admin/vendors',
     icon: Truck,
-    category: 'management'
+    category: 'management',
+    module: 'vendors'
   },
   {
     label: 'Sales',
     href: '/admin/sales',
     icon: TrendingUp,
-    category: 'sales'
+    category: 'sales',
+    module: 'sales'
   },
   {
     label: 'Sales Team',
     href: '/admin/sales-team',
     icon: Users,
-    category: 'sales'
+    category: 'sales',
+    module: 'sales-team'
   },
   {
     label: 'Case Studies',
     href: '/admin/case-studies',
     icon: BookOpen,
-    category: 'content'
+    category: 'content',
+    module: 'case-studies'
   },
   {
     label: 'Testimonials',
     href: '/admin/testimonials',
     icon: Star,
-    category: 'content'
+    category: 'content',
+    module: 'testimonials'
   },
   {
     label: 'Pricing',
     href: '/admin/pricing',
     icon: DollarSign,
-    category: 'content'
+    category: 'content',
+    module: 'pricing'
   },
   {
     label: 'AMC',
     href: '/admin/amc',
     icon: Shield,
-    category: 'management'
+    category: 'management',
+    module: 'amc'
   },
   {
     label: 'AMC Plans',
     href: '/admin/amc-plans',
     icon: FileText,
-    category: 'management'
+    category: 'management',
+    module: 'amc-plans'
   },
   {
     label: 'Team Members',
     href: '/admin/team-members',
     icon: UserCheck,
-    category: 'management'
+    category: 'management',
+    module: 'team-members'
   },
   {
     label: 'Brands',
     href: '/admin/brands',
     icon: Tag,
-    category: 'management'
+    category: 'management',
+    module: 'brands'
   },
   {
     label: 'Orders',
     href: '/admin/orders',
     icon: ShoppingCart,
-    category: 'management'
+    category: 'management',
+    module: 'orders'
   },
   {
     label: 'Inquiries',
     href: '/admin/inquiries',
     icon: HelpCircle,
-    category: 'sales'
+    category: 'sales',
+    module: 'inquiries'
   },
   {
     label: 'Email Templates',
     href: '/admin/email-templates',
     icon: Mail,
-    category: 'content'
+    category: 'content',
+    module: 'email-templates'
   },
   {
     label: 'SMTP Settings',
     href: '/admin/smtp-settings',
     icon: Mail,
-    category: 'config'
+    category: 'config',
+    module: 'smtp-settings'
   },
   {
     label: 'Enterprise',
     href: '/admin/enterprise',
     icon: Shield,
-    category: 'management'
+    category: 'management',
+    module: 'enterprise'
+  },
+  {
+    label: 'Employees',
+    href: '/admin/employees',
+    icon: Users,
+    category: 'config',
+    module: 'employees'
   },
   {
     label: 'Settings',
     href: '/admin/site-settings',
     icon: Settings,
-    category: 'config'
+    category: 'config',
+    module: 'site-settings'
   },
 ];
 
@@ -185,6 +220,7 @@ function getActiveCategory(path: string | null): string {
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const { data: session, status } = useSession();
 
   const [expandedCategory, setExpandedCategory] = useState<string | null>(() => getActiveCategory(pathname));
   const [unreadCount, setUnreadCount] = useState(0);
@@ -207,8 +243,31 @@ export default function AdminSidebar() {
     await signOut({ callbackUrl: '/admin/login' });
   };
 
-  // Group sections by category
-  const groupedSections = ADMIN_SECTIONS.reduce((acc, section) => {
+  // Group sections by category, filtering by permissions
+  const filteredSections = ADMIN_SECTIONS.filter((section) => {
+    // Dashboard is restricted to superadmin only
+    if (section.href === '/admin') {
+      if (status === 'loading' || !session?.user) return false;
+      const userRole = (session.user as any).role;
+      return userRole === 'superadmin';
+    }
+
+    // Hide restricted modules while the session is loading to avoid visual flash
+    if (status === 'loading' || !session?.user) return false;
+
+    // If it has no module attribute, it is always accessible
+    if (!section.module) return true;
+
+    const userRole = (session.user as any).role;
+    if (userRole === 'superadmin') return true;
+    if (userRole === 'admin' && !(session.user as any).permissions) return true; // dev credentials fallback
+
+    // Normal employee permissions check
+    const userPermissions = (session.user as any).permissions as string[] | null;
+    return userPermissions?.includes(section.module) ?? false;
+  });
+
+  const groupedSections = filteredSections.reduce((acc, section) => {
     if (!acc[section.category]) {
       acc[section.category] = [];
     }
@@ -219,7 +278,7 @@ export default function AdminSidebar() {
   const isActive = (href: string) => pathname === href;
 
   return (
-    <div className="h-full w-full bg-gradient-to-b from-slate-900 to-slate-950 text-white flex flex-col overflow-y-auto">
+    <div className="h-full w-full bg-gradient-to-b from-slate-900 to-slate-950 text-white flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       {/* Header */}
       <div className="p-6 border-b border-slate-800 flex-shrink-0">
         <div className="flex items-center gap-3 mb-6">
@@ -234,62 +293,65 @@ export default function AdminSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="p-6 space-y-1 flex-1 overflow-y-auto">
-        {Object.entries(groupedSections).map(([category, sections]) => (
-          <div key={category} className="mb-6">
-            <button
-              onClick={() =>
-                setExpandedCategory(
-                  expandedCategory === category ? null : category
-                )
-              }
-              className="w-full flex items-center justify-between px-3 py-2 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-300 transition-colors"
-            >
-              {CATEGORIES[category as keyof typeof CATEGORIES]}
-              <span className="text-xs">
-                {expandedCategory === category ? '−' : '+'}
-              </span>
-            </button>
+      <nav className="p-6 space-y-1 flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        {Object.entries(groupedSections).map(([category, sections]) => {
+          if (!sections || sections.length === 0) return null;
+          return (
+            <div key={category} className="mb-6">
+              <button
+                onClick={() =>
+                  setExpandedCategory(
+                    expandedCategory === category ? null : category
+                  )
+                }
+                className="w-full flex items-center justify-between px-3 py-2 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-300 transition-colors"
+              >
+                {CATEGORIES[category as keyof typeof CATEGORIES]}
+                <span className="text-xs">
+                  {expandedCategory === category ? '−' : '+'}
+                </span>
+              </button>
 
-            <AnimatePresence>
-              {expandedCategory === category && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mt-2 space-y-1 overflow-hidden"
-                >
-                  {sections.map((section) => {
-                    const Icon = section.icon;
-                    const active = isActive(section.href);
+              <AnimatePresence>
+                {expandedCategory === category && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2 space-y-1 overflow-hidden"
+                  >
+                    {sections.map((section) => {
+                      const Icon = section.icon;
+                      const active = isActive(section.href);
 
-                    return (
-                      <Link key={section.href} href={section.href}>
-                        <div
-                          className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                            active
-                              ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                          }`}
-                        >
-                          <Icon size={16} />
-                          <span className="text-sm font-semibold flex-1">
-                            {section.label}
-                          </span>
-                          {section.href === '/admin/messages' && unreadCount > 0 && (
-                            <span className="bg-blue-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                              {unreadCount > 99 ? '99+' : unreadCount}
+                      return (
+                        <Link key={section.href} href={section.href}>
+                          <div
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                              active
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                            }`}
+                          >
+                            <Icon size={16} />
+                            <span className="text-sm font-semibold flex-1">
+                              {section.label}
                             </span>
-                          )}
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        ))}
+                            {section.href === '/admin/messages' && unreadCount > 0 && (
+                              <span className="bg-blue-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                {unreadCount > 99 ? '99+' : unreadCount}
+                              </span>
+                            )}
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
       </nav>
 
       {/* Footer */}
