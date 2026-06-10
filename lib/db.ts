@@ -46,19 +46,23 @@ export async function initDB() {
     }
 
     // Seed default roles if empty
-    const [rolesCheck] = await connection.query('SELECT COUNT(*) as count FROM admin_roles');
-    const rolesCount = (rolesCheck as any[])[0].count;
-    if (rolesCount === 0) {
-      await connection.query(
-        "INSERT INTO admin_roles (name, permissions) VALUES (?, ?), (?, ?)",
-        [
-          'employee', 
-          JSON.stringify([]), 
-          'sales', 
-          JSON.stringify(['inquiries', 'sales', 'sales-team'])
-        ]
-      );
-      console.log('[initDB] Seeded default roles: employee, sales');
+    try {
+      const [rolesCheck] = await connection.query('SELECT COUNT(*) as count FROM admin_roles');
+      const rolesCount = (rolesCheck as any[])[0].count;
+      if (rolesCount === 0) {
+        await connection.query(
+          "INSERT IGNORE INTO admin_roles (name, permissions) VALUES (?, ?), (?, ?)",
+          [
+            'employee', 
+            JSON.stringify([]), 
+            'sales', 
+            JSON.stringify(['inquiries', 'sales', 'sales-team'])
+          ]
+        );
+        console.log('[initDB] Seeded default roles: employee, sales');
+      }
+    } catch (e: any) {
+      console.warn('[initDB] Failed to seed default roles:', e.message);
     }
 
     // Admin Users
