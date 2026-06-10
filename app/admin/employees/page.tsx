@@ -43,21 +43,6 @@ interface EmployeeForm {
   permissions: string[];
 }
 
-const DEFAULT_PERMISSIONS = {
-  superadmin: AVAILABLE_MODULES.map(m => m.key),
-  employee: ['quotations', 'clients', 'products', 'orders', 'inquiries', 'messages', 'testimonials'],
-  sales: ['sales', 'sales-team', 'inquiries', 'orders', 'analytics']
-};
-
-const EMPTY_FORM: EmployeeForm = {
-  name: '',
-  email: '',
-  mobile_number: '',
-  password: '',
-  role: 'employee',
-  permissions: DEFAULT_PERMISSIONS.employee,
-};
-
 const AVAILABLE_MODULES = [
   { key: 'quotations', label: 'Quotations', category: 'Main', desc: 'View and manage quotation requests' },
   
@@ -88,6 +73,21 @@ const AVAILABLE_MODULES = [
   { key: 'site-settings', label: 'Site Settings', category: 'Configuration', desc: 'Configure global metadata and contacts' },
   { key: 'employees', label: 'Employees', category: 'Configuration', desc: 'Manage other staff logins and permission access' },
 ];
+
+const DEFAULT_PERMISSIONS = {
+  superadmin: AVAILABLE_MODULES.map(m => m.key),
+  employee: ['quotations', 'clients', 'products', 'orders', 'inquiries', 'messages', 'testimonials'],
+  sales: ['sales', 'sales-team', 'inquiries', 'orders', 'analytics']
+};
+
+const EMPTY_FORM: EmployeeForm = {
+  name: '',
+  email: '',
+  mobile_number: '',
+  password: '',
+  role: 'employee',
+  permissions: DEFAULT_PERMISSIONS.employee,
+};
 
 // Group modules by category for the permissions checklist layout
 const MODULE_CATEGORIES = AVAILABLE_MODULES.reduce((acc, mod) => {
