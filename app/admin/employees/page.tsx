@@ -43,13 +43,19 @@ interface EmployeeForm {
   permissions: string[];
 }
 
+const DEFAULT_PERMISSIONS = {
+  superadmin: AVAILABLE_MODULES.map(m => m.key),
+  employee: ['quotations', 'clients', 'products', 'orders', 'inquiries', 'messages', 'testimonials'],
+  sales: ['sales', 'sales-team', 'inquiries', 'orders', 'analytics']
+};
+
 const EMPTY_FORM: EmployeeForm = {
   name: '',
   email: '',
   mobile_number: '',
   password: '',
   role: 'employee',
-  permissions: [],
+  permissions: DEFAULT_PERMISSIONS.employee,
 };
 
 const AVAILABLE_MODULES = [
@@ -297,7 +303,7 @@ function EmployeeModal({
                       setForm((prev) => ({
                         ...prev,
                         role: newRole,
-                        permissions: newRole === 'superadmin' ? AVAILABLE_MODULES.map(m => m.key) : prev.permissions
+                        permissions: DEFAULT_PERMISSIONS[newRole]
                       }));
                     }}
                     disabled={isSelf} // Prevent demoting yourself
