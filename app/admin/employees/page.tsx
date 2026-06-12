@@ -18,7 +18,14 @@ import {
   Lock,
   UserCheck,
   Edit2,
-  Info
+  Info,
+  Check,
+  Layout,
+  BarChart2,
+  FolderLock,
+  TrendingUp,
+  Activity,
+  Settings
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -29,7 +36,7 @@ interface Employee {
   email: string;
   mobile_number: string | null;
   role: 'admin' | 'superadmin' | 'employee' | 'sales';
-  permissions: string[] | null;
+  permissions: Record<string, { view: boolean; edit: boolean; delete: boolean }> | string[] | null;
   last_login: string | null;
   created_at: string;
 }
@@ -39,8 +46,8 @@ interface EmployeeForm {
   email: string;
   mobile_number: string;
   password?: string;
-  role: 'superadmin' | 'employee' | 'sales';
-  permissions: string[];
+  role: 'admin' | 'superadmin' | 'employee' | 'sales';
+  permissions: Record<string, { view: boolean; edit: boolean; delete: boolean }>;
 }
 
 const EMPTY_FORM: EmployeeForm = {
@@ -49,8 +56,41 @@ const EMPTY_FORM: EmployeeForm = {
   mobile_number: '',
   password: '',
   role: 'employee',
-  permissions: [],
+  permissions: {},
 };
+
+function normalizePermissions(permissions: any): Record<string, { view: boolean; edit: boolean; delete: boolean }> {
+  const normalized: Record<string, { view: boolean; edit: boolean; delete: boolean }> = {};
+  
+  AVAILABLE_MODULES.forEach((mod) => {
+    normalized[mod.key] = { view: false, edit: false, delete: false };
+  });
+
+  if (!permissions) return normalized;
+
+  if (Array.isArray(permissions)) {
+    // Old format: string array
+    permissions.forEach((key) => {
+      if (normalized[key]) {
+        normalized[key] = { view: true, edit: true, delete: true };
+      }
+    });
+  } else if (typeof permissions === 'object') {
+    // New format: action flags
+    Object.keys(permissions).forEach((key) => {
+      const p = permissions[key];
+      if (normalized[key]) {
+        normalized[key] = {
+          view: p && typeof p === 'object' ? !!p.view : false,
+          edit: p && typeof p === 'object' ? !!p.edit : false,
+          delete: p && typeof p === 'object' ? !!p.delete : false,
+        };
+      }
+    });
+  }
+
+  return normalized;
+}
 
 const AVAILABLE_MODULES = [
   { key: 'quotations', label: 'Quotations', category: 'Main', desc: 'View and manage quotation requests' },
@@ -80,7 +120,7 @@ const AVAILABLE_MODULES = [
   
   { key: 'smtp-settings', label: 'SMTP Settings', category: 'Configuration', desc: 'Configure system outbound mail servers' },
   { key: 'site-settings', label: 'Site Settings', category: 'Configuration', desc: 'Configure global metadata and contacts' },
-  { key: 'employees', label: 'Employees', category: 'Configuration', desc: 'Manage other staff logins and permission access' },
+  { key: 'employees', label: 'Employees', category: 'Staff', desc: 'Manage other staff logins and permission access' },
 ];
 
 // Group modules by category for the permissions checklist layout
@@ -89,6 +129,16 @@ const MODULE_CATEGORIES = AVAILABLE_MODULES.reduce((acc, mod) => {
   acc[mod.category].push(mod);
   return acc;
 }, {} as Record<string, typeof AVAILABLE_MODULES>);
+
+const CATEGORIES = [
+  { id: 'Main', label: 'Main Modules', icon: Layout, desc: 'Core request flows' },
+  { id: 'Analytics', label: 'Analytics', icon: BarChart2, desc: 'Data & statistics' },
+  { id: 'Management', label: 'Management', icon: FolderLock, desc: 'Clients, products & AMC' },
+  { id: 'Sales', label: 'Sales & CRM', icon: TrendingUp, desc: 'Sales pipeline and CRM' },
+  { id: 'Content', label: 'Content Pages', icon: Activity, desc: 'Dynamic site content' },
+  { id: 'Staff', label: 'Staff Management', icon: Users, desc: 'Employees & access roles' },
+  { id: 'Configuration', label: 'System Configuration', icon: Settings, desc: 'SMTP, staff & site settings' },
+];
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
@@ -109,6 +159,7 @@ function EmployeeModal({
 }) {
   const [form, setForm] = useState<EmployeeForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('Account');
 
   useEffect(() => {
     if (open) {
@@ -119,11 +170,12 @@ function EmployeeModal({
           mobile_number: initial.mobile_number || '',
           password: '',
           role: initial.role,
-          permissions: initial.permissions || [],
+          permissions: normalizePermissions(initial.permissions),
         });
       } else {
         setForm(EMPTY_FORM);
       }
+      setActiveCategory('Account');
     }
   }, [open, initial]);
 
@@ -131,27 +183,41 @@ function EmployeeModal({
     setForm((f) => ({ ...f, [key]: value }));
   };
 
-  const handlePermissionToggle = (moduleKey: string) => {
+  const handlePermissionActionToggle = (moduleKey: string, action: 'view' | 'edit' | 'delete') => {
     if (form.role === 'superadmin') return; // Superadmins always have all permissions implicitly
     
     setForm((prev) => {
-      const exists = prev.permissions.includes(moduleKey);
-      const newPerms = exists
-        ? prev.permissions.filter((k) => k !== moduleKey)
-        : [...prev.permissions, moduleKey];
-      return { ...prev, permissions: newPerms };
+      const current = prev.permissions[moduleKey] || { view: false, edit: false, delete: false };
+      const updatedModulePerms = {
+        ...current,
+        [action]: !current[action],
+      };
+      return {
+        ...prev,
+        permissions: {
+          ...prev.permissions,
+          [moduleKey]: updatedModulePerms,
+        },
+      };
     });
   };
 
   const selectAllPermissions = () => {
     if (form.role === 'superadmin') return;
-    const allKeys = AVAILABLE_MODULES.map((m) => m.key);
-    setField('permissions', allKeys);
+    const allPerms: Record<string, { view: boolean; edit: boolean; delete: boolean }> = {};
+    AVAILABLE_MODULES.forEach((m) => {
+      allPerms[m.key] = { view: true, edit: true, delete: true };
+    });
+    setField('permissions', allPerms);
   };
 
   const clearAllPermissions = () => {
     if (form.role === 'superadmin') return;
-    setField('permissions', []);
+    const emptyPerms: Record<string, { view: boolean; edit: boolean; delete: boolean }> = {};
+    AVAILABLE_MODULES.forEach((m) => {
+      emptyPerms[m.key] = { view: false, edit: false, delete: false };
+    });
+    setField('permissions', emptyPerms);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -201,10 +267,7 @@ function EmployeeModal({
     }
   };
 
-  const inputClass =
-    'w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800 font-semibold';
-
-  const isSelf = initial?.id && String(initial.id) === String(currentUserId);
+  const isSelf = !!(initial?.id && String(initial.id) === String(currentUserId));
 
   return (
     <AnimatePresence>
@@ -220,17 +283,17 @@ function EmployeeModal({
             initial={{ scale: 0.96, opacity: 0, y: 10 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.96, opacity: 0, y: 10 }}
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-y-auto max-h-[90vh] flex flex-col"
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[85vh] min-h-[600px] overflow-hidden flex flex-col"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100 flex-shrink-0">
+            <div className="flex items-center justify-between px-8 py-5 border-b border-slate-100 flex-shrink-0 bg-slate-50/50">
               <div>
                 <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
                   <Shield size={22} className="text-blue-600" />
-                  {initial?.id ? 'Edit Employee Permissions' : 'Create Employee Account'}
+                  {initial?.id ? 'Edit Employee Access Settings' : 'Create Employee Account'}
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Configure secure access settings and module availability.
+                  Configure secure access settings and override module availability.
                 </p>
               </div>
               <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 transition-all">
@@ -239,189 +302,367 @@ function EmployeeModal({
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-6">
-              
-              {/* Core Credentials Rows */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">Full Name *</label>
-                  <input
-                    className={inputClass}
-                    value={form.name}
-                    onChange={(e) => setField('name', e.target.value)}
-                    required
-                    placeholder="e.g. Rahul Sharma"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">Email Address * (Login ID)</label>
-                  <input
-                    className={inputClass}
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => setField('email', e.target.value)}
-                    required
-                    placeholder="e.g. rahul@example.com"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">Mobile Number</label>
-                  <input
-                    className={inputClass}
-                    value={form.mobile_number}
-                    onChange={(e) => setField('mobile_number', e.target.value)}
-                    placeholder="e.g. +91 98765 43210"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">
-                    {initial?.id ? 'New Password (Optional)' : 'Password *'}
-                  </label>
-                  <input
-                    className={inputClass}
-                    type="password"
-                    value={form.password || ''}
-                    onChange={(e) => setField('password', e.target.value)}
-                    required={!initial?.id}
-                    placeholder={initial?.id ? 'Leave empty to keep current' : 'Min 6 characters'}
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">System Role *</label>
-                  <select
-                    className={inputClass}
-                    value={form.role}
-                    onChange={(e) => {
-                      const newRole = e.target.value;
-                      let rolePermissions = form.permissions;
-                      if (newRole === 'superadmin') {
-                        rolePermissions = AVAILABLE_MODULES.map(m => m.key);
-                      } else {
-                        const matchedRole = roles.find(r => r.name === newRole);
-                        if (matchedRole) {
-                          rolePermissions = matchedRole.permissions || [];
-                        }
-                      }
-                      setForm((prev) => ({
-                        ...prev,
-                        role: newRole as any,
-                        permissions: rolePermissions
-                      }));
-                    }}
-                    disabled={isSelf} // Prevent demoting yourself
-                  >
-                    {form.role === 'superadmin' && (
-                      <option value="superadmin">Superadmin</option>
-                    )}
-                    {roles.map((r) => (
-                      <option key={r.id} value={r.name}>
-                        {r.name.charAt(0).toUpperCase() + r.name.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {isSelf && (
-                <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 flex gap-3 text-xs">
-                  <Info size={16} className="flex-shrink-0 mt-0.5" />
-                  <p>You are editing your own account. For security, you cannot change your own system role or permissions checklist to prevent accidental lockouts.</p>
-                </div>
-              )}
-
-              {/* Permissions Checklist Area */}
-              <div>
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                  <div>
-                    <h3 className="text-sm font-black text-slate-900">Module Access Configuration</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">Select which sections of the admin panel this user can access.</p>
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
+              {/* Sidebar + Content Container */}
+              <div className="flex flex-1 overflow-hidden bg-slate-50/50 min-h-0">
+                {/* Left Sidebar - Categories */}
+                <div className="w-80 bg-white border-r border-slate-100 flex flex-col flex-shrink-0 overflow-y-auto no-scrollbar p-4 space-y-2">
+                  <div className="px-3 py-1 mb-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">Navigation</span>
                   </div>
+
+                  {/* Account Tab */}
+                  <button
+                    type="button"
+                    onClick={() => setActiveCategory('Account')}
+                    className={`w-full flex items-center justify-between text-left p-3 rounded-2xl transition-all border ${
+                      activeCategory === 'Account'
+                        ? 'bg-blue-50/70 border-blue-100 text-blue-900 shadow-sm shadow-blue-50/50'
+                        : 'bg-white border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`p-2 rounded-xl flex-shrink-0 ${
+                        activeCategory === 'Account' ? 'bg-blue-600 text-white shadow-md shadow-blue-200/50' : 'bg-slate-100 text-slate-500'
+                      }`}>
+                        <UserCheck size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-xs font-black block leading-none">Account Info</span>
+                        <span className="text-[10px] text-slate-400 block mt-1 truncate max-w-[150px] font-medium">
+                          Credentials & Role
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+
+                  <div className="px-3 py-1 my-2 border-t border-slate-100 pt-4">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">Permissions Overrides</span>
+                  </div>
+
+                  {CATEGORIES.map((cat) => {
+                    const Icon = cat.icon;
+                    const isActive = activeCategory === cat.id;
+                    
+                    // Count how many permissions are active in this category
+                    const categoryModules = MODULE_CATEGORIES[cat.id] || [];
+                    const activeInCatCount = categoryModules.reduce((acc, mod) => {
+                      const perms = form.permissions[mod.key] || { view: false, edit: false, delete: false };
+                      let count = 0;
+                      if (perms.view) count++;
+                      if (perms.edit) count++;
+                      if (perms.delete) count++;
+                      return acc + count;
+                    }, 0);
+                    const totalPossible = categoryModules.length * 3;
+
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setActiveCategory(cat.id)}
+                        disabled={form.role === 'superadmin'}
+                        className={`w-full flex items-center justify-between text-left p-3 rounded-2xl transition-all border disabled:opacity-50 ${
+                          isActive
+                            ? 'bg-blue-50/70 border-blue-100 text-blue-900 shadow-sm shadow-blue-50/50'
+                            : 'bg-white border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`p-2 rounded-xl flex-shrink-0 ${
+                            isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-200/50' : 'bg-slate-100 text-slate-500'
+                          }`}>
+                            <Icon size={16} />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-xs font-black block leading-none">{cat.label}</span>
+                            <span className="text-[10px] text-slate-400 block mt-1 truncate max-w-[150px] font-medium">
+                              {cat.desc}
+                            </span>
+                          </div>
+                        </div>
+                        {form.role !== 'superadmin' && activeInCatCount > 0 && (
+                          <div className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold flex-shrink-0 ${
+                            isActive ? 'bg-blue-200/60 text-blue-800' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                            {activeInCatCount}/{totalPossible}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                  
+                  {/* Global settings buttons at the bottom of the sidebar */}
                   {form.role !== 'superadmin' && (
-                    <div className="flex gap-2">
+                    <div className="pt-4 mt-auto border-t border-slate-100 flex flex-col gap-2">
                       <button
                         type="button"
                         onClick={selectAllPermissions}
-                        className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg transition-all"
+                        className="w-full text-xs font-extrabold text-blue-600 hover:text-blue-700 bg-blue-50/80 hover:bg-blue-100/80 py-2.5 rounded-xl transition-all border border-blue-100/50 text-center"
                       >
-                        Select All
+                        Enable All Modules
                       </button>
                       <button
                         type="button"
                         onClick={clearAllPermissions}
-                        className="text-xs font-bold text-slate-600 hover:text-slate-700 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg transition-all"
+                        className="w-full text-xs font-extrabold text-slate-500 hover:text-slate-600 bg-slate-50 hover:bg-slate-100/80 py-2.5 rounded-xl transition-all border border-slate-200/50 text-center"
                       >
-                        Clear All
+                        Disable All Modules
                       </button>
                     </div>
                   )}
                 </div>
 
-                {form.role === 'superadmin' ? (
-                  <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 text-center">
-                    <Shield size={36} className="text-blue-500 mx-auto mb-3" />
-                    <h4 className="text-sm font-black text-blue-900">Unrestricted Access Granted</h4>
-                    <p className="text-xs text-blue-600 max-w-lg mx-auto mt-1">
-                      Users designated as <strong>Superadmin</strong> automatically inherit full read and write privileges across all system configurations, databases, and administrative modules.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {Object.entries(MODULE_CATEGORIES).map(([categoryName, modules]) => (
-                      <div key={categoryName} className="space-y-3">
-                        <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-50 pb-1">
-                          {categoryName}
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          {modules.map((mod) => {
-                            const isChecked = form.permissions.includes(mod.key);
-                            return (
-                              <label
-                                key={mod.key}
-                                className={`flex items-start gap-3 p-3.5 border rounded-xl cursor-pointer hover:bg-slate-50 transition-all ${
-                                  isChecked
-                                    ? 'border-blue-200 bg-blue-50/20 ring-1 ring-blue-500/10'
-                                    : 'border-slate-100 bg-white'
-                                }`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={() => handlePermissionToggle(mod.key)}
-                                  className="mt-0.5 w-4.5 h-4.5 rounded-md border-slate-300 text-blue-600 focus:ring-blue-500/20"
-                                />
-                                <div>
-                                  <div className="text-xs font-black text-slate-900">{mod.label}</div>
-                                  <div className="text-[10px] text-slate-500 mt-0.5 leading-relaxed">{mod.desc}</div>
-                                </div>
-                              </label>
-                            );
-                          })}
+                {/* Right Content Area */}
+                <div className="flex-1 overflow-y-auto no-scrollbar p-6 flex flex-col">
+                  {activeCategory === 'Account' ? (
+                    <div className="space-y-6 max-w-3xl">
+                      <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <UserCheck size={18} className="text-blue-600" />
+                        <h3 className="text-sm font-black text-slate-900">Account Credentials & System Role</h3>
+                      </div>
+
+                      {isSelf && (
+                        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 flex gap-3 text-xs font-semibold">
+                          <Info size={16} className="flex-shrink-0 mt-0.5" />
+                          <p>You are editing your own account. For security, you cannot change your own system role or access level to prevent accidental lockout.</p>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">Full Name *</label>
+                          <input
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800 font-semibold"
+                            value={form.name}
+                            onChange={(e) => setField('name', e.target.value)}
+                            required
+                            placeholder="e.g. Rahul Sharma"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">Email Address * (Login ID)</label>
+                          <input
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800 font-semibold"
+                            type="email"
+                            value={form.email}
+                            onChange={(e) => setField('email', e.target.value)}
+                            required
+                            placeholder="e.g. rahul@example.com"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">Mobile Number</label>
+                          <input
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800 font-semibold"
+                            value={form.mobile_number}
+                            onChange={(e) => setField('mobile_number', e.target.value)}
+                            placeholder="e.g. +91 98765 43210"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">System Role *</label>
+                          <select
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800 font-semibold cursor-pointer disabled:opacity-50"
+                            value={form.role}
+                            onChange={(e) => {
+                              const newRole = e.target.value;
+                              let rolePermissions = form.permissions;
+                              if (newRole === 'superadmin') {
+                                const allPerms: Record<string, { view: boolean; edit: boolean; delete: boolean }> = {};
+                                AVAILABLE_MODULES.forEach((m) => {
+                                  allPerms[m.key] = { view: true, edit: true, delete: true };
+                                });
+                                rolePermissions = allPerms;
+                              } else {
+                                const matchedRole = roles.find((r) => r.name === newRole);
+                                if (matchedRole) {
+                                  rolePermissions = normalizePermissions(matchedRole.permissions);
+                                }
+                              }
+                              setForm((prev) => ({
+                                ...prev,
+                                role: newRole as any,
+                                permissions: rolePermissions
+                              }));
+                            }}
+                            disabled={isSelf} // Prevent demoting yourself
+                          >
+                            {form.role === 'superadmin' && (
+                              <option value="superadmin">Superadmin</option>
+                            )}
+                            {roles.map((r) => (
+                              <option key={r.id} value={r.name}>
+                                {r.name.charAt(0).toUpperCase() + r.name.slice(1)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">
+                            {initial?.id ? 'New Password (Optional)' : 'Password *'}
+                          </label>
+                          <input
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800 font-semibold"
+                            type="password"
+                            value={form.password || ''}
+                            onChange={(e) => setField('password', e.target.value)}
+                            required={!initial?.id}
+                            placeholder={initial?.id ? 'Leave empty to keep current password' : 'Min 6 characters'}
+                          />
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </div>
+                  ) : form.role === 'superadmin' ? (
+                    <div className="bg-blue-50 border border-blue-100 rounded-3xl p-8 text-center my-auto max-w-xl mx-auto">
+                      <Shield size={42} className="text-blue-500 mx-auto mb-4" />
+                      <h4 className="text-base font-black text-blue-900">Unrestricted Access Role</h4>
+                      <p className="text-xs text-blue-600 max-w-lg mx-auto mt-2 leading-relaxed font-semibold">
+                        Users designated as <strong>Superadmin</strong> automatically inherit full read and write privileges across all system configurations, databases, and administrative modules. Individual permission override presets cannot be modified.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Category Header Controls */}
+                      {(() => {
+                        const catInfo = CATEGORIES.find(c => c.id === activeCategory);
+                        const categoryModules = MODULE_CATEGORIES[activeCategory] || [];
+                        
+                        return (
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-5">
+                            <div>
+                              <h3 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                                {catInfo?.label}
+                              </h3>
+                              <p className="text-xs text-slate-500 mt-0.5">{catInfo?.desc}</p>
+                            </div>
+                            
+                            {/* Category specific select/clear */}
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setForm(prev => {
+                                    const updated = { ...prev.permissions };
+                                    categoryModules.forEach(mod => {
+                                      updated[mod.key] = { view: true, edit: true, delete: true };
+                                    });
+                                    return { ...prev, permissions: updated };
+                                  });
+                                }}
+                                className="text-[10px] font-black uppercase tracking-wider text-blue-600 hover:bg-blue-50/60 px-3 py-2 border border-blue-100 rounded-xl transition-all bg-white"
+                              >
+                                Select Category
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setForm(prev => {
+                                    const updated = { ...prev.permissions };
+                                    categoryModules.forEach(mod => {
+                                      updated[mod.key] = { view: false, edit: false, delete: false };
+                                    });
+                                    return { ...prev, permissions: updated };
+                                  });
+                                }}
+                                className="text-[10px] font-black uppercase tracking-wider text-slate-500 hover:bg-slate-100 px-3 py-2 border border-slate-200 rounded-xl transition-all bg-white"
+                              >
+                                Clear Category
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Modules Cards list */}
+                      <div className="space-y-4">
+                        {(MODULE_CATEGORIES[activeCategory] || []).map((mod) => {
+                          const perms = form.permissions[mod.key] || { view: false, edit: false, delete: false };
+                          return (
+                            <div
+                              key={mod.key}
+                              className="bg-white border border-slate-200/60 rounded-3xl p-5 hover:border-blue-200 hover:shadow-md hover:shadow-blue-50/10 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                            >
+                              <div className="max-w-md">
+                                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md inline-block mb-1.5">
+                                  {mod.key}
+                                </span>
+                                <span className="text-sm font-black block leading-none text-slate-900">{mod.label}</span>
+                                <span className="text-xs text-slate-500 block mt-1.5 leading-normal font-medium">{mod.desc}</span>
+                              </div>
+                              
+                              {/* Premium Action Pill Toggles */}
+                              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                                {/* View Pill */}
+                                <button
+                                  type="button"
+                                  onClick={() => handlePermissionActionToggle(mod.key, 'view')}
+                                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border ${
+                                    perms.view
+                                      ? 'bg-blue-50/80 border-blue-200 text-blue-700 shadow-sm shadow-blue-100/30'
+                                      : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                                  }`}
+                                >
+                                  <Check size={14} className={`transition-transform duration-250 ${perms.view ? 'scale-100' : 'scale-0 w-0'}`} />
+                                  <span>View</span>
+                                </button>
+
+                                {/* Edit Pill */}
+                                <button
+                                  type="button"
+                                  onClick={() => handlePermissionActionToggle(mod.key, 'edit')}
+                                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border ${
+                                    perms.edit
+                                      ? 'bg-emerald-50/80 border-emerald-200 text-emerald-700 shadow-sm shadow-emerald-100/30'
+                                      : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                                  }`}
+                                >
+                                  <Check size={14} className={`transition-transform duration-250 ${perms.edit ? 'scale-100' : 'scale-0 w-0'}`} />
+                                  <span>Edit</span>
+                                </button>
+
+                                {/* Delete Pill */}
+                                <button
+                                  type="button"
+                                  onClick={() => handlePermissionActionToggle(mod.key, 'delete')}
+                                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border ${
+                                    perms.delete
+                                      ? 'bg-rose-50/80 border-rose-200 text-rose-700 shadow-sm shadow-rose-100/30'
+                                      : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                                  }`}
+                                >
+                                  <Check size={14} className={`transition-transform duration-250 ${perms.delete ? 'scale-100' : 'scale-0 w-0'}`} />
+                                  <span>Delete</span>
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-4 pt-4 border-t border-slate-100 flex-shrink-0">
+              {/* Actions Footer */}
+              <div className="flex items-center justify-end gap-3 px-8 py-5 border-t border-slate-100 bg-white flex-shrink-0">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-3 border border-slate-200 rounded-xl text-sm font-black text-slate-600 hover:bg-slate-50 transition-all"
+                  className="px-6 py-3 border border-slate-200 text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 disabled:opacity-50"
                 >
-                  {saving && <RefreshCw size={14} className="animate-spin" />}
-                  {saving ? 'Saving Account…' : initial?.id ? 'Save Access Settings' : 'Create Account'}
+                  {saving ? 'Saving...' : initial?.id ? 'Save Access Settings' : 'Create Account'}
                 </button>
               </div>
             </form>
@@ -541,22 +782,13 @@ export default function EmployeesPage() {
   };
 
   const openEdit = (emp: Employee) => {
-    const parsedPerms = Array.isArray(emp.permissions)
-      ? emp.permissions
-      : typeof emp.permissions === 'string'
-      ? (() => {
-          try { return JSON.parse(emp.permissions); }
-          catch { return []; }
-        })()
-      : [];
-
     setModalInitial({
       id: emp.id,
       name: emp.name,
       email: emp.email,
       mobile_number: emp.mobile_number || '',
       role: emp.role,
-      permissions: parsedPerms,
+      permissions: normalizePermissions(emp.permissions),
     });
     setModalOpen(true);
   };
@@ -703,31 +935,39 @@ export default function EmployeesPage() {
                             Full Unrestricted Access
                           </span>
                         ) : (() => {
-                          const perms = Array.isArray(emp.permissions)
-                            ? emp.permissions
-                            : typeof emp.permissions === 'string'
-                            ? (() => {
-                                try { return JSON.parse(emp.permissions); }
-                                catch { return []; }
-                              })()
-                            : [];
+                          const normalized = normalizePermissions(emp.permissions);
+                          const activeModules = Object.entries(normalized).filter(
+                            ([_, actions]) => actions.view || actions.edit || actions.delete
+                          );
                           
-                          if (perms.length === 0) {
+                          if (activeModules.length === 0) {
                             return (
                               <span className="text-[11px] font-semibold text-slate-400 bg-slate-50 border border-slate-200 px-2 py-1 rounded-lg flex items-center gap-1.5 w-fit">
                                 <Lock size={10} />
-                                No Modules Authorized
+                                  No Modules Authorized
                               </span>
                             );
                           }
 
                           return (
-                            <div className="flex flex-wrap gap-1">
-                              {perms.map((p) => (
-                                <span key={p} className="text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200/50 px-1.5 py-0.5 rounded-md">
-                                  {p}
-                                </span>
-                              ))}
+                            <div className="flex flex-wrap gap-1.5">
+                              {activeModules.map(([moduleKey, actions]) => {
+                                const mod = AVAILABLE_MODULES.find((m) => m.key === moduleKey);
+                                const label = mod ? mod.label : moduleKey;
+                                const actionList = [];
+                                if (actions.view) actionList.push('V');
+                                if (actions.edit) actionList.push('E');
+                                if (actions.delete) actionList.push('D');
+                                return (
+                                  <span
+                                    key={moduleKey}
+                                    className="text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200/50 px-1.5 py-0.5 rounded-md flex items-center gap-1 capitalize animate-fadeIn"
+                                  >
+                                    <span>{label}</span>
+                                    <span className="text-slate-400 font-extrabold">({actionList.join(',')})</span>
+                                  </span>
+                                );
+                              })}
                             </div>
                           );
                         })()}

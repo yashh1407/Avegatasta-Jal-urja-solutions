@@ -15,25 +15,65 @@ import {
   Lock,
   Edit2,
   Info,
-  Check
+  Check,
+  Layout,
+  BarChart2,
+  FolderLock,
+  TrendingUp,
+  Activity,
+  Settings,
+  Users
 } from 'lucide-react';
 
 interface Role {
   id: number;
   name: string;
-  permissions: string[] | null;
+  permissions: Record<string, { view: boolean; edit: boolean; delete: boolean }> | string[] | null;
   created_at: string;
 }
 
 interface RoleForm {
   name: string;
-  permissions: string[];
+  permissions: Record<string, { view: boolean; edit: boolean; delete: boolean }>;
 }
 
 const EMPTY_FORM: RoleForm = {
   name: '',
-  permissions: [],
+  permissions: {},
 };
+
+function normalizePermissions(permissions: any): Record<string, { view: boolean; edit: boolean; delete: boolean }> {
+  const normalized: Record<string, { view: boolean; edit: boolean; delete: boolean }> = {};
+  
+  AVAILABLE_MODULES.forEach((mod) => {
+    normalized[mod.key] = { view: false, edit: false, delete: false };
+  });
+
+  if (!permissions) return normalized;
+
+  if (Array.isArray(permissions)) {
+    // Old format: string array
+    permissions.forEach((key) => {
+      if (normalized[key]) {
+        normalized[key] = { view: true, edit: true, delete: true };
+      }
+    });
+  } else if (typeof permissions === 'object') {
+    // New format: action flags
+    Object.keys(permissions).forEach((key) => {
+      const p = permissions[key];
+      if (normalized[key]) {
+        normalized[key] = {
+          view: p && typeof p === 'object' ? !!p.view : false,
+          edit: p && typeof p === 'object' ? !!p.edit : false,
+          delete: p && typeof p === 'object' ? !!p.delete : false,
+        };
+      }
+    });
+  }
+
+  return normalized;
+}
 
 const AVAILABLE_MODULES = [
   { key: 'quotations', label: 'Quotations', category: 'Main', desc: 'View and manage quotation requests' },
@@ -63,7 +103,7 @@ const AVAILABLE_MODULES = [
   
   { key: 'smtp-settings', label: 'SMTP Settings', category: 'Configuration', desc: 'Configure system outbound mail servers' },
   { key: 'site-settings', label: 'Site Settings', category: 'Configuration', desc: 'Configure global metadata and contacts' },
-  { key: 'employees', label: 'Employees', category: 'Configuration', desc: 'Manage other staff logins and permission access' },
+  { key: 'employees', label: 'Employees', category: 'Staff', desc: 'Manage other staff logins and permission access' },
 ];
 
 const MODULE_CATEGORIES = AVAILABLE_MODULES.reduce((acc, mod) => {
@@ -71,6 +111,16 @@ const MODULE_CATEGORIES = AVAILABLE_MODULES.reduce((acc, mod) => {
   acc[mod.category].push(mod);
   return acc;
 }, {} as Record<string, typeof AVAILABLE_MODULES>);
+
+const CATEGORIES = [
+  { id: 'Main', label: 'Main Modules', icon: Layout, desc: 'Core request flows' },
+  { id: 'Analytics', label: 'Analytics', icon: BarChart2, desc: 'Data & statistics' },
+  { id: 'Management', label: 'Management', icon: FolderLock, desc: 'Clients, products & AMC' },
+  { id: 'Sales', label: 'Sales & CRM', icon: TrendingUp, desc: 'Sales pipeline and CRM' },
+  { id: 'Content', label: 'Content Pages', icon: Activity, desc: 'Dynamic site content' },
+  { id: 'Staff', label: 'Staff Management', icon: Users, desc: 'Employees & access roles' },
+  { id: 'Configuration', label: 'System Configuration', icon: Settings, desc: 'SMTP, staff & site settings' },
+];
 
 // ─── Modal Component ─────────────────────────────────────────────────────────
 
@@ -87,37 +137,53 @@ function RoleModal({
 }) {
   const [form, setForm] = useState<RoleForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('Main');
 
   useEffect(() => {
     if (open) {
       if (initial) {
         setForm({
           name: initial.name,
-          permissions: initial.permissions || [],
+          permissions: normalizePermissions(initial.permissions),
         });
       } else {
         setForm(EMPTY_FORM);
       }
+      setActiveCategory('Main');
     }
   }, [open, initial]);
 
-  const handlePermissionToggle = (moduleKey: string) => {
+  const handlePermissionActionToggle = (moduleKey: string, action: 'view' | 'edit' | 'delete') => {
     setForm((prev) => {
-      const exists = prev.permissions.includes(moduleKey);
-      const newPerms = exists
-        ? prev.permissions.filter((k) => k !== moduleKey)
-        : [...prev.permissions, moduleKey];
-      return { ...prev, permissions: newPerms };
+      const current = prev.permissions[moduleKey] || { view: false, edit: false, delete: false };
+      const updatedModulePerms = {
+        ...current,
+        [action]: !current[action],
+      };
+      return {
+        ...prev,
+        permissions: {
+          ...prev.permissions,
+          [moduleKey]: updatedModulePerms,
+        },
+      };
     });
   };
 
   const selectAllPermissions = () => {
-    const allKeys = AVAILABLE_MODULES.map((m) => m.key);
-    setForm((prev) => ({ ...prev, permissions: allKeys }));
+    const allPerms: Record<string, { view: boolean; edit: boolean; delete: boolean }> = {};
+    AVAILABLE_MODULES.forEach((m) => {
+      allPerms[m.key] = { view: true, edit: true, delete: true };
+    });
+    setForm((prev) => ({ ...prev, permissions: allPerms }));
   };
 
   const clearAllPermissions = () => {
-    setForm((prev) => ({ ...prev, permissions: [] }));
+    const emptyPerms: Record<string, { view: boolean; edit: boolean; delete: boolean }> = {};
+    AVAILABLE_MODULES.forEach((m) => {
+      emptyPerms[m.key] = { view: false, edit: false, delete: false };
+    });
+    setForm((prev) => ({ ...prev, permissions: emptyPerms }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -156,7 +222,7 @@ function RoleModal({
     }
   };
 
-  const isSystemDefault = initial && (initial.name === 'employee' || initial.name === 'sales');
+  const isSystemDefault = !!(initial && (initial.name === 'employee' || initial.name === 'sales'));
 
   return (
     <AnimatePresence>
@@ -172,10 +238,10 @@ function RoleModal({
             initial={{ scale: 0.96, opacity: 0, y: 10 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.96, opacity: 0, y: 10 }}
-            className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-y-auto max-h-[90vh] flex flex-col"
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[85vh] min-h-[600px] overflow-hidden flex flex-col"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100 flex-shrink-0">
+            <div className="flex items-center justify-between px-8 py-5 border-b border-slate-100 flex-shrink-0 bg-slate-50/50">
               <div>
                 <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
                   <Shield size={22} className="text-blue-600" />
@@ -191,12 +257,11 @@ function RoleModal({
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-6">
-              
-              <div>
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
+              <div className="p-6 border-b border-slate-100 bg-white flex-shrink-0">
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">Role Name *</label>
                 <input
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800 font-semibold disabled:opacity-50"
+                  className="w-full max-w-md px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800 font-semibold disabled:opacity-50"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   required
@@ -208,75 +273,206 @@ function RoleModal({
                 )}
               </div>
 
-              {/* Permissions Checklist Area */}
-              <div>
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                  <div>
-                    <h3 className="text-sm font-black text-slate-900">Module Access Configuration</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">Select which sections of the admin panel this role can access.</p>
+              {/* Sidebar + Content Container */}
+              <div className="flex flex-1 overflow-hidden bg-slate-50/50 min-h-0">
+                {/* Left Sidebar - Categories */}
+                <div className="w-80 bg-white border-r border-slate-100 flex flex-col flex-shrink-0 overflow-y-auto no-scrollbar p-4 space-y-2">
+                  <div className="px-3 py-1 mb-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">Categories</span>
                   </div>
-                  <div className="flex gap-2">
+                  {CATEGORIES.map((cat) => {
+                    const Icon = cat.icon;
+                    const isActive = activeCategory === cat.id;
+                    
+                    // Count how many permissions are active in this category
+                    const categoryModules = MODULE_CATEGORIES[cat.id] || [];
+                    const activeInCatCount = categoryModules.reduce((acc, mod) => {
+                      const perms = form.permissions[mod.key] || { view: false, edit: false, delete: false };
+                      let count = 0;
+                      if (perms.view) count++;
+                      if (perms.edit) count++;
+                      if (perms.delete) count++;
+                      return acc + count;
+                    }, 0);
+                    const totalPossible = categoryModules.length * 3;
+
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setActiveCategory(cat.id)}
+                        className={`w-full flex items-center justify-between text-left p-3 rounded-2xl transition-all border ${
+                          isActive
+                            ? 'bg-blue-50/70 border-blue-100 text-blue-900 shadow-sm shadow-blue-50/50'
+                            : 'bg-white border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`p-2 rounded-xl flex-shrink-0 ${
+                            isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-200/50' : 'bg-slate-100 text-slate-500'
+                          }`}>
+                            <Icon size={16} />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-xs font-black block leading-none">{cat.label}</span>
+                            <span className="text-[10px] text-slate-400 block mt-1 truncate max-w-[150px] font-medium">
+                              {cat.desc}
+                            </span>
+                          </div>
+                        </div>
+                        {activeInCatCount > 0 && (
+                          <div className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold flex-shrink-0 ${
+                            isActive ? 'bg-blue-200/60 text-blue-800' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                            {activeInCatCount}/{totalPossible}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                  
+                  {/* Global settings buttons at the bottom of the sidebar */}
+                  <div className="pt-4 mt-auto border-t border-slate-100 flex flex-col gap-2">
                     <button
                       type="button"
                       onClick={selectAllPermissions}
-                      className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg transition-all"
+                      className="w-full text-xs font-extrabold text-blue-600 hover:text-blue-700 bg-blue-50/80 hover:bg-blue-100/80 py-2.5 rounded-xl transition-all border border-blue-100/50 text-center"
                     >
-                      Select All
+                      Enable All Modules
                     </button>
                     <button
                       type="button"
                       onClick={clearAllPermissions}
-                      className="text-xs font-bold text-slate-600 hover:text-slate-700 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg transition-all"
+                      className="w-full text-xs font-extrabold text-slate-500 hover:text-slate-600 bg-slate-50 hover:bg-slate-100/80 py-2.5 rounded-xl transition-all border border-slate-200/50 text-center"
                     >
-                      Clear All
+                      Disable All Modules
                     </button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {Object.entries(MODULE_CATEGORIES).map(([categoryName, modules]) => (
-                    <div key={categoryName} className="border border-slate-100 rounded-2xl p-5 bg-slate-50/20">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3.5 pb-2 border-b border-slate-100">
-                        {categoryName}
-                      </h4>
-                      <div className="space-y-3">
-                        {modules.map((mod) => {
-                          const active = form.permissions.includes(mod.key);
-                          return (
+                {/* Right Content Area */}
+                <div className="flex-1 overflow-y-auto no-scrollbar p-6 flex flex-col">
+                  {/* Category Header Controls */}
+                  {(() => {
+                    const catInfo = CATEGORIES.find(c => c.id === activeCategory);
+                    const categoryModules = MODULE_CATEGORIES[activeCategory] || [];
+                    
+                    return (
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-5">
+                        <div>
+                          <h3 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                            {catInfo?.label}
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-0.5">{catInfo?.desc}</p>
+                        </div>
+                        
+                        {/* Category specific select/clear */}
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setForm(prev => {
+                                const updated = { ...prev.permissions };
+                                categoryModules.forEach(mod => {
+                                  updated[mod.key] = { view: true, edit: true, delete: true };
+                                });
+                                return { ...prev, permissions: updated };
+                              });
+                            }}
+                            className="text-[10px] font-black uppercase tracking-wider text-blue-600 hover:bg-blue-50/60 px-3 py-2 border border-blue-100 rounded-xl transition-all bg-white"
+                          >
+                            Select Category
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setForm(prev => {
+                                const updated = { ...prev.permissions };
+                                categoryModules.forEach(mod => {
+                                  updated[mod.key] = { view: false, edit: false, delete: false };
+                                });
+                                return { ...prev, permissions: updated };
+                              });
+                            }}
+                            className="text-[10px] font-black uppercase tracking-wider text-slate-500 hover:bg-slate-100 px-3 py-2 border border-slate-200 rounded-xl transition-all bg-white"
+                          >
+                            Clear Category
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Modules Cards list */}
+                  <div className="space-y-4">
+                    {(MODULE_CATEGORIES[activeCategory] || []).map((mod) => {
+                      const perms = form.permissions[mod.key] || { view: false, edit: false, delete: false };
+                      return (
+                        <div
+                          key={mod.key}
+                          className="bg-white border border-slate-200/60 rounded-3xl p-5 hover:border-blue-200 hover:shadow-md hover:shadow-blue-50/10 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                        >
+                          <div className="max-w-md">
+                            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md inline-block mb-1.5">
+                              {mod.key}
+                            </span>
+                            <span className="text-sm font-black block leading-none text-slate-900">{mod.label}</span>
+                            <span className="text-xs text-slate-500 block mt-1.5 leading-normal font-medium">{mod.desc}</span>
+                          </div>
+                          
+                          {/* Premium Action Pill Toggles */}
+                          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                            {/* View Pill */}
                             <button
-                              key={mod.key}
                               type="button"
-                              onClick={() => handlePermissionToggle(mod.key)}
-                              className={`w-full flex items-start text-left p-2.5 rounded-xl border transition-all ${
-                                active
-                                  ? 'bg-blue-50/30 border-blue-200/50 text-blue-900'
-                                  : 'bg-white border-slate-100 hover:border-slate-200 text-slate-700'
+                              onClick={() => handlePermissionActionToggle(mod.key, 'view')}
+                              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border ${
+                                perms.view
+                                  ? 'bg-blue-50/80 border-blue-200 text-blue-700 shadow-sm shadow-blue-100/30'
+                                  : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
                               }`}
                             >
-                              <div
-                                className={`w-4 h-4 rounded mt-0.5 flex items-center justify-center border transition-all flex-shrink-0 mr-3 ${
-                                  active
-                                    ? 'bg-blue-600 border-blue-600 text-white'
-                                    : 'bg-slate-50 border-slate-300'
-                                }`}
-                              >
-                                {active && <Check size={10} className="stroke-[3]" />}
-                              </div>
-                              <div>
-                                <span className="text-xs font-bold block leading-tight">{mod.label}</span>
-                                <span className="text-[10px] text-slate-400 font-semibold block mt-0.5 leading-snug">{mod.desc}</span>
-                              </div>
+                              <Check size={14} className={`transition-transform duration-250 ${perms.view ? 'scale-100' : 'scale-0 w-0'}`} />
+                              <span>View</span>
                             </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
+
+                            {/* Edit Pill */}
+                            <button
+                              type="button"
+                              onClick={() => handlePermissionActionToggle(mod.key, 'edit')}
+                              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border ${
+                                perms.edit
+                                  ? 'bg-emerald-50/80 border-emerald-200 text-emerald-700 shadow-sm shadow-emerald-100/30'
+                                  : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                              }`}
+                            >
+                              <Check size={14} className={`transition-transform duration-250 ${perms.edit ? 'scale-100' : 'scale-0 w-0'}`} />
+                              <span>Edit</span>
+                            </button>
+
+                            {/* Delete Pill */}
+                            <button
+                              type="button"
+                              onClick={() => handlePermissionActionToggle(mod.key, 'delete')}
+                              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border ${
+                                perms.delete
+                                  ? 'bg-rose-50/80 border-rose-200 text-rose-700 shadow-sm shadow-rose-100/30'
+                                  : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                              }`}
+                            >
+                              <Check size={14} className={`transition-transform duration-250 ${perms.delete ? 'scale-100' : 'scale-0 w-0'}`} />
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 flex-shrink-0">
+              {/* Actions Footer */}
+              <div className="flex items-center justify-end gap-3 px-8 py-5 border-t border-slate-100 bg-white flex-shrink-0">
                 <button
                   type="button"
                   onClick={onClose}
@@ -403,7 +599,7 @@ export default function RolesPage() {
     setModalInitial({
       id: role.id,
       name: role.name,
-      permissions: Array.isArray(role.permissions) ? role.permissions : [],
+      permissions: normalizePermissions(role.permissions),
     });
     setModalOpen(true);
   };
@@ -519,17 +715,38 @@ export default function RolesPage() {
 
                       {/* Authorized Access Column */}
                       <td className="px-6 py-5">
-                        {permList.length === 0 ? (
-                          <span className="text-slate-400 text-xs italic">No access modules allowed</span>
-                        ) : (
-                          <div className="flex flex-wrap gap-1 max-w-md">
-                            {permList.map((p) => (
-                              <span key={p} className="text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200/50 px-1.5 py-0.5 rounded-md capitalize">
-                                {p.replace('-', ' ')}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                        {(() => {
+                          const normalized = normalizePermissions(role.permissions);
+                          const activeModules = Object.entries(normalized).filter(
+                            ([_, actions]) => actions.view || actions.edit || actions.delete
+                          );
+                          
+                          if (activeModules.length === 0) {
+                            return <span className="text-slate-400 text-xs italic">No access modules allowed</span>;
+                          }
+
+                          return (
+                            <div className="flex flex-wrap gap-1.5 max-w-md">
+                              {activeModules.map(([moduleKey, actions]) => {
+                                const mod = AVAILABLE_MODULES.find((m) => m.key === moduleKey);
+                                const label = mod ? mod.label : moduleKey;
+                                const actionList = [];
+                                if (actions.view) actionList.push('V');
+                                if (actions.edit) actionList.push('E');
+                                if (actions.delete) actionList.push('D');
+                                return (
+                                  <span
+                                    key={moduleKey}
+                                    className="text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200/50 px-1.5 py-0.5 rounded-md flex items-center gap-1 capitalize animate-fadeIn"
+                                  >
+                                    <span>{label}</span>
+                                    <span className="text-slate-400 font-extrabold">({actionList.join(',')})</span>
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
                       </td>
 
                       {/* Created Date Column */}
