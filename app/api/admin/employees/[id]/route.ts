@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import pool, { initDB } from '@/lib/db';
 import { requireAdminSession } from '@/lib/admin-auth';
 import bcrypt from 'bcryptjs';
+import { validatePassword } from '@/lib/security';
+import { logAdminAction, getIpAddress } from '@/lib/audit';
 
 // PUT update employee
 export async function PUT(
@@ -40,8 +42,9 @@ export async function PUT(
     const paramsList: any[] = [name, email, mobile_number, role, permissions ? JSON.stringify(permissions) : null];
 
     if (password) {
-      if (password.length < 6) {
-        return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
+      const pwdCheck = validatePassword(password);
+      if (!pwdCheck.isValid) {
+        return NextResponse.json({ error: pwdCheck.error }, { status: 400 });
       }
       const passwordHash = await bcrypt.hash(password, 12);
       query += ', password_hash = ?';
@@ -52,6 +55,16 @@ export async function PUT(
     paramsList.push(id);
 
     await pool.query(query, paramsList);
+
+    // Log the admin action
+    const adminUser = session.user as any;
+    await logAdminAction(
+      adminUser.id ? Number(adminUser.id) : null,
+      adminUser.email || null,
+      'UPDATE_EMPLOYEE',
+      { employee_id: id, employee_email: email, role },
+      getIpAddress(request)
+    );
 
     return NextResponse.json({
       message: 'Employee updated successfully',
@@ -107,6 +120,16 @@ export async function DELETE(
     }
 
     await pool.query('DELETE FROM admin_users WHERE id = ?', [id]);
+
+    // Log the admin action
+    const adminUser = session.user as any;
+    await logAdminAction(
+      adminUser.id ? Number(adminUser.id) : null,
+      adminUser.email || null,
+      'DELETE_EMPLOYEE',
+      { employee_id: id, employee_email: employeeToDelete.email },
+      getIpAddress(request)
+    );
 
     return NextResponse.json({ message: 'Employee deleted successfully', id });
   } catch (error: any) {

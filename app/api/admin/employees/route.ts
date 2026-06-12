@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import pool, { initDB } from '@/lib/db';
 import { requireAdminSession } from '@/lib/admin-auth';
 import bcrypt from 'bcryptjs';
+import { validatePassword } from '@/lib/security';
+import { logAdminAction, getIpAddress } from '@/lib/audit';
 
 // GET all employees
 export async function GET() {
@@ -51,8 +53,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Name, email, password, and role are required' }, { status: 400 });
     }
 
-    if (password.length < 6) {
-      return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
+    const pwdCheck = validatePassword(password);
+    if (!pwdCheck.isValid) {
+      return NextResponse.json({ error: pwdCheck.error }, { status: 400 });
     }
 
     await initDB();
@@ -72,6 +75,16 @@ export async function POST(request: Request) {
     );
 
     const insertId = (result as any).insertId;
+
+    // Log the admin action
+    const adminUser = session.user as any;
+    await logAdminAction(
+      adminUser.id ? Number(adminUser.id) : null,
+      adminUser.email || null,
+      'CREATE_EMPLOYEE',
+      { employee_id: insertId, employee_email: email, employee_name: name, role },
+      getIpAddress(request)
+    );
 
     return NextResponse.json({
       id: insertId,

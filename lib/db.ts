@@ -76,6 +76,29 @@ export async function initDB() {
         role VARCHAR(255) NOT NULL DEFAULT 'employee',
         permissions JSON DEFAULT NULL,
         last_login TIMESTAMP NULL,
+        failed_login_attempts INT DEFAULT 0,
+        lockout_until TIMESTAMP NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Migrate existing admin_users table to add failed_login_attempts and lockout_until columns
+    for (const ddl of [
+      `ALTER TABLE admin_users ADD COLUMN failed_login_attempts INT DEFAULT 0`,
+      `ALTER TABLE admin_users ADD COLUMN lockout_until TIMESTAMP NULL`,
+    ]) {
+      try { await connection.query(ddl); } catch (e: any) { if (e.code !== 'ER_DUP_FIELDNAME') throw e; }
+    }
+
+    // Admin Audit Logs
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS admin_audit_logs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        admin_id INT NULL,
+        admin_email VARCHAR(255) NULL,
+        action VARCHAR(255) NOT NULL,
+        details JSON DEFAULT NULL,
+        ip_address VARCHAR(45) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);

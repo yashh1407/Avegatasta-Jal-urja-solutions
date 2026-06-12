@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool, { initDB } from '@/lib/db';
 import { requireAdminSession } from '@/lib/admin-auth';
+import { logAdminAction, getIpAddress } from '@/lib/audit';
 
 // PUT update role
 export async function PUT(
@@ -61,6 +62,16 @@ export async function PUT(
       [normalizedName, permissionsJson, oldName]
     );
 
+    // Log the admin action
+    const adminUser = session.user as any;
+    await logAdminAction(
+      adminUser.id ? Number(adminUser.id) : null,
+      adminUser.email || null,
+      'UPDATE_ROLE',
+      { role_id: id, role_name: normalizedName, old_role_name: oldName, permissions },
+      getIpAddress(request)
+    );
+
     return NextResponse.json({
       message: 'Role updated successfully',
       id,
@@ -105,6 +116,16 @@ export async function DELETE(
     await pool.query(
       "UPDATE admin_users SET role = 'employee', permissions = ? WHERE role = ?",
       [JSON.stringify([]), roleName]
+    );
+
+    // Log the admin action
+    const adminUser = session.user as any;
+    await logAdminAction(
+      adminUser.id ? Number(adminUser.id) : null,
+      adminUser.email || null,
+      'DELETE_ROLE',
+      { role_id: id, role_name: roleName },
+      getIpAddress(request)
     );
 
     return NextResponse.json({ message: 'Role deleted successfully', id });

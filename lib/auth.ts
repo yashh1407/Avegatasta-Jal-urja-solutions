@@ -39,17 +39,44 @@ export const authOptions: NextAuthOptions = {
           await initDB();
 
           const [rows] = await pool.query(
-            'SELECT id, name, email, password_hash, role, permissions FROM admin_users WHERE email = ? LIMIT 1',
+            'SELECT id, name, email, password_hash, role, permissions, failed_login_attempts, lockout_until FROM admin_users WHERE email = ? LIMIT 1',
             [credentials.email]
           );
 
-          const user = (rows as Array<{ id: number; name: string; email: string; password_hash: string; role: string; permissions: any }>)[0];
+          const user = (rows as Array<{ id: number; name: string; email: string; password_hash: string; role: string; permissions: any; failed_login_attempts: number; lockout_until: string | null }>)[0];
           if (!user) return null;
 
-          const valid = await bcrypt.compare(credentials.password, user.password_hash);
-          if (!valid) return null;
+          // Check if account is locked out
+          if (user.lockout_until) {
+            const lockoutTime = new Date(user.lockout_until);
+            if (lockoutTime > new Date()) {
+              throw new Error('Account is temporarily locked. Please try again in 15 minutes.');
+            }
+          }
 
-          await pool.query('UPDATE admin_users SET last_login = NOW() WHERE id = ?', [user.id]);
+          const valid = await bcrypt.compare(credentials.password, user.password_hash);
+          if (!valid) {
+            const attempts = (user.failed_login_attempts || 0) + 1;
+            if (attempts >= 5) {
+              await pool.query(
+                'UPDATE admin_users SET failed_login_attempts = ?, lockout_until = DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id = ?',
+                [attempts, user.id]
+              );
+              throw new Error('Account is temporarily locked. Please try again in 15 minutes.');
+            } else {
+              await pool.query(
+                'UPDATE admin_users SET failed_login_attempts = ? WHERE id = ?',
+                [attempts, user.id]
+              );
+            }
+            return null;
+          }
+
+          // Reset attempts on successful login
+          await pool.query(
+            'UPDATE admin_users SET failed_login_attempts = 0, lockout_until = NULL, last_login = NOW() WHERE id = ?',
+            [user.id]
+          );
 
           let parsedPermissions = null;
           if (user.permissions) {
@@ -69,7 +96,10 @@ export const authOptions: NextAuthOptions = {
             role: user.role,
             permissions: parsedPermissions
           };
-        } catch (error) {
+        } catch (error: any) {
+          if (error.message && error.message.includes('locked')) {
+            throw error;
+          }
           // Database unavailable, fall through to dev credentials check above
           console.error('Database auth failed:', error);
           return null;

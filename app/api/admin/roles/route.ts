@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool, { initDB } from '@/lib/db';
 import { requireAdminSession } from '@/lib/admin-auth';
+import { logAdminAction, getIpAddress } from '@/lib/audit';
 
 // GET all roles
 export async function GET() {
@@ -73,6 +74,16 @@ export async function POST(request: Request) {
     );
 
     const insertId = (result as any).insertId;
+
+    // Log the admin action
+    const adminUser = session.user as any;
+    await logAdminAction(
+      adminUser.id ? Number(adminUser.id) : null,
+      adminUser.email || null,
+      'CREATE_ROLE',
+      { role_id: insertId, role_name: normalizedName, permissions },
+      getIpAddress(request)
+    );
 
     return NextResponse.json({
       id: insertId,
