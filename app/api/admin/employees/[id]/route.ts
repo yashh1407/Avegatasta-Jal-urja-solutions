@@ -37,8 +37,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Email address already in use by another account' }, { status: 400 });
     }
 
-    // Build update query
-    let query = 'UPDATE admin_users SET name = ?, email = ?, mobile_number = ?, role = ?, permissions = ?';
+    // Build update query (automatically unlocks the account on edit)
+    let query = 'UPDATE admin_users SET name = ?, email = ?, mobile_number = ?, role = ?, permissions = ?, failed_login_attempts = 0, lockout_until = NULL';
     const paramsList: any[] = [name, email, mobile_number, role, permissions ? JSON.stringify(permissions) : null];
 
     if (password) {
