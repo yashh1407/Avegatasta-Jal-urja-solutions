@@ -35,7 +35,11 @@ async function main() {
   }
   
   // also check if there are other tables like categories
-  await connection.query("UPDATE categories SET name = REPLACE(name, 'â€ ', '\"')");
+  try {
+    await connection.query("UPDATE categories SET name = REPLACE(name, 'â€ ', '\"')");
+  } catch (e) {
+    if (e.code !== 'ER_NO_SUCH_TABLE') throw e;
+  }
   
   console.log('Database mojibake fixed successfully');
   await connection.end();

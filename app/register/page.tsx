@@ -1,39 +1,65 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
 import { User, Phone, ArrowRight, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { Captcha, CaptchaRef } from '@/components/Captcha';
 
 export default function RegisterPage() {
   const [isRegistered, setIsRegistered] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    phone: ''
+    phone: '',
+    gstin: ''
   });
+  const [error, setError] = useState('');
+  const captchaRef = useRef<CaptchaRef>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
+    if (!captchaRef.current?.validate()) {
+      return;
+    }
     
     try {
+      const captchaData = captchaRef.current?.getCaptchaData() || { token: '', input: '' };
       const response = await fetch('/api/registrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           firstName: formData.firstName,
           lastName: formData.lastName,
-          phone: formData.phone
+          phone: formData.phone,
+          gstin: formData.gstin,
+          captchaToken: captchaData.token,
+          captchaInput: captchaData.input,
         })
       });
 
       if (response.ok) {
         setIsRegistered(true);
+        setFormData({ firstName: '', lastName: '', phone: '', gstin: '' });
+        captchaRef.current?.reset();
+      } else {
+        const data = await response.json().catch(() => ({}));
+        const msg = typeof data?.error === 'string' ? data.error : 'Registration failed. Please try again.';
+        setError(msg);
+        if (msg.includes('verification code') || msg.toLowerCase().includes('captcha')) {
+          captchaRef.current?.setErrorState(true);
+        } else {
+          captchaRef.current?.reset();
+        }
       }
     } catch (error) {
       console.error('Error registering:', error);
+      setError('Something went wrong. Please try again.');
+      captchaRef.current?.reset();
     }
   };
 
@@ -74,6 +100,11 @@ export default function RegisterPage() {
               </div>
 
               <form onSubmit={handleSubmit} suppressHydrationWarning className="space-y-5">
+                {error && (
+                  <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-bold border border-red-100 animate-pulse">
+                    {error}
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-blue-950 uppercase tracking-widest ml-1">First Name</label>
@@ -116,6 +147,21 @@ export default function RegisterPage() {
                     />
                   </div>
                 </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-blue-950 uppercase tracking-widest ml-1">GSTIN (Optional)</label>
+                  <input 
+                    type="text" 
+                    name="gstin"
+                    value={formData.gstin}
+                    onChange={handleChange}
+                    placeholder="Enter your GSTIN here"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  />
+                  <span className="text-[10px] text-slate-400 font-bold ml-1 block">Enter your GSTIN here</span>
+                </div>
+
+                <Captcha ref={captchaRef} />
 
                 <button 
                   type="submit"

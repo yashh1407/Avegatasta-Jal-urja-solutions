@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Mail, Phone, MapPin, Linkedin, Instagram } from 'lucide-react';
+import { Mail, Phone, MapPin, Linkedin, Instagram, Facebook } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -51,6 +51,7 @@ export default function Footer() {
     whatsapp_number: '',
     social_linkedin: '',
     social_instagram: '',
+    social_facebook: '',
   });
 
   useEffect(() => {
@@ -81,8 +82,9 @@ export default function Footer() {
   const email = contact.company_email || 'sales@avegatasta.com';
   const address = contact.company_address || '';
   const waNumber = (contact.whatsapp_number || phone).replace(/\D/g, '');
-  const linkedinUrl = contact.social_linkedin || '';
-  const instagramUrl = contact.social_instagram || '';
+  const linkedinUrl = contact.social_linkedin || 'https://linkedin.com';
+  const instagramUrl = contact.social_instagram || 'https://instagram.com';
+  const facebookUrl = contact.social_facebook || 'https://facebook.com';
 
   return (
     <footer className="bg-brand-50 text-slate-600 pt-10 lg:pt-14 pb-6 lg:pb-8">
@@ -109,35 +111,50 @@ export default function Footer() {
 
             {/* Social icons */}
             <div className="flex items-center gap-3">
+              {/* WhatsApp */}
               <a
                 href={`https://wa.me/${waNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 hover:bg-green-500 hover:text-white hover:shadow-md transition-all"
+                className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 hover:bg-[#25D366] hover:text-white hover:shadow-md transition-all"
                 aria-label="WhatsApp"
               >
                 <WhatsAppIcon size={18} />
               </a>
-              {linkedinUrl && (
+              {/* Facebook */}
+              {facebookUrl && (
                 <a
-                  href={linkedinUrl}
+                  href={facebookUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white hover:shadow-md transition-all"
-                  aria-label="LinkedIn"
+                  className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 hover:bg-[#1877F2] hover:text-white hover:shadow-md transition-all"
+                  aria-label="Facebook"
                 >
-                  <Linkedin size={18} />
+                  <Facebook size={18} />
                 </a>
               )}
+              {/* Instagram */}
               {instagramUrl && (
                 <a
                   href={instagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 hover:bg-pink-600 hover:text-white hover:shadow-md transition-all"
+                  className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 hover:bg-[#E1306C] hover:text-white hover:shadow-md transition-all"
                   aria-label="Instagram"
                 >
                   <Instagram size={18} />
+                </a>
+              )}
+              {/* LinkedIn */}
+              {linkedinUrl && (
+                <a
+                  href={linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 hover:bg-[#0A66C2] hover:text-white hover:shadow-md transition-all"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin size={18} />
                 </a>
               )}
             </div>

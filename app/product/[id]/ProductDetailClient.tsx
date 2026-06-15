@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { products, Product } from '@/lib/data';
+import { Captcha, CaptchaRef } from '@/components/Captcha';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -34,33 +35,54 @@ type InquiryState = 'idle' | 'loading' | 'success' | 'error';
 
 function ProductInquiryForm({ product }: { product: Product }) {
   const [state, setState] = useState<InquiryState>('idle');
-  const [form, setForm] = useState({ name: '', phone: '', email: '', message: '' });
+  const [form, setForm] = useState({ name: '', phone: '', email: '', message: '', gstin: '' });
   const [errorMsg, setErrorMsg] = useState('');
+  const captchaRef = useRef<CaptchaRef>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setState('loading');
     setErrorMsg('');
+
+    if (!captchaRef.current?.validate()) {
+      return;
+    }
+
+    setState('loading');
     try {
+      const captchaData = captchaRef.current?.getCaptchaData() || { token: '', input: '' };
       const res = await fetch('/api/product-inquiries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, productName: product.name, productId: product.id }),
+        body: JSON.stringify({ 
+          ...form, 
+          productName: product.name, 
+          productId: product.id,
+          captchaToken: captchaData.token,
+          captchaInput: captchaData.input,
+        }),
       });
       if (res.ok) {
         setState('success');
-        setForm({ name: '', phone: '', email: '', message: '' });
+        setForm({ name: '', phone: '', email: '', message: '', gstin: '' });
+        captchaRef.current?.reset();
       } else {
         const data = await res.json().catch(() => ({}));
-        setErrorMsg(data?.error ? JSON.stringify(data.error) : 'Submission failed. Please try again.');
+        const msg = typeof data?.error === 'string' ? data.error : 'Submission failed. Please try again.';
+        setErrorMsg(msg);
         setState('error');
+        if (msg.includes('verification code') || msg.toLowerCase().includes('captcha')) {
+          captchaRef.current?.setErrorState(true);
+        } else {
+          captchaRef.current?.reset();
+        }
       }
     } catch {
       setErrorMsg('Network error. Please try again.');
       setState('error');
+      captchaRef.current?.reset();
     }
   };
 
@@ -122,6 +144,18 @@ function ProductInquiryForm({ product }: { product: Product }) {
         />
       </div>
       <div className="space-y-1">
+        <label className="text-[10px] font-black text-blue-950 uppercase tracking-widest ml-1">GSTIN (Optional)</label>
+        <input
+          type="text"
+          name="gstin"
+          value={form.gstin}
+          onChange={handleChange}
+          placeholder="Enter your GSTIN here"
+          className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+        />
+        <span className="text-[10px] text-slate-400 font-bold ml-1 block">Enter your GSTIN here</span>
+      </div>
+      <div className="space-y-1">
         <label className="text-[10px] font-black text-blue-950 uppercase tracking-widest ml-1">Message *</label>
         <textarea
           required
@@ -133,6 +167,7 @@ function ProductInquiryForm({ product }: { product: Product }) {
           className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
         />
       </div>
+      <Captcha ref={captchaRef} />
       {state === 'error' && (
         <p className="text-red-500 text-xs font-bold px-1">{errorMsg}</p>
       )}
@@ -158,9 +193,32 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 
 // ─── Inner page (needs useSearchParams) ───────────────────────────────────────
 
-export default function ProductDetailContent({ id }: { id: string }) {
+export default function ProductDetailContent({ product: initialProduct }: { product: Product }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const [product, setProduct] = useState<Product>(initialProduct);
+  const [productsList, setProductsList] = useState<Product[]>(() => products);
+
+  useEffect(() => {
+    setProduct(initialProduct);
+  }, [initialProduct]);
+
+  useEffect(() => {
+    // Sync single product detail and all products (for related)
+    fetch('/api/products')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setProductsList(data);
+          const found = data.find((p: any) => p.id === initialProduct.id);
+          if (found) {
+            setProduct(found);
+          }
+        }
+      })
+      .catch((err) => console.error('Failed to sync products catalog details:', err));
+  }, [initialProduct.id]);
 
   const rawTab = searchParams?.get('tab') as TabId | null;
   const validTab = rawTab && TABS.some((t) => t.id === rawTab) ? rawTab : 'overview';
@@ -175,16 +233,14 @@ export default function ProductDetailContent({ id }: { id: string }) {
     } else {
       params.set('tab', tab);
     }
-    router.replace(`/product/${id}?${params.toString()}`, { scroll: false });
+    router.replace(`/product/${product.id}?${params.toString()}`, { scroll: false });
   };
-
-  const product = products.find((p) => p.id === id);
 
   if (!product) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
+          <h1 className="text-2xl font-bold mb-4 text-blue-950">Product Not Found</h1>
           <Link href="/products" className="text-blue-600 hover:underline font-bold">Browse Products</Link>
         </div>
       </div>
@@ -526,7 +582,7 @@ export default function ProductDetailContent({ id }: { id: string }) {
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {products
+            {productsList
               .filter((p) => p.id !== product.id && (p.category === product.category || p.brand === product.brand))
               .slice(0, 4)
               .map((p, i) => {

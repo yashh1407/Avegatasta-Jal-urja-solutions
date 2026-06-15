@@ -196,14 +196,6 @@ export default function Hero(props: HeroProps) {
               </div>
             </div>
           </div>
-
-          {/* Floating partnership badge */}
-          <div className="absolute -bottom-5 -left-6 bg-white rounded-2xl px-5 py-4 shadow-xl">
-            <p className="text-xs font-black text-brand-950 uppercase tracking-widest mb-1">
-              {floatingBadgeEyebrow}
-            </p>
-            <p className="text-sm font-bold text-brand-600">{floatingBadgeText}</p>
-          </div>
         </motion.div>
       </div>
 

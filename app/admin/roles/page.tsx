@@ -28,13 +28,13 @@ import {
 interface Role {
   id: number;
   name: string;
-  permissions: Record<string, { view: boolean; edit: boolean; delete: boolean }> | string[] | null;
+  permissions: Record<string, { view: boolean; add: boolean; edit: boolean; delete: boolean }> | string[] | null;
   created_at: string;
 }
 
 interface RoleForm {
   name: string;
-  permissions: Record<string, { view: boolean; edit: boolean; delete: boolean }>;
+  permissions: Record<string, { view: boolean; add: boolean; edit: boolean; delete: boolean }>;
 }
 
 const EMPTY_FORM: RoleForm = {
@@ -42,11 +42,11 @@ const EMPTY_FORM: RoleForm = {
   permissions: {},
 };
 
-function normalizePermissions(permissions: any): Record<string, { view: boolean; edit: boolean; delete: boolean }> {
-  const normalized: Record<string, { view: boolean; edit: boolean; delete: boolean }> = {};
+function normalizePermissions(permissions: any): Record<string, { view: boolean; add: boolean; edit: boolean; delete: boolean }> {
+  const normalized: Record<string, { view: boolean; add: boolean; edit: boolean; delete: boolean }> = {};
   
   AVAILABLE_MODULES.forEach((mod) => {
-    normalized[mod.key] = { view: false, edit: false, delete: false };
+    normalized[mod.key] = { view: false, add: false, edit: false, delete: false };
   });
 
   if (!permissions) return normalized;
@@ -55,7 +55,7 @@ function normalizePermissions(permissions: any): Record<string, { view: boolean;
     // Old format: string array
     permissions.forEach((key) => {
       if (normalized[key]) {
-        normalized[key] = { view: true, edit: true, delete: true };
+        normalized[key] = { view: true, add: true, edit: true, delete: true };
       }
     });
   } else if (typeof permissions === 'object') {
@@ -65,6 +65,7 @@ function normalizePermissions(permissions: any): Record<string, { view: boolean;
       if (normalized[key]) {
         normalized[key] = {
           view: p && typeof p === 'object' ? !!p.view : false,
+          add: p && typeof p === 'object' ? (p.add !== undefined ? !!p.add : !!p.edit) : false,
           edit: p && typeof p === 'object' ? !!p.edit : false,
           delete: p && typeof p === 'object' ? !!p.delete : false,
         };
@@ -76,34 +77,158 @@ function normalizePermissions(permissions: any): Record<string, { view: boolean;
 }
 
 const AVAILABLE_MODULES = [
-  { key: 'quotations', label: 'Quotations', category: 'Main', desc: 'View and manage quotation requests' },
+  { 
+    key: 'analytics', 
+    label: 'Analytics', 
+    category: 'Analytics', 
+    desc: 'Access traffic and inquiries charts',
+    supportedActions: ['view']
+  },
   
-  { key: 'analytics', label: 'Analytics', category: 'Analytics', desc: 'Access traffic and inquiries charts' },
+  { 
+    key: 'clients', 
+    label: 'Clients', 
+    category: 'Management', 
+    desc: 'View client database and information',
+    supportedActions: ['view', 'add', 'edit', 'delete']
+  },
+  { 
+    key: 'products', 
+    label: 'Products', 
+    category: 'Products', 
+    desc: 'Manage products, pricing, and quotations',
+    supportedActions: ['view', 'add', 'edit', 'delete']
+  },
+  { 
+    key: 'vendors', 
+    label: 'Vendors', 
+    category: 'Management', 
+    desc: 'Manage vendor and manufacturer records',
+    supportedActions: ['view', 'add', 'edit', 'delete']
+  },
+  { 
+    key: 'amc', 
+    label: 'AMC', 
+    category: 'Management', 
+    desc: 'Manage Annual Maintenance Contracts',
+    supportedActions: ['view', 'add', 'edit', 'delete']
+  },
+  { 
+    key: 'amc-plans', 
+    label: 'AMC Plans', 
+    category: 'Management', 
+    desc: 'Manage AMC pricing and plan tiers',
+    supportedActions: ['view', 'add', 'edit', 'delete']
+  },
+  { 
+    key: 'team-members', 
+    label: 'Team Members', 
+    category: 'Management', 
+    desc: 'Manage public-facing team members list',
+    supportedActions: ['view', 'add', 'edit', 'delete']
+  },
+  { 
+    key: 'brands', 
+    label: 'Brands', 
+    category: 'Management', 
+    desc: 'Manage partner and brand logos',
+    supportedActions: ['view', 'add', 'edit', 'delete']
+  },
+  { 
+    key: 'orders', 
+    label: 'Orders', 
+    category: 'Management', 
+    desc: 'View and manage orders',
+    supportedActions: ['view', 'add', 'edit', 'delete']
+  },
+  { 
+    key: 'enterprise', 
+    label: 'Enterprise', 
+    category: 'Management', 
+    desc: 'View enterprise project requests',
+    supportedActions: ['view', 'edit', 'delete']
+  },
   
-  { key: 'clients', label: 'Clients', category: 'Management', desc: 'View client database and information' },
-  { key: 'products', label: 'Products', category: 'Management', desc: 'Manage products and service catalog' },
-  { key: 'vendors', label: 'Vendors', category: 'Management', desc: 'Manage vendor and manufacturer records' },
-  { key: 'amc', label: 'AMC', category: 'Management', desc: 'Manage Annual Maintenance Contracts' },
-  { key: 'amc-plans', label: 'AMC Plans', category: 'Management', desc: 'Manage AMC pricing and plan tiers' },
-  { key: 'team-members', label: 'Team Members', category: 'Management', desc: 'Manage public-facing team members list' },
-  { key: 'brands', label: 'Brands', category: 'Management', desc: 'Manage partner and brand logos' },
-  { key: 'orders', label: 'Orders', category: 'Management', desc: 'View and manage orders' },
-  { key: 'enterprise', label: 'Enterprise', category: 'Management', desc: 'View enterprise project requests' },
+  { 
+    key: 'sales', 
+    label: 'Sales Dashboard', 
+    category: 'Sales', 
+    desc: 'View sales progress and records',
+    supportedActions: ['view', 'add', 'edit', 'delete']
+  },
+  { 
+    key: 'sales-team', 
+    label: 'Sales Team', 
+    category: 'Sales', 
+    desc: 'Manage sales representatives',
+    supportedActions: ['view', 'add', 'edit', 'delete']
+  },
+  { 
+    key: 'inquiries', 
+    label: 'Customer Inquiries', 
+    category: 'Sales', 
+    desc: 'Manage product & service inquiries',
+    supportedActions: ['view', 'add', 'edit', 'delete']
+  },
   
-  { key: 'sales', label: 'Sales Dashboard', category: 'Sales', desc: 'View sales progress and records' },
-  { key: 'sales-team', label: 'Sales Team', category: 'Sales', desc: 'Manage sales representatives' },
-  { key: 'inquiries', label: 'Customer Inquiries', category: 'Sales', desc: 'Manage product & service inquiries' },
+  { 
+    key: 'messages', 
+    label: 'Contact Messages', 
+    category: 'Content', 
+    desc: 'Manage contact form message entries',
+    supportedActions: ['view', 'delete']
+  },
+  { 
+    key: 'pages', 
+    label: 'Content Pages', 
+    category: 'Content', 
+    desc: 'Configure content pages and sections data',
+    supportedActions: ['view', 'edit']
+  },
+  { 
+    key: 'case-studies', 
+    label: 'Case Studies', 
+    category: 'Content', 
+    desc: 'Manage case studies and success stories',
+    supportedActions: ['view', 'add', 'edit', 'delete']
+  },
+  { 
+    key: 'testimonials', 
+    label: 'Testimonials', 
+    category: 'Content', 
+    desc: 'Manage customer reviews and feedback',
+    supportedActions: ['view', 'add', 'edit', 'delete']
+  },
+
+  { 
+    key: 'email-templates', 
+    label: 'Email Templates', 
+    category: 'Content', 
+    desc: 'View and manage outbound email layouts',
+    supportedActions: ['view', 'add', 'edit', 'delete']
+  },
   
-  { key: 'messages', label: 'Contact Messages', category: 'Content', desc: 'Manage contact form message entries' },
-  { key: 'pages', label: 'Content Pages', category: 'Content', desc: 'Configure content pages and sections data' },
-  { key: 'case-studies', label: 'Case Studies', category: 'Content', desc: 'Manage case studies and success stories' },
-  { key: 'testimonials', label: 'Testimonials', category: 'Content', desc: 'Manage customer reviews and feedback' },
-  { key: 'pricing', label: 'Pricing Plans', category: 'Content', desc: 'Manage pricing structures' },
-  { key: 'email-templates', label: 'Email Templates', category: 'Content', desc: 'View and manage outbound email layouts' },
-  
-  { key: 'smtp-settings', label: 'SMTP Settings', category: 'Configuration', desc: 'Configure system outbound mail servers' },
-  { key: 'site-settings', label: 'Site Settings', category: 'Configuration', desc: 'Configure global metadata and contacts' },
-  { key: 'employees', label: 'Employees', category: 'Staff', desc: 'Manage other staff logins and permission access' },
+  { 
+    key: 'smtp-settings', 
+    label: 'SMTP Settings', 
+    category: 'Configuration', 
+    desc: 'Configure system outbound mail servers',
+    supportedActions: ['view', 'edit']
+  },
+  { 
+    key: 'site-settings', 
+    label: 'Site Settings', 
+    category: 'Configuration', 
+    desc: 'Configure global metadata and contacts',
+    supportedActions: ['view', 'edit']
+  },
+  { 
+    key: 'employees', 
+    label: 'Employees', 
+    category: 'Staff', 
+    desc: 'Manage other staff logins and permission access',
+    supportedActions: ['view', 'add', 'edit', 'delete']
+  },
 ];
 
 const MODULE_CATEGORIES = AVAILABLE_MODULES.reduce((acc, mod) => {
@@ -153,9 +278,9 @@ function RoleModal({
     }
   }, [open, initial]);
 
-  const handlePermissionActionToggle = (moduleKey: string, action: 'view' | 'edit' | 'delete') => {
+  const handlePermissionActionToggle = (moduleKey: string, action: 'view' | 'add' | 'edit' | 'delete') => {
     setForm((prev) => {
-      const current = prev.permissions[moduleKey] || { view: false, edit: false, delete: false };
+      const current = prev.permissions[moduleKey] || { view: false, add: false, edit: false, delete: false };
       const updatedModulePerms = {
         ...current,
         [action]: !current[action],
@@ -171,17 +296,22 @@ function RoleModal({
   };
 
   const selectAllPermissions = () => {
-    const allPerms: Record<string, { view: boolean; edit: boolean; delete: boolean }> = {};
-    AVAILABLE_MODULES.forEach((m) => {
-      allPerms[m.key] = { view: true, edit: true, delete: true };
+    const allPerms: Record<string, { view: boolean; add: boolean; edit: boolean; delete: boolean }> = {};
+    AVAILABLE_MODULES.forEach((m: any) => {
+      allPerms[m.key] = {
+        view: m.supportedActions.includes('view'),
+        add: m.supportedActions.includes('add'),
+        edit: m.supportedActions.includes('edit'),
+        delete: m.supportedActions.includes('delete'),
+      };
     });
     setForm((prev) => ({ ...prev, permissions: allPerms }));
   };
 
   const clearAllPermissions = () => {
-    const emptyPerms: Record<string, { view: boolean; edit: boolean; delete: boolean }> = {};
+    const emptyPerms: Record<string, { view: boolean; add: boolean; edit: boolean; delete: boolean }> = {};
     AVAILABLE_MODULES.forEach((m) => {
-      emptyPerms[m.key] = { view: false, edit: false, delete: false };
+      emptyPerms[m.key] = { view: false, add: false, edit: false, delete: false };
     });
     setForm((prev) => ({ ...prev, permissions: emptyPerms }));
   };
@@ -373,8 +503,13 @@ function RoleModal({
                             onClick={() => {
                               setForm(prev => {
                                 const updated = { ...prev.permissions };
-                                categoryModules.forEach(mod => {
-                                  updated[mod.key] = { view: true, edit: true, delete: true };
+                                categoryModules.forEach((mod: any) => {
+                                  updated[mod.key] = {
+                                    view: mod.supportedActions.includes('view'),
+                                    add: mod.supportedActions.includes('add'),
+                                    edit: mod.supportedActions.includes('edit'),
+                                    delete: mod.supportedActions.includes('delete'),
+                                  };
                                 });
                                 return { ...prev, permissions: updated };
                               });
@@ -389,7 +524,7 @@ function RoleModal({
                               setForm(prev => {
                                 const updated = { ...prev.permissions };
                                 categoryModules.forEach(mod => {
-                                  updated[mod.key] = { view: false, edit: false, delete: false };
+                                  updated[mod.key] = { view: false, add: false, edit: false, delete: false };
                                 });
                                 return { ...prev, permissions: updated };
                               });
@@ -405,17 +540,14 @@ function RoleModal({
 
                   {/* Modules Cards list */}
                   <div className="space-y-4">
-                    {(MODULE_CATEGORIES[activeCategory] || []).map((mod) => {
-                      const perms = form.permissions[mod.key] || { view: false, edit: false, delete: false };
+                    {(MODULE_CATEGORIES[activeCategory] || []).map((mod: any) => {
+                      const perms = form.permissions[mod.key] || { view: false, add: false, edit: false, delete: false };
                       return (
                         <div
                           key={mod.key}
                           className="bg-white border border-slate-200/60 rounded-3xl p-5 hover:border-blue-200 hover:shadow-md hover:shadow-blue-50/10 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
                         >
                           <div className="max-w-md">
-                            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md inline-block mb-1.5">
-                              {mod.key}
-                            </span>
                             <span className="text-sm font-black block leading-none text-slate-900">{mod.label}</span>
                             <span className="text-xs text-slate-500 block mt-1.5 leading-normal font-medium">{mod.desc}</span>
                           </div>
@@ -423,46 +555,68 @@ function RoleModal({
                           {/* Premium Action Pill Toggles */}
                           <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                             {/* View Pill */}
-                            <button
-                              type="button"
-                              onClick={() => handlePermissionActionToggle(mod.key, 'view')}
-                              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border ${
-                                perms.view
-                                  ? 'bg-blue-50/80 border-blue-200 text-blue-700 shadow-sm shadow-blue-100/30'
-                                  : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
-                              }`}
-                            >
-                              <Check size={14} className={`transition-transform duration-250 ${perms.view ? 'scale-100' : 'scale-0 w-0'}`} />
-                              <span>View</span>
-                            </button>
+                            {mod.supportedActions.includes('view') && (
+                              <button
+                                type="button"
+                                onClick={() => handlePermissionActionToggle(mod.key, 'view')}
+                                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border ${
+                                  perms.view
+                                    ? 'bg-blue-50/80 border-blue-200 text-blue-700 shadow-sm shadow-blue-100/30'
+                                    : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                                }`}
+                              >
+                                <Check size={14} className={`transition-transform duration-250 ${perms.view ? 'scale-100' : 'scale-0 w-0'}`} />
+                                <span>View</span>
+                              </button>
+                            )}
+
+                            {/* Add Pill */}
+                            {mod.supportedActions.includes('add') && (
+                              <button
+                                type="button"
+                                onClick={() => handlePermissionActionToggle(mod.key, 'add')}
+                                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border ${
+                                  perms.add
+                                    ? 'bg-emerald-50/80 border-emerald-200 text-emerald-700 shadow-sm shadow-emerald-100/30'
+                                    : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                                }`}
+                              >
+                                <Check size={14} className={`transition-transform duration-250 ${perms.add ? 'scale-100' : 'scale-0 w-0'}`} />
+                                <span>Add</span>
+                              </button>
+                            )}
 
                             {/* Edit Pill */}
-                            <button
-                              type="button"
-                              onClick={() => handlePermissionActionToggle(mod.key, 'edit')}
-                              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border ${
-                                perms.edit
-                                  ? 'bg-emerald-50/80 border-emerald-200 text-emerald-700 shadow-sm shadow-emerald-100/30'
-                                  : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
-                              }`}
-                            >
-                              <Check size={14} className={`transition-transform duration-250 ${perms.edit ? 'scale-100' : 'scale-0 w-0'}`} />
-                              <span>Edit</span>
-                            </button>
+                            {mod.supportedActions.includes('edit') && (
+                              <button
+                                type="button"
+                                onClick={() => handlePermissionActionToggle(mod.key, 'edit')}
+                                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border ${
+                                  perms.edit
+                                    ? 'bg-amber-50/80 border-amber-200 text-amber-700 shadow-sm shadow-amber-100/30'
+                                    : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                                }`}
+                              >
+                                <Check size={14} className={`transition-transform duration-250 ${perms.edit ? 'scale-100' : 'scale-0 w-0'}`} />
+                                <span>Edit</span>
+                              </button>
+                            )}
 
                             {/* Delete Pill */}
-                            <button
-                              type="button"
-                              onClick={() => handlePermissionActionToggle(mod.key, 'delete')}
-                              className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border ${
-                                perms.delete
-                                  ? 'bg-rose-50/80 border-rose-200 text-rose-700 shadow-sm shadow-rose-100/30'
-                                  : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
-                              }`}
-                            >
-                              <Check size={14} className={`transition-transform duration-250 ${perms.delete ? 'scale-100' : 'scale-0 w-0'}`} />
-                              <span>Delete</span>
-                            </button>
+                            {mod.supportedActions.includes('delete') && (
+                              <button
+                                type="button"
+                                onClick={() => handlePermissionActionToggle(mod.key, 'delete')}
+                                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border ${
+                                  perms.delete
+                                    ? 'bg-rose-50/80 border-rose-200 text-rose-700 shadow-sm shadow-rose-100/30'
+                                    : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
+                                }`}
+                              >
+                                <Check size={14} className={`transition-transform duration-250 ${perms.delete ? 'scale-100' : 'scale-0 w-0'}`} />
+                                <span>Delete</span>
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
@@ -718,7 +872,7 @@ export default function RolesPage() {
                         {(() => {
                           const normalized = normalizePermissions(role.permissions);
                           const activeModules = Object.entries(normalized).filter(
-                            ([_, actions]) => actions.view || actions.edit || actions.delete
+                            ([_, actions]) => actions.view || actions.add || actions.edit || actions.delete
                           );
                           
                           if (activeModules.length === 0) {
@@ -732,6 +886,7 @@ export default function RolesPage() {
                                 const label = mod ? mod.label : moduleKey;
                                 const actionList = [];
                                 if (actions.view) actionList.push('V');
+                                if (actions.add) actionList.push('A');
                                 if (actions.edit) actionList.push('E');
                                 if (actions.delete) actionList.push('D');
                                 return (

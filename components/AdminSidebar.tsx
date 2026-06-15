@@ -24,6 +24,7 @@ import {
   UserCheck,
   Tag,
   ShoppingCart,
+  Receipt,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -35,11 +36,32 @@ const ADMIN_SECTIONS = [
     category: 'main'
   },
   {
+    label: 'Products',
+    href: '/admin/products',
+    icon: Package,
+    category: 'products_cat',
+    module: 'products'
+  },
+  {
+    label: 'Pricing',
+    href: '/admin/pricing',
+    icon: DollarSign,
+    category: 'products_cat',
+    module: 'products'
+  },
+  {
+    label: 'Invoices',
+    href: '/admin/invoices',
+    icon: Receipt,
+    category: 'products_cat',
+    module: 'products'
+  },
+  {
     label: 'Quotations',
     href: '/admin/quotations',
     icon: FileText,
-    category: 'main',
-    module: 'quotations'
+    category: 'products_cat',
+    module: 'products'
   },
   {
     label: 'Messages',
@@ -68,13 +90,6 @@ const ADMIN_SECTIONS = [
     icon: Users,
     category: 'management',
     module: 'clients'
-  },
-  {
-    label: 'Products',
-    href: '/admin/products',
-    icon: Package,
-    category: 'management',
-    module: 'products'
   },
   {
     label: 'Vendors',
@@ -110,13 +125,6 @@ const ADMIN_SECTIONS = [
     icon: Star,
     category: 'content',
     module: 'testimonials'
-  },
-  {
-    label: 'Pricing',
-    href: '/admin/pricing',
-    icon: DollarSign,
-    category: 'content',
-    module: 'pricing'
   },
   {
     label: 'AMC',
@@ -206,6 +214,7 @@ const ADMIN_SECTIONS = [
 
 const CATEGORIES = {
   main: 'Main',
+  products_cat: 'Products',
   analytics: 'Analytics',
   management: 'Management',
   sales: 'Sales',

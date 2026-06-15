@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAdminSession } from '@/lib/admin-auth';
 
-export async function PUT(req: Request, { params }: { params: { id: string, faqId: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string, faqId: string }> }) {
   const { error } = await requireAdminSession();
   if (error) return error;
 
   try {
+    const { id, faqId } = await params;
     const data = await req.json();
     const { question, answer, is_active } = data;
     
@@ -14,7 +15,7 @@ export async function PUT(req: Request, { params }: { params: { id: string, faqI
       `UPDATE page_faqs 
        SET question=?, answer=?, is_active=?
        WHERE id=? AND page_id=?`,
-      [question || '', answer || '', is_active === false ? 0 : 1, params.faqId, params.id]
+      [question || '', answer || '', is_active === false ? 0 : 1, faqId, id]
     );
 
     return NextResponse.json({ success: true });
@@ -23,12 +24,13 @@ export async function PUT(req: Request, { params }: { params: { id: string, faqI
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string, faqId: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string, faqId: string }> }) {
   const { error } = await requireAdminSession();
   if (error) return error;
 
   try {
-    await query(`DELETE FROM page_faqs WHERE id = ? AND page_id = ?`, [params.faqId, params.id]);
+    const { id, faqId } = await params;
+    await query(`DELETE FROM page_faqs WHERE id = ? AND page_id = ?`, [faqId, id]);
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

@@ -5,6 +5,7 @@ import { contactSchema } from '@/lib/validation';
 import { sendOwnerNotification, contactNotificationHtml } from '@/lib/mailer';
 import { sendEmail, getSiteSettings } from '@/lib/email';
 import { requireAdminSession } from '@/lib/admin-auth';
+import { decryptCaptcha } from '@/lib/captcha';
 
 export async function POST(req: Request) {
   const { ok } = rateLimit(`contact:${getClientIp(req)}`);
@@ -19,18 +20,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
+  // Decrypt and verify CAPTCHA
+  const { captchaToken, captchaInput } = (body || {}) as { captchaToken?: string; captchaInput?: string };
+  if (!captchaToken || !captchaInput) {
+    return NextResponse.json({ error: 'Security verification code is required.' }, { status: 400 });
+  }
+
+  const expectedCode = decryptCaptcha(captchaToken);
+  if (!expectedCode || expectedCode.toLowerCase() !== captchaInput.toLowerCase()) {
+    return NextResponse.json({ error: 'Incorrect security verification code. Please try again.' }, { status: 400 });
+  }
+
   const parsed = contactSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 422 });
   }
 
-  const { name, email, phone, subject, message } = parsed.data;
+  const { name, email, phone, subject, message, gstin } = parsed.data;
 
   try {
     await initDB();
     const [result] = await pool.query(
-      'INSERT INTO contact_messages (name, email, phone, subject, message) VALUES (?, ?, ?, ?, ?)',
-      [name, email, phone ?? null, subject ?? null, message]
+      'INSERT INTO contact_messages (name, email, phone, subject, message, gstin) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, email, phone ?? null, subject ?? null, message, gstin ?? null]
     );
     const submittedAt = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
@@ -65,7 +77,7 @@ export async function POST(req: Request) {
 
     sendOwnerNotification(
       `New Contact Form Submission from ${name}`,
-      contactNotificationHtml({ name, email, phone, subject, message, submittedAt })
+      contactNotificationHtml({ name, email, phone, subject, message, gstin, submittedAt })
     ).catch((err) => console.error('[mailer] contact notification failed:', err));
 
     return NextResponse.json({ success: true, id: (result as { insertId: number }).insertId });

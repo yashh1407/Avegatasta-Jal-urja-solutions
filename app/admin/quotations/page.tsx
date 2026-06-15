@@ -16,6 +16,8 @@ type LineItem = {
   price: number;
   description: string;
   brand?: string;
+  hsn_code?: string;
+  sac_code?: string;
 };
 
 type QuotationData = {
@@ -75,6 +77,7 @@ export default function ProposalBuilderPage() {
 
   const [mounted, setMounted] = useState(false);
   const [dbProducts, setDbProducts] = useState<any[]>([]);
+  const [clients, setClients] = useState<any[]>([]);
   const [savedQuotations, setSavedQuotations] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null);
@@ -104,6 +107,13 @@ export default function ProposalBuilderPage() {
       .then(r => r.json())
       .then(res => {
         if (Array.isArray(res)) setDbProducts(res);
+      })
+      .catch(console.error);
+
+    fetch('/api/admin/clients')
+      .then(r => r.json())
+      .then(res => {
+        if (Array.isArray(res)) setClients(res);
       })
       .catch(console.error);
 
@@ -231,7 +241,9 @@ export default function ProposalBuilderPage() {
                 qty: Number(it.qty) || 1,
                 mrp: Number(it.mrp) || 0,
                 price: Number(it.price) || 0,
-                description: it.description || ''
+                description: it.description || '',
+                hsn_code: it.hsn_code || '',
+                sac_code: it.sac_code || ''
               }));
             }
           }
@@ -378,6 +390,34 @@ export default function ProposalBuilderPage() {
                   </div>
                 </div>
                 <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Select Client (Auto-fill)</label>
+                  <select 
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 font-semibold outline-none focus:border-blue-500"
+                    onChange={e => {
+                      const selectedId = e.target.value;
+                      if (!selectedId) return;
+                      const selected = clients.find(c => String(c.id) === selectedId);
+                      if (selected) {
+                        setData(prev => ({
+                          ...prev,
+                          clientCompany: selected.company_name || selected.name || '',
+                          clientName: selected.name || '',
+                          clientPhone: selected.phone || '',
+                        }));
+                      }
+                      e.target.value = '';
+                    }}
+                    defaultValue=""
+                  >
+                    <option value="">-- Select Client to Auto-fill --</option>
+                    {clients.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.company_name ? `${c.company_name} (${c.name})` : c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Company Name</label>
                   <input className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500" value={data.clientCompany} onChange={e => setData({...data, clientCompany: e.target.value})} placeholder="e.g. Acme Corp" />
                 </div>
@@ -445,6 +485,8 @@ export default function ProposalBuilderPage() {
                                         if (p.dp_price) newItems[idx].price = Number(p.dp_price);
                                         else if (p.mrp_price) newItems[idx].price = Number(p.mrp_price);
                                         if (p.description) newItems[idx].description = p.description;
+                                        newItems[idx].hsn_code = p.hsn_code || '';
+                                        newItems[idx].sac_code = p.sac_code || '';
                                         setData({...data, items: newItems});
                                         setActiveDropdown(null);
                                       }}
@@ -482,6 +524,17 @@ export default function ProposalBuilderPage() {
                           <div className="flex-[1.5]">
                             <label className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1 block">Selling Price</label>
                             <input type="number" className="w-full bg-emerald-50 border border-emerald-300 rounded px-2 py-1.5 text-sm font-bold text-right text-emerald-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" value={item.price || ''} onChange={(e) => { const newItems = [...data.items]; newItems[idx].price = Number(e.target.value); setData({...data, items: newItems}); }} placeholder="0" />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">HSN Code</label>
+                            <input type="text" className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-blue-500" value={item.hsn_code || ''} onChange={(e) => { const newItems = [...data.items]; newItems[idx].hsn_code = e.target.value; setData({...data, items: newItems}); }} placeholder="e.g. 84191920" />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">SAC Code</label>
+                            <input type="text" className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-blue-500" value={item.sac_code || ''} onChange={(e) => { const newItems = [...data.items]; newItems[idx].sac_code = e.target.value; setData({...data, items: newItems}); }} placeholder="e.g. 998719" />
                           </div>
                         </div>
 
@@ -719,6 +772,20 @@ export default function ProposalBuilderPage() {
                       {item.mrp > item.price && (
                         <div className="text-[10px] text-slate-400 font-normal mt-0.5 mb-1">
                           MRP: <span className="line-through decoration-red-400">₹{item.mrp.toLocaleString()}</span> (You save ₹{(item.mrp - item.price).toLocaleString()})
+                        </div>
+                      )}
+                      {(item.hsn_code || item.sac_code) && (
+                        <div className="text-[11px] font-bold mt-2 flex gap-3 text-slate-700 print:text-black">
+                          {item.hsn_code && (
+                            <span className="inline-flex items-center bg-slate-100 print:bg-none px-2 py-0.5 rounded text-slate-700 print:text-black print:px-0">
+                              HSN: {item.hsn_code}
+                            </span>
+                          )}
+                          {item.sac_code && (
+                            <span className="inline-flex items-center bg-slate-100 print:bg-none px-2 py-0.5 rounded text-slate-700 print:text-black print:px-0">
+                              SAC: {item.sac_code}
+                            </span>
+                          )}
                         </div>
                       )}
                     </td>

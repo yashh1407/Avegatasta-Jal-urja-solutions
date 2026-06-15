@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS contact_messages (
   phone      VARCHAR(20),
   subject    VARCHAR(255),
   message    TEXT NOT NULL,
+  gstin      VARCHAR(15) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -84,6 +85,7 @@ CREATE TABLE IF NOT EXISTS registrations (
   firstName  VARCHAR(255) NOT NULL,
   lastName   VARCHAR(255) NOT NULL,
   phone      VARCHAR(20) UNIQUE,
+  gstin      VARCHAR(15) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -105,6 +107,7 @@ CREATE TABLE IF NOT EXISTS product_inquiries (
   meeting_time VARCHAR(20) NULL,
   meeting_type ENUM('office', 'custom') NULL,
   meeting_location TEXT NULL,
+  gstin        VARCHAR(15) DEFAULT NULL,
   created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -219,6 +222,28 @@ CREATE TABLE IF NOT EXISTS vendors (
   notes          TEXT,
   created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- Products
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS products (
+  id VARCHAR(255) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  brand VARCHAR(100) NOT NULL,
+  category VARCHAR(100) NOT NULL,
+  subCategory VARCHAR(100) DEFAULT NULL,
+  description TEXT NOT NULL,
+  image VARCHAR(500) NOT NULL,
+  features JSON NOT NULL,
+  specs JSON NOT NULL,
+  inStock TINYINT(1) NOT NULL DEFAULT 1,
+  hsn_code VARCHAR(50) DEFAULT NULL,
+  sac_code VARCHAR(50) DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_products_brand (brand),
+  INDEX idx_products_category (category)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
@@ -377,6 +402,7 @@ CREATE TABLE IF NOT EXISTS enterprise_inquiries (
   scale        VARCHAR(255),
   message      TEXT,
   status       ENUM('new', 'contacted', 'quoted', 'won', 'lost') NOT NULL DEFAULT 'new',
+  gstin        VARCHAR(15) DEFAULT NULL,
   created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise';
 import '@/lib/env'; // Validate env vars at startup
+import { products as initialProducts } from './data';
 
 declare global {
   var _mysqlPool: mysql.Pool | undefined;
@@ -133,6 +134,7 @@ export async function initDB() {
         assigned_to VARCHAR(255) NULL,
         follow_up_date DATE NULL,
         tags VARCHAR(500) NULL,
+        gstin VARCHAR(15) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -146,6 +148,7 @@ export async function initDB() {
       `ALTER TABLE contact_messages ADD COLUMN assigned_to VARCHAR(255) NULL`,
       `ALTER TABLE contact_messages ADD COLUMN follow_up_date DATE NULL`,
       `ALTER TABLE contact_messages ADD COLUMN tags VARCHAR(500) NULL`,
+      `ALTER TABLE contact_messages ADD COLUMN gstin VARCHAR(15) DEFAULT NULL`,
     ]) {
       try { await connection.query(ddl); } catch (e: any) { if (e.code !== 'ER_DUP_FIELDNAME') throw e; }
     }
@@ -213,9 +216,16 @@ export async function initDB() {
         firstName VARCHAR(255) NOT NULL,
         lastName VARCHAR(255) NOT NULL,
         phone VARCHAR(20) UNIQUE,
+        gstin VARCHAR(15) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    // Migrate existing registrations table
+    for (const ddl of [
+      `ALTER TABLE registrations ADD COLUMN gstin VARCHAR(15) DEFAULT NULL`
+    ]) {
+      try { await connection.query(ddl); } catch (e: any) { if (e.code !== 'ER_DUP_FIELDNAME') throw e; }
+    }
 
     // Product Inquiries
     await connection.query(`
@@ -234,6 +244,7 @@ export async function initDB() {
         meeting_time VARCHAR(20) NULL,
         meeting_type ENUM('office', 'custom') NULL,
         meeting_location TEXT NULL,
+        gstin VARCHAR(15) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -248,6 +259,7 @@ export async function initDB() {
       `ALTER TABLE product_inquiries ADD COLUMN meeting_type ENUM('office', 'custom') NULL`,
       `ALTER TABLE product_inquiries ADD COLUMN meeting_location TEXT NULL`,
       `ALTER TABLE product_inquiries ADD COLUMN client_id INT DEFAULT NULL`,
+      `ALTER TABLE product_inquiries ADD COLUMN gstin VARCHAR(15) DEFAULT NULL`,
     ]) {
       try { await connection.query(ddl); } catch (e: any) { if (e.code !== 'ER_DUP_FIELDNAME') throw e; }
     }
@@ -475,8 +487,9 @@ export async function initDB() {
       { key: 'company_address',  value: 'Avegatasta Solution, Nashik, Maharashtra', label: 'Company Address', group: 'contact' },
       { key: 'whatsapp_number', value: '',                label: 'WhatsApp Number',        group: 'contact' },
       { key: 'google_maps_url', value: '',                label: 'Google Maps Embed URL',  group: 'contact' },
-      { key: 'social_linkedin', value: '',                label: 'LinkedIn URL',           group: 'footer' },
-      { key: 'social_instagram',value: '',                label: 'Instagram URL',          group: 'footer' },
+      { key: 'social_linkedin', value: '',                label: 'LinkedIn URL',           group: 'contact' },
+      { key: 'social_instagram',value: '',                label: 'Instagram URL',          group: 'contact' },
+      { key: 'social_facebook', value: '',                label: 'Facebook URL',           group: 'contact' },
       { key: 'about_why_choose',value: '["Authorized partner for trusted brands like V-Guard, Wilo, and Zero B","Professional installation and technical support","Energy-efficient and cost-effective systems","Customized solutions for residential and commercial projects","Reliable service and maintenance support"]', label: 'About Why Choose Us (JSON)', group: 'general' },
     ];
     for (const s of siteSettingsSeeds) {
@@ -485,6 +498,10 @@ export async function initDB() {
         [s.key, s.value, s.label, s.group]
       );
     }
+    // Migrate existing social settings group from 'footer' to 'contact'
+    await connection.query(
+      "UPDATE site_settings SET `group` = 'contact' WHERE `key` IN ('social_linkedin', 'social_instagram', 'social_facebook')"
+    );
 
     // About Content
     await connection.query(`
@@ -815,15 +832,16 @@ export async function initDB() {
         scale VARCHAR(255),
         message TEXT,
         status ENUM('new', 'contacted', 'quoted', 'won', 'lost') NOT NULL DEFAULT 'new',
+        gstin VARCHAR(15) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    // Migrate existing enterprise_inquiries table to make project_type nullable (safe, idempotent)
-    try {
-      await connection.query(`ALTER TABLE enterprise_inquiries MODIFY COLUMN project_type ENUM('hotel', 'industrial', 'commercial', 'healthcare', 'residential_society', 'other')`);
-    } catch (e: any) {
-      // Ignore if column doesn't exist or is already nullable
-      if (e.code !== 'ER_BAD_FIELD_ERROR') console.warn('[initDB] enterprise_inquiries project_type migration:', e.message);
+    // Migrate existing enterprise_inquiries table
+    for (const ddl of [
+      `ALTER TABLE enterprise_inquiries MODIFY COLUMN project_type ENUM('hotel', 'industrial', 'commercial', 'healthcare', 'residential_society', 'other')`,
+      `ALTER TABLE enterprise_inquiries ADD COLUMN gstin VARCHAR(15) DEFAULT NULL`
+    ]) {
+      try { await connection.query(ddl); } catch (e: any) { if (e.code !== 'ER_DUP_FIELDNAME') throw e; }
     }
 
     // Email Templates
@@ -1081,6 +1099,84 @@ export async function initDB() {
           INDEX idx_cq_quote_number (quote_number)
         )
       `);
+
+      // Canvas Invoices
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS canvas_invoices (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          invoice_number VARCHAR(50) NOT NULL UNIQUE,
+          client_name VARCHAR(255),
+          invoice_data LONGTEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX idx_ci_invoice_number (invoice_number)
+        )
+      `);
+
+      // Products table
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS products (
+          id VARCHAR(255) PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          brand VARCHAR(100) NOT NULL,
+          category VARCHAR(100) NOT NULL,
+          subCategory VARCHAR(100) DEFAULT NULL,
+          description TEXT NOT NULL,
+          image VARCHAR(500) NOT NULL,
+          features JSON NOT NULL,
+          specs JSON NOT NULL,
+          inStock TINYINT(1) NOT NULL DEFAULT 1,
+          hsn_code VARCHAR(50) DEFAULT NULL,
+          sac_code VARCHAR(50) DEFAULT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          INDEX idx_products_brand (brand),
+          INDEX idx_products_category (category)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+
+      // Add hsn_code and sac_code columns to products table dynamically if they do not exist
+      try {
+        await connection.query(`
+          ALTER TABLE products ADD COLUMN hsn_code VARCHAR(50) DEFAULT NULL AFTER inStock
+        `);
+      } catch (e: any) {
+        // Ignore if column already exists
+      }
+      try {
+        await connection.query(`
+          ALTER TABLE products ADD COLUMN sac_code VARCHAR(50) DEFAULT NULL AFTER hsn_code
+        `);
+      } catch (e: any) {
+        // Ignore if column already exists
+      }
+
+      // Seed initial products if table is empty
+      const [prodCountRows] = await connection.query('SELECT COUNT(*) as count FROM products');
+      const prodCount = (prodCountRows as any[])[0].count;
+      if (prodCount === 0) {
+        for (const p of initialProducts) {
+          await connection.query(
+            `INSERT INTO products (id, name, brand, category, subCategory, description, image, features, specs, inStock, hsn_code, sac_code)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              p.id,
+              p.name,
+              p.brand,
+              p.category,
+              p.subCategory || null,
+              p.description,
+              p.image,
+              JSON.stringify(p.features || []),
+              JSON.stringify(p.specs || {}),
+              p.inStock ? 1 : 0,
+              p.hsn_code || null,
+              p.sac_code || null
+            ]
+          );
+        }
+        console.log(`[initDB] Seeded ${initialProducts.length} initial products from lib/data.ts`);
+      }
 
     // Performance indexes for high-traffic public reads and admin dashboard summaries.
     for (const ddl of [

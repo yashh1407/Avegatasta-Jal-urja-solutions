@@ -37,6 +37,7 @@ interface SiteSettingsMap {
   google_maps_url?: string;
   social_linkedin?: string;
   social_instagram?: string;
+  social_facebook?: string;
   about_why_choose?: string;
   [key: string]: string | undefined;
 }
@@ -652,6 +653,7 @@ export default function SiteSettingsPage() {
           { key: 'google_maps_url', value: settings.google_maps_url ?? '' },
           { key: 'social_linkedin', value: settings.social_linkedin ?? '' },
           { key: 'social_instagram', value: settings.social_instagram ?? '' },
+          { key: 'social_facebook', value: settings.social_facebook ?? '' },
         ]),
       });
       if (!res.ok) throw new Error();
@@ -961,6 +963,16 @@ export default function SiteSettingsPage() {
                         setSettings((s) => ({ ...s, social_instagram: e.target.value }))
                       }
                       placeholder="https://instagram.com/…"
+                    />
+                  </Field>
+                  <Field label="Facebook URL">
+                    <input
+                      className={INPUT_CLS}
+                      value={settings.social_facebook ?? ''}
+                      onChange={(e) =>
+                        setSettings((s) => ({ ...s, social_facebook: e.target.value }))
+                      }
+                      placeholder="https://facebook.com/…"
                     />
                   </Field>
                 </div>

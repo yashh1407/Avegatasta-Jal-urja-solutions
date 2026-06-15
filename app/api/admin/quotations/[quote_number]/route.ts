@@ -3,7 +3,7 @@ import pool, { initDB } from '@/lib/db';
 import { requireAdminSession } from '@/lib/admin-auth';
 
 export async function GET(request: Request, { params }: { params: Promise<{ quote_number: string }> }) {
-  const { error } = await requireAdminSession();
+  const { error } = await requireAdminSession('products');
   if (error) return error;
 
   try {
@@ -22,7 +22,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ quot
   }
 }
 export async function DELETE(request: Request, { params }: { params: Promise<{ quote_number: string }> }) {
-  const { error } = await requireAdminSession();
+  const { error } = await requireAdminSession('products');
   if (error) return error;
 
   try {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, X, CheckCircle2, Loader2 } from 'lucide-react';
 import Image from 'next/image';
@@ -174,26 +174,25 @@ function InquiryDialog({ product, onClose }: InquiryDialogProps) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-interface FeaturedProductsProps {
-  badge?: string;
-  titleHtml?: string;
-  description?: string;
-  featuredIds?: string[];
-}
-
-export default function FeaturedProducts(props: FeaturedProductsProps) {
+export default function FeaturedProducts() {
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
-  
-  const badge = props.badge || 'Featured Products';
-  const titleHtml = props.titleHtml || 'Top Picks for You';
-  const description = props.description || 'Handpicked water solutions from V-Guard, Zero B, and Wilo.';
+  const [productsList, setProductsList] = useState<Product[]>(() => products);
+
+  useEffect(() => {
+    fetch('/api/products')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setProductsList(data);
+        }
+      })
+      .catch((err) => console.error('Failed to sync featured products:', err));
+  }, []);
   
   // Custom selection for "Top Picks" based on user request
-  const defaultFeaturedIds = ['vg-hp-vhp150', 'zb-softener-as1', 'wilo-fmhil-booster', 'zb-zenora-ro-uf'];
-  const featuredIds = props.featuredIds && props.featuredIds.length > 0 ? props.featuredIds : defaultFeaturedIds;
-  
+  const featuredIds = ['vg-hp-vhp150', 'zb-softener-as1', 'wilo-fmhil-booster', 'zb-zenora-ro-uf'];
   const featured = featuredIds
-    .map(id => products.find(p => p.id === id))
+    .map(id => productsList.find(p => p.id === id))
     .filter(Boolean) as Product[];
 
   return (
@@ -204,11 +203,13 @@ export default function FeaturedProducts(props: FeaturedProductsProps) {
           <div className="flex items-end justify-between mb-12">
             <div>
               <p className="text-xs font-black text-brand-500 uppercase tracking-[0.2em] mb-2">
-                {badge}
+                Featured Products
               </p>
-              <h2 className="text-3xl font-black text-brand-950 tracking-tight" dangerouslySetInnerHTML={{ __html: titleHtml }} />
+              <h2 className="text-3xl font-black text-brand-950 tracking-tight">
+                Top Picks for You
+              </h2>
               <p className="text-brand-500 font-medium mt-2">
-                {description}
+                Handpicked water solutions from V-Guard, Zero B, and Wilo.
               </p>
             </div>
             <Link

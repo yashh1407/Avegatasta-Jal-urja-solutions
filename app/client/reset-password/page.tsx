@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Lock, Droplets, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
+import { Captcha, CaptchaRef } from '@/components/Captcha';
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -17,6 +18,7 @@ function ResetPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const captchaRef = useRef<CaptchaRef>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,25 +33,44 @@ function ResetPasswordForm() {
       return;
     }
 
+    if (!captchaRef.current?.validate()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
+      const captchaData = captchaRef.current?.getCaptchaData() || { token: '', input: '' };
       const res = await fetch('/api/client/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, email, password }),
+        body: JSON.stringify({ 
+          token, 
+          email, 
+          password,
+          captchaToken: captchaData.token,
+          captchaInput: captchaData.input,
+        }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(typeof data.error === 'string' ? data.error : 'Reset failed');
+        const msg = typeof data.error === 'string' ? data.error : 'Reset failed';
+        setError(msg);
+        if (msg.includes('verification code') || msg.toLowerCase().includes('captcha')) {
+          captchaRef.current?.setErrorState(true);
+        } else {
+          captchaRef.current?.reset();
+        }
       } else {
+        captchaRef.current?.reset();
         setDone(true);
         setTimeout(() => router.push('/client/login'), 2500);
       }
     } catch {
       setError('Something went wrong. Please try again.');
+      captchaRef.current?.reset();
     } finally {
       setLoading(false);
     }
@@ -130,6 +151,8 @@ function ResetPasswordForm() {
           />
         </div>
       </div>
+
+      <Captcha ref={captchaRef} />
 
       <button
         type="submit"

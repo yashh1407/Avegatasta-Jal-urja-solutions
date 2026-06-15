@@ -32,6 +32,32 @@ async function seedPages() {
         show_in_menu: 1,
         menu_label: 'Home',
         menu_order: 1,
+        faqs: [
+          {
+            question: "What is Avegatasta Jal-Urja Solutions?",
+            answer: "Avegatasta Jal-Urja Solutions is an authorized B2B distributor and installation partner for V-Guard, Wilo, Zero B, and Bluewave India in Nashik, Maharashtra. We specialize in enterprise-grade water heating, pumping systems, water treatment, solar energy, and swimming pool solutions."
+          },
+          {
+            question: "What areas does Avegatasta serve?",
+            answer: "Avegatasta primarily serves Nashik and the surrounding Maharashtra region, catering to industrial, commercial, and large-scale residential projects."
+          },
+          {
+            question: "Which brands does Avegatasta distribute?",
+            answer: "Avegatasta is an authorized distributor for V-Guard (heat pumps, solar water heaters, domestic pumps), Wilo (pumping systems), Zero B by Ion Exchange (water purifiers, water softeners), and Bluewave India (swimming pool equipment and chemicals)."
+          },
+          {
+            question: "Does Avegatasta offer installation services?",
+            answer: "Yes. Avegatasta provides end-to-end installation services for heat pump water heaters, pumping systems, water treatment plants, solar on-grid systems, and swimming pool equipment across Nashik and Maharashtra."
+          },
+          {
+            question: "Where can I buy swimming pool chemicals in Nashik?",
+            answer: "Avegatasta Jal-Urja Solutions is an authorized supplier of Bluewave India swimming pool chemicals and equipment in Nashik. Contact us at +919689881369 or visit avegatasta.com for enquiries."
+          },
+          {
+            question: "What types of heat pumps are available in Nashik?",
+            answer: "Avegatasta stocks V-Guard heat pump water heaters suitable for residential, commercial, and industrial applications. These are energy-efficient alternatives to traditional electric geysers. Contact us for the best heat pump in Nashik."
+          }
+        ],
         sections: [
           {
             type: 'HeroSection', key: 'home-hero', category: 'Homepage', 
@@ -125,7 +151,10 @@ async function seedPages() {
           },
           {
             type: 'FAQAccordion', key: 'home-faqs', category: 'Homepage', title: 'Home FAQs',
-            data_json: {}
+            data_json: {
+              badge: 'FAQ',
+              title: 'Frequently Asked Questions'
+            }
           },
         ]
       },
@@ -195,6 +224,7 @@ async function seedPages() {
         sections: [
           { type: 'GenericHero', key: 'projects-hero', category: 'Projects', title: 'Projects & Installations', subtitle: 'Proven Solutions. <br /> <span class="text-blue-500">Successful Installations.</span>', content: 'Explore our portfolio of successful installations across Nashik and surrounding regions. From industrial RO plants to commercial solar water heating systems, we deliver enterprise-grade solutions tailored to complex requirements.', data_json: {} },
           { type: 'ProjectsInstallations', key: 'projects-installations', category: 'Projects', title: 'Projects Installations', data_json: {} },
+          { type: 'CaseStudiesSection', key: 'projects-case-studies', category: 'Projects', title: 'Enterprise Case Studies', data_json: {} },
           { type: 'ProjectsProcess', key: 'projects-process', category: 'Projects', title: 'How We Work', subtitle: 'A structured installation process from start to support', content: 'Every project is planned with technical clarity, professional execution, and dependable after-sales service.', data_json: {} },
           { type: 'ProjectsWhyTrustUs', key: 'projects-why', category: 'Projects', title: 'Why Customers Trust Us', subtitle: 'Trusted execution for water and energy infrastructure', content: 'From system selection to commissioning, Avegatasta focuses on delivering reliable performance, clean installation work, and long-term service value.', data_json: {} }
         ]
@@ -228,6 +258,24 @@ async function seedPages() {
         show_in_menu: 1,
         menu_label: 'Contact',
         menu_order: 6,
+        faqs: [
+          {
+            question: "How long does installation take?",
+            answer: "Most domestic pump and water purifier installations are completed within 4-6 hours. Larger solar or industrial systems may take 1-2 days depending on the complexity."
+          },
+          {
+            question: "Do you provide after-sales service?",
+            answer: "Yes, we are authorized service providers for all brands we sell. We offer both on-call repairs and annual maintenance contracts (AMC)."
+          },
+          {
+            question: "What is the warranty period?",
+            answer: "Warranty varies by product and brand. Typically, V-Guard and Zero B products come with a 1-year comprehensive warranty, while some pump motors have up to 2 years."
+          },
+          {
+            question: "Do you offer free site visits?",
+            answer: "For solar water heaters and industrial pumping solutions, we provide free site surveys within Nashik city limits to ensure the right product selection."
+          }
+        ],
         page_data: {
           hero_title: 'Get in Touch with <br />\n<span class="text-blue-500">Our Experts</span>',
           hero_subtitle: 'Contact Us – Avegatasta Solution',
@@ -237,7 +285,7 @@ async function seedPages() {
           { type: 'ContactHero', key: 'contact-hero', category: 'Contact', title: 'Contact Us – Avegatasta Solution', subtitle: 'Get in Touch with <br /><span class="text-blue-500">Our Experts</span>', content: 'At Avegatasta Solution, we are committed to providing reliable support and expert guidance for all your water heating, pumping, water treatment, and solar energy needs. Whether you are planning a new installation or looking for the right solution for your home or business, our team is here to help.', data_json: {} },
           { type: 'ContactInfo', key: 'contact-info', category: 'Contact', title: 'Contact Info', data_json: {} },
           { type: 'ContactForm', key: 'contact-form', category: 'Contact', title: 'Request a Consultation', subtitle: 'Planning a new installation? <br /><span class="text-blue-600">Let our experts help.</span>', content: 'If you are planning a solar installation, water heating system, pump installation, or water purification solution, our experts can help you choose the right system based on your requirements. Send us your enquiry and our team will contact you with the best solution and quotation.', data_json: {} },
-          { type: 'FAQAccordion', key: 'contact-faqs', category: 'Contact', title: 'Contact FAQs', data_json: {} },
+          { type: 'FAQAccordion', key: 'contact-faqs', category: 'Contact', title: 'Contact FAQs', data_json: { badge: 'Common Questions', title: 'Frequently Asked Questions' } },
           { type: 'ContactMap', key: 'contact-map', category: 'Contact', title: 'Visit our Visitors Area', subtitle: '', content: 'Experience our range of V-Guard, Wilo, and Zero B products in person. Our technical staff is available for live demonstrations.', data_json: {} }
         ]
       }
@@ -274,6 +322,20 @@ async function seedPages() {
           [pageId, sec.type, sec.key, sec.category, sec.title, sec.subtitle || '', sec.content || '', JSON.stringify(sec.data_json || {}), sort]
         );
         sort++;
+      }
+
+      // Seed FAQs if any are defined on the page object
+      await query(`DELETE FROM page_faqs WHERE page_id = ?`, [pageId]);
+      if (page.faqs && page.faqs.length > 0) {
+        let faqSort = 1;
+        for (const faq of page.faqs) {
+          await query(
+            `INSERT INTO page_faqs (page_id, question, answer, sort_order, is_active) VALUES (?, ?, ?, ?, ?)`,
+            [pageId, faq.question, faq.answer, faqSort, true]
+          );
+          faqSort++;
+        }
+        console.log(`Seeded ${page.faqs.length} FAQs for page: ${page.title}`);
       }
     }
 

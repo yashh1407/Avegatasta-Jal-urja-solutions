@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 @import "tw-animate-css";
 
 /* â”€â”€â”€ Design Tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -133,12 +133,10 @@
   from {
     opacity: 0.35;
     transform: translateY(42px) scale(0.985);
-    filter: blur(10px);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
-    filter: blur(0);
   }
 }
 
@@ -208,7 +206,7 @@
     animation-timeline: view();
     animation-range: entry 6% cover 28%;
     transform-origin: center top;
-    will-change: opacity, transform, filter;
+    will-change: opacity, transform;
   }
 
   body.site-motion [data-motion-root] main > section:not(:first-child) :where(h2, h3, p, li, dt, dd, form) {

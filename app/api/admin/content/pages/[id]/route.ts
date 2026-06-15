@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAdminSession } from '@/lib/admin-auth';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { error } = await requireAdminSession();
   if (error) return error;
 
   try {
-    const pages = await query(`SELECT * FROM pages WHERE id = ?`, [params.id]) as any[];
+    const { id } = await params;
+    const pages = await query(`SELECT * FROM pages WHERE id = ?`, [id]) as any[];
     if (pages.length === 0) return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     
     const page = pages[0];
@@ -19,11 +20,12 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { error } = await requireAdminSession();
   if (error) return error;
 
   try {
+    const { id } = await params;
     const data = await req.json();
     const { 
       title, slug, meta_title, meta_description, meta_keywords, canonical_url,
@@ -38,7 +40,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       [
         title, slug, meta_title, meta_description, meta_keywords, canonical_url,
         og_title, og_description, og_image, status, show_in_menu ? 1 : 0, menu_label, menu_order || 0, parent_id || null,
-        params.id
+        id
       ]
     );
 
@@ -51,12 +53,13 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { error } = await requireAdminSession();
   if (error) return error;
 
   try {
-    await query(`DELETE FROM pages WHERE id = ?`, [params.id]);
+    const { id } = await params;
+    await query(`DELETE FROM pages WHERE id = ?`, [id]);
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

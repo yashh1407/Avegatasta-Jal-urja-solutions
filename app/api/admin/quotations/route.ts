@@ -3,7 +3,7 @@ import pool, { initDB } from '@/lib/db';
 import { requireAdminSession } from '@/lib/admin-auth';
 
 export async function GET(request: Request) {
-  const { error } = await requireAdminSession();
+  const { error } = await requireAdminSession('products');
   if (error) return error;
 
   try {
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { error } = await requireAdminSession();
+  const { error } = await requireAdminSession('products');
   if (error) return error;
 
   try {

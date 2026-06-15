@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, Suspense, useCallback, useEffect } from 'react';
-import { products } from '@/lib/data';
+import { products, type Product } from '@/lib/data';
 import { getHierarchyNode, productHierarchy, productMatchesHierarchy, type ProductHierarchyNode } from '@/lib/productHierarchy';
 import { CATEGORY_SEO_BY_LABEL } from '@/lib/seo-categories';
 import Navbar from '@/components/Navbar';
@@ -256,10 +256,25 @@ function CategoryTree({
   );
 }
 
-function ProductsContent({ initialCategory = null }: { initialCategory?: string | null }) {
+function ProductsContent({ initialCategory = null, initialProducts = [] }: { initialCategory?: string | null; initialProducts?: Product[] }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+
+  const [productsList, setProductsList] = useState<Product[]>(() =>
+    initialProducts.length > 0 ? initialProducts : products
+  );
+
+  useEffect(() => {
+    fetch('/api/products')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setProductsList(data);
+        }
+      })
+      .catch((err) => console.error('Failed to sync products catalog:', err));
+  }, []);
 
   const selectedCategory = searchParams?.get('category') ?? initialCategory ?? null;
   const selectedBrand = searchParams?.get('brand') ?? null;
@@ -369,7 +384,7 @@ function ProductsContent({ initialCategory = null }: { initialCategory?: string 
   const brands = ['V-Guard', 'Zero B', 'Wilo', 'Bluewave India'];
 
   const filteredProducts = useMemo(() => {
-    return products
+    return productsList
       .filter((p) => {
         const matchesCategory = !selectedCategory || productMatchesHierarchy(p, selectedCategory);
         const matchesBrand = !selectedBrand || p.brand === selectedBrand;
@@ -684,10 +699,10 @@ function ProductsSkeletonFallback() {
   );
 }
 
-export default function ProductsPageClient({ initialCategory = null }: { initialCategory?: string | null } = {}) {
+export default function ProductsPageClient({ initialCategory = null, initialProducts = [] }: { initialCategory?: string | null; initialProducts?: Product[] } = {}) {
   return (
     <Suspense fallback={<ProductsSkeletonFallback />}>
-      <ProductsContent initialCategory={initialCategory} />
+      <ProductsContent initialCategory={initialCategory} initialProducts={initialProducts} />
     </Suspense>
   );
 }

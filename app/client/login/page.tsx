@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, Mail, Droplets, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
+import { Captcha, CaptchaRef } from '@/components/Captcha';
 
 export default function ClientLoginPage() {
   const [email, setEmail] = useState('');
@@ -12,29 +13,49 @@ export default function ClientLoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const captchaRef = useRef<CaptchaRef>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!captchaRef.current?.validate()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
+      const captchaData = captchaRef.current?.getCaptchaData() || { token: '', input: '' };
       const res = await fetch('/api/client/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ 
+          email, 
+          password,
+          captchaToken: captchaData.token,
+          captchaInput: captchaData.input,
+        }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(typeof data.error === 'string' ? data.error : 'Login failed');
+        const msg = typeof data.error === 'string' ? data.error : 'Login failed';
+        setError(msg);
+        if (msg.includes('verification code') || msg.toLowerCase().includes('captcha')) {
+          captchaRef.current?.setErrorState(true);
+        } else {
+          captchaRef.current?.reset();
+        }
       } else {
+        captchaRef.current?.reset();
         router.push('/client/dashboard');
         router.refresh();
       }
     } catch {
       setError('Something went wrong. Please try again.');
+      captchaRef.current?.reset();
     } finally {
       setLoading(false);
     }
@@ -109,6 +130,8 @@ export default function ClientLoginPage() {
                 Forgot password?
               </Link>
             </div>
+
+            <Captcha ref={captchaRef} />
 
             <button
               type="submit"

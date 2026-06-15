@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import pool, { initDB } from '@/lib/db';
 import { clientResetPasswordSchema } from '@/lib/validation';
+import { decryptCaptcha } from '@/lib/captcha';
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -9,6 +10,17 @@ export async function POST(request: Request) {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  // Decrypt and verify CAPTCHA
+  const { captchaToken, captchaInput } = (body || {}) as { captchaToken?: string; captchaInput?: string };
+  if (!captchaToken || !captchaInput) {
+    return NextResponse.json({ error: 'Security verification code is required.' }, { status: 400 });
+  }
+
+  const expectedCode = decryptCaptcha(captchaToken);
+  if (!expectedCode || expectedCode.toLowerCase() !== captchaInput.toLowerCase()) {
+    return NextResponse.json({ error: 'Incorrect security verification code. Please try again.' }, { status: 400 });
   }
 
   const parsed = clientResetPasswordSchema.safeParse(body);

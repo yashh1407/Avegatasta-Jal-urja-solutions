@@ -1,9 +1,48 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 
+function checkPermission(
+  permissions: any,
+  module: string,
+  action?: 'view' | 'add' | 'edit' | 'delete'
+): boolean {
+  if (!permissions) return false;
+
+  // Handle old string array format (backward compatibility)
+  if (Array.isArray(permissions)) {
+    return permissions.includes(module);
+  }
+
+  // Handle new object format: { [module]: { view: boolean, add: boolean, edit: boolean, delete: boolean } }
+  if (typeof permissions === 'object') {
+    const modulePerms = permissions[module];
+    if (!modulePerms || typeof modulePerms !== 'object') {
+      return false;
+    }
+
+    if (action) {
+      return !!modulePerms[action];
+    }
+
+    // If no action is specified, check if they have any access
+    return !!(modulePerms.view || modulePerms.add || modulePerms.edit || modulePerms.delete);
+  }
+
+  return false;
+}
+
 function getRequiredModule(pathname: string): string | null {
   // Check exact matches or prefixes
-  if (pathname.startsWith('/admin/quotations') || pathname.startsWith('/api/admin/quotations')) return 'quotations';
+  if (
+    pathname.startsWith('/admin/invoices') || 
+    pathname.startsWith('/api/admin/invoices') ||
+    pathname.startsWith('/admin/quotations') || 
+    pathname.startsWith('/api/admin/quotations') ||
+    pathname.startsWith('/admin/pricing') || 
+    pathname.startsWith('/api/admin/pricing') ||
+    pathname.startsWith('/admin/products') || 
+    pathname.startsWith('/api/admin/products')
+  ) return 'products';
   if (pathname.startsWith('/admin/messages') || pathname.startsWith('/api/admin/messages')) return 'messages';
   
   if (
@@ -15,7 +54,6 @@ function getRequiredModule(pathname: string): string | null {
   
   if (pathname.startsWith('/admin/analytics') || pathname.startsWith('/api/admin/analytics')) return 'analytics';
   if (pathname.startsWith('/admin/clients') || pathname.startsWith('/api/admin/clients')) return 'clients';
-  if (pathname.startsWith('/admin/products') || pathname.startsWith('/api/admin/products')) return 'products';
   if (pathname.startsWith('/admin/vendors') || pathname.startsWith('/api/admin/vendors')) return 'vendors';
   
   if (
@@ -32,7 +70,6 @@ function getRequiredModule(pathname: string): string | null {
   
   if (pathname.startsWith('/admin/case-studies') || pathname.startsWith('/api/admin/case-studies')) return 'case-studies';
   if (pathname.startsWith('/admin/testimonials') || pathname.startsWith('/api/admin/testimonials')) return 'testimonials';
-  if (pathname.startsWith('/admin/pricing') || pathname.startsWith('/api/admin/pricing')) return 'pricing';
   if (pathname.startsWith('/admin/amc-plans') || pathname.startsWith('/api/admin/amc-plans')) return 'amc-plans';
   if (pathname.startsWith('/admin/amc') || pathname.startsWith('/api/admin/amc')) return 'amc';
   if (pathname.startsWith('/admin/team-members') || pathname.startsWith('/api/admin/team-members')) return 'team-members';
@@ -97,11 +134,27 @@ export default withAuth(
     if (pathname === '/admin') {
       const role = token?.role;
       if (role !== 'superadmin') {
-        const permissions = token?.permissions as string[] | null;
-        if (permissions && permissions.length > 0) {
-          const firstModulePath = getModulePath(permissions[0]);
-          if (firstModulePath) {
-            return NextResponse.redirect(new URL(firstModulePath, req.url));
+        const permissions = token?.permissions;
+        if (permissions) {
+          let firstAllowedModule: string | null = null;
+          if (Array.isArray(permissions)) {
+            if (permissions.length > 0) {
+              firstAllowedModule = permissions[0];
+            }
+          } else if (typeof permissions === 'object') {
+            for (const key of Object.keys(permissions)) {
+              const p = (permissions as any)[key];
+              if (p && (p.view || p.edit || p.delete)) {
+                firstAllowedModule = key;
+                break;
+              }
+            }
+          }
+          if (firstAllowedModule) {
+            const firstModulePath = getModulePath(firstAllowedModule);
+            if (firstModulePath) {
+              return NextResponse.redirect(new URL(firstModulePath, req.url));
+            }
           }
         }
         // If they have no permissions, redirect to login
@@ -112,17 +165,34 @@ export default withAuth(
     const requiredModule = getRequiredModule(pathname);
     if (requiredModule) {
       const role = token?.role;
-      const permissions = token?.permissions as string[] | null;
+      const permissions = token?.permissions;
 
       if (role !== 'superadmin') {
         // Allow dev fallback if no permissions are set on the admin user at all
         const isDevFallback = role === 'admin' && permissions === null;
         
-        if (!isDevFallback && (!permissions || !permissions.includes(requiredModule))) {
+        let hasAccess = false;
+        let action: 'view' | 'edit' | 'delete' = 'view';
+
+        if (isDevFallback) {
+          hasAccess = true;
+        } else {
+          let action: 'view' | 'add' | 'edit' | 'delete' = 'view';
+          if (req.method === 'DELETE') {
+            action = 'delete';
+          } else if (req.method === 'POST') {
+            action = 'add';
+          } else if (req.method === 'PUT' || req.method === 'PATCH') {
+            action = 'edit';
+          }
+          hasAccess = checkPermission(permissions, requiredModule, action);
+        }
+
+        if (!hasAccess) {
           // If they are calling an API, return a 403 JSON response
           if (pathname.startsWith('/api/')) {
             return NextResponse.json(
-              { error: `Forbidden: Missing access to module '${requiredModule}'` },
+              { error: `Forbidden: Missing ${action} access to module '${requiredModule}'` },
               { status: 403 }
             );
           }

@@ -10,10 +10,7 @@ async function check() {
 
   try {
     const [rows] = await connection.query(`
-      SELECT p.id, p.title, p.slug, p.status, p.show_in_menu as in_menu,
-             (SELECT COUNT(*) FROM page_sections s WHERE s.page_id = p.id) as section_count
-      FROM pages p
-      ORDER BY p.updated_at DESC
+      SELECT id, page_id, section_type, section_key, title, data_json FROM page_sections WHERE section_type = 'FAQAccordion'
     `);
     console.log(rows);
   } catch (err) {

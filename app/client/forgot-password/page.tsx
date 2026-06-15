@@ -1,36 +1,56 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Mail, Droplets, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
+import { Captcha, CaptchaRef } from '@/components/Captcha';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const captchaRef = useRef<CaptchaRef>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!captchaRef.current?.validate()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
+      const captchaData = captchaRef.current?.getCaptchaData() || { token: '', input: '' };
       const res = await fetch('/api/client/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ 
+          email,
+          captchaToken: captchaData.token,
+          captchaInput: captchaData.input,
+        }),
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        setError(typeof data.error === 'string' ? data.error : 'Request failed');
+        const data = await res.json().catch(() => ({}));
+        const msg = typeof data.error === 'string' ? data.error : 'Request failed';
+        setError(msg);
+        if (msg.includes('verification code') || msg.toLowerCase().includes('captcha')) {
+          captchaRef.current?.setErrorState(true);
+        } else {
+          captchaRef.current?.reset();
+        }
       } else {
+        captchaRef.current?.reset();
         setSent(true);
       }
     } catch {
       setError('Something went wrong. Please try again.');
+      captchaRef.current?.reset();
     } finally {
       setLoading(false);
     }
@@ -101,6 +121,8 @@ export default function ForgotPasswordPage() {
                   />
                 </div>
               </div>
+
+              <Captcha ref={captchaRef} />
 
               <button
                 type="submit"

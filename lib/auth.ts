@@ -47,27 +47,34 @@ export const authOptions: NextAuthOptions = {
           if (!user) return null;
 
           // Check if account is locked out
-          if (user.lockout_until) {
+          if (user.role !== 'superadmin' && user.lockout_until) {
             const lockoutTime = new Date(user.lockout_until);
             if (lockoutTime > new Date()) {
-              throw new Error('Account is temporarily locked. Please try again in 15 minutes.');
+              const isPermanent = lockoutTime.getFullYear() > 2050;
+              if (isPermanent) {
+                throw new Error('Account has been locked by an administrator.');
+              } else {
+                throw new Error('Account is temporarily locked. Please try again in 15 minutes.');
+              }
             }
           }
 
           const valid = await bcrypt.compare(credentials.password, user.password_hash);
           if (!valid) {
-            const attempts = (user.failed_login_attempts || 0) + 1;
-            if (attempts >= 5) {
-              await pool.query(
-                'UPDATE admin_users SET failed_login_attempts = ?, lockout_until = DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id = ?',
-                [attempts, user.id]
-              );
-              throw new Error('Account is temporarily locked. Please try again in 15 minutes.');
-            } else {
-              await pool.query(
-                'UPDATE admin_users SET failed_login_attempts = ? WHERE id = ?',
-                [attempts, user.id]
-              );
+            if (user.role !== 'superadmin') {
+              const attempts = (user.failed_login_attempts || 0) + 1;
+              if (attempts >= 5) {
+                await pool.query(
+                  'UPDATE admin_users SET failed_login_attempts = ?, lockout_until = DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id = ?',
+                  [attempts, user.id]
+                );
+                throw new Error('Account is temporarily locked. Please try again in 15 minutes.');
+              } else {
+                await pool.query(
+                  'UPDATE admin_users SET failed_login_attempts = ? WHERE id = ?',
+                  [attempts, user.id]
+                );
+              }
             }
             return null;
           }
@@ -109,7 +116,20 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: 'jwt',
-    maxAge: 24 * 60 * 60, // 24 hours
+    maxAge: 24 * 60 * 60, // 24 hours (security limit for token verification on server side)
+  },
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production'
+        ? `__Secure-next-auth.session-token`
+        : `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
   },
   pages: {
     signIn: '/admin/login',

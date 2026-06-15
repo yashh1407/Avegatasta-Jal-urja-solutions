@@ -127,6 +127,7 @@ function LogSaleModal({
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [pricing, setPricing] = useState<ProductPricing[]>([]);
+  const [dbProducts, setDbProducts] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -134,15 +135,17 @@ function LogSaleModal({
     if (!open) return;
     setForm(EMPTY);
     setError('');
-    // Fetch team, clients, pricing in parallel
+    // Fetch team, clients, pricing, and products in parallel
     Promise.all([
       fetch('/api/admin/sales-team').then((r) => r.json()),
       fetch('/api/admin/clients').then((r) => r.json()),
       fetch('/api/admin/pricing').then((r) => r.json()),
-    ]).then(([team, clientList, pricingList]) => {
+      fetch('/api/products').then((r) => r.json()),
+    ]).then(([team, clientList, pricingList, productsList]) => {
       setTeamMembers(Array.isArray(team) ? team.filter((m: TeamMember) => m.status === 'active') : []);
       setClients(Array.isArray(clientList) ? clientList : (clientList.clients ?? []));
       setPricing(Array.isArray(pricingList) ? pricingList : []);
+      setDbProducts(Array.isArray(productsList) ? productsList : []);
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -157,8 +160,8 @@ function LogSaleModal({
   );
 
   const selectedProduct = useMemo(
-    () => products.find((p) => p.id === form.product_id) ?? null,
-    [form.product_id]
+    () => dbProducts.find((p) => p.id === form.product_id) ?? products.find((p) => p.id === form.product_id) ?? null,
+    [dbProducts, form.product_id]
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -249,7 +252,7 @@ function LogSaleModal({
                 </label>
                 <select className={inputClass} value={form.product_id} onChange={set('product_id')} required>
                   <option value="">Select product…</option>
-                  {products.map((p) => (
+                  {(dbProducts.length > 0 ? dbProducts : products).map((p) => (
                     <option key={p.id} value={p.id}>{p.name} — {p.brand}</option>
                   ))}
                 </select>

@@ -17,7 +17,7 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const { name, email, mobile_number, role, permissions, password } = body;
+    const { name, email, mobile_number, role, permissions, password, is_locked } = body;
 
     if (!name || !email || !role) {
       return NextResponse.json({ error: 'Name, email, and role are required' }, { status: 400 });
@@ -25,11 +25,13 @@ export async function PUT(
 
     await initDB();
 
-    // Verify user exists
-    const [existing] = await pool.query('SELECT id, role FROM admin_users WHERE id = ? LIMIT 1', [id]);
+    // Verify user exists (and retrieve current failed_login_attempts and lockout_until)
+    const [existing] = await pool.query('SELECT id, role, failed_login_attempts, lockout_until FROM admin_users WHERE id = ? LIMIT 1', [id]);
     if ((existing as any[]).length === 0) {
       return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
     }
+
+    const user = (existing as any[])[0];
 
     // Verify email is not already in use by another user
     const [existingEmail] = await pool.query('SELECT id FROM admin_users WHERE email = ? AND id != ? LIMIT 1', [email, id]);
@@ -37,9 +39,32 @@ export async function PUT(
       return NextResponse.json({ error: 'Email address already in use by another account' }, { status: 400 });
     }
 
-    // Build update query (automatically unlocks the account on edit)
-    let query = 'UPDATE admin_users SET name = ?, email = ?, mobile_number = ?, role = ?, permissions = ?, failed_login_attempts = 0, lockout_until = NULL';
-    const paramsList: any[] = [name, email, mobile_number, role, permissions ? JSON.stringify(permissions) : null];
+    // Determine values for failed_login_attempts and lockout_until based on is_locked toggle
+    let newFailedAttempts = user.failed_login_attempts || 0;
+    let newLockoutUntil = user.lockout_until;
+
+    // Check if the user is currently locked out in the database
+    const currentlyLocked = user.lockout_until && new Date(user.lockout_until) > new Date();
+
+    if (role === 'superadmin') {
+      // Superadmins can never be locked
+      newFailedAttempts = 0;
+      newLockoutUntil = null;
+    } else if (is_locked) {
+      // If admin wants it locked and it isn't currently locked, apply a manual lock (year 2099)
+      if (!currentlyLocked) {
+        newFailedAttempts = 5;
+        newLockoutUntil = '2099-12-31 23:59:59';
+      }
+    } else {
+      // If admin wants it unlocked, reset the attempts and lockout timestamp
+      newFailedAttempts = 0;
+      newLockoutUntil = null;
+    }
+
+    // Build update query
+    let query = 'UPDATE admin_users SET name = ?, email = ?, mobile_number = ?, role = ?, permissions = ?, failed_login_attempts = ?, lockout_until = ?';
+    const paramsList: any[] = [name, email, mobile_number, role, permissions ? JSON.stringify(permissions) : null, newFailedAttempts, newLockoutUntil];
 
     if (password) {
       const pwdCheck = validatePassword(password);

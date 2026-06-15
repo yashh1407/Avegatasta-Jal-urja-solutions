@@ -3,36 +3,42 @@
 import { motion } from 'motion/react';
 import { staggerContainer, fadeUp } from '@/lib/motion';
 
-interface BrandPartner {
-  name: string;
-  categories: string[];
-  color: string;
-  border: string;
-  dot: string;
-  initial: string;
-}
+const BRAND_PARTNERS = [
+  {
+    name: 'V-Guard',
+    categories: ['Water Heating Solutions', 'Solar Power Systems'],
+    color: 'from-red-600/20 to-red-500/5',
+    border: 'border-red-500/20',
+    dot: 'bg-red-500',
+    initial: 'VG',
+  },
+  {
+    name: 'ZeroB',
+    categories: ['Water Treatment Solutions'],
+    color: 'from-sky-600/20 to-sky-500/5',
+    border: 'border-sky-500/20',
+    dot: 'bg-sky-500',
+    initial: 'ZB',
+  },
+  {
+    name: 'Bluewave India',
+    categories: ['Swimming Pool Solutions'],
+    color: 'from-cyan-600/20 to-cyan-500/5',
+    border: 'border-cyan-500/20',
+    dot: 'bg-cyan-500',
+    initial: 'BW',
+  },
+  {
+    name: 'Wilo',
+    categories: ['Pumping Solutions'],
+    color: 'from-rose-700/20 to-rose-600/5',
+    border: 'border-rose-600/20',
+    dot: 'bg-rose-600',
+    initial: 'WI',
+  },
+];
 
-interface BrandsSectionProps {
-  badge?: string;
-  titleHtml?: string;
-  description?: string;
-  partners?: BrandPartner[];
-}
-
-export default function BrandsSection(props: BrandsSectionProps) {
-  const badge = props.badge || 'Brands We Partner With';
-  const titleHtml = props.titleHtml || 'Authorized for India&apos;s <span class="text-accent-400">Leading Brands</span>';
-  const description = props.description || 'We are authorized channel partners for four specialized brands, covering every aspect of water, energy, and pool infrastructure for enterprise clients.';
-
-  const defaultPartners = [
-    { name: 'V-Guard', categories: ['Water Heating Solutions', 'Solar Power Systems'], color: 'from-red-600/20 to-red-500/5', border: 'border-red-500/20', dot: 'bg-red-500', initial: 'VG' },
-    { name: 'ZeroB', categories: ['Water Treatment Solutions'], color: 'from-sky-600/20 to-sky-500/5', border: 'border-sky-500/20', dot: 'bg-sky-500', initial: 'ZB' },
-    { name: 'Bluewave India', categories: ['Swimming Pool Solutions'], color: 'from-cyan-600/20 to-cyan-500/5', border: 'border-cyan-500/20', dot: 'bg-cyan-500', initial: 'BW' },
-    { name: 'Wilo', categories: ['Pumping Solutions'], color: 'from-rose-700/20 to-rose-600/5', border: 'border-rose-600/20', dot: 'bg-rose-600', initial: 'WI' },
-  ];
-
-  const partners = props.partners && props.partners.length > 0 ? props.partners : defaultPartners;
-
+export default function BrandsSection() {
   return (
     <section className="py-16 sm:py-20 lg:py-24 bg-brand-950 text-white overflow-hidden relative">
       {/* Background glow */}
@@ -54,23 +60,26 @@ export default function BrandsSection(props: BrandsSectionProps) {
             variants={fadeUp}
             className="text-xs font-black text-accent-400 uppercase tracking-[0.2em] mb-4"
           >
-            {badge}
+            Brands We Partner With
           </motion.p>
           <motion.h2
             variants={fadeUp}
-            className="text-4xl md:text-5xl font-black tracking-tight leading-tight [&_span.text-accent-400]:text-accent-400"
-            dangerouslySetInnerHTML={{ __html: titleHtml }}
-          />
+            className="text-4xl md:text-5xl font-black tracking-tight leading-tight"
+          >
+            Authorized for India&apos;s{' '}
+            <span className="text-accent-400">Leading Brands</span>
+          </motion.h2>
           <motion.p
             variants={fadeUp}
             className="mt-5 text-brand-300 max-w-2xl mx-auto text-lg leading-relaxed"
           >
-            {description}
+            We are authorized channel partners for four specialized brands, covering every aspect
+            of water, energy, and pool infrastructure for enterprise clients.
           </motion.p>
         </motion.div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {partners.map((brand, i) => (
+          {BRAND_PARTNERS.map((brand, i) => (
             <motion.div
               key={brand.name}
               initial={{ opacity: 0, y: 32 }}

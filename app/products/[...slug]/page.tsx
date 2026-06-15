@@ -37,10 +37,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+import pool, { initDB } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
+
 export default async function ProductCategoryLandingPage({ params }: PageProps) {
   const { slug } = await params;
   const path = getPath(slug);
   const data = CATEGORY_BY_PATH[path];
+
+  let dbProducts: any[] = [];
+  try {
+    await initDB();
+    const [rows] = await pool.query('SELECT * FROM products ORDER BY name ASC');
+    dbProducts = (rows as any[]).map((row) => ({
+      ...row,
+      features: typeof row.features === 'string' ? JSON.parse(row.features) : (row.features || []),
+      specs: typeof row.specs === 'string' ? JSON.parse(row.specs) : (row.specs || {}),
+      inStock: Boolean(row.inStock),
+    }));
+  } catch (error) {
+    console.error('Failed to pre-fetch products for slug page:', error);
+  }
 
   const faqJsonLd = data?.faq?.length
     ? {
@@ -65,7 +83,7 @@ export default async function ProductCategoryLandingPage({ params }: PageProps) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       )}
-      <ProductsPageClient initialCategory={data?.label ?? null} />
+      <ProductsPageClient initialCategory={data?.label ?? null} initialProducts={dbProducts} />
     </>
   );
 }

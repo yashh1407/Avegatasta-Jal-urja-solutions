@@ -119,12 +119,6 @@ export default function EnterpriseHero({
             />
             <div className="absolute inset-0 bg-gradient-to-t from-brand-950/40 via-transparent to-transparent" />
           </div>
-          <div className="absolute -bottom-5 -left-6 bg-white rounded-2xl px-5 py-4 shadow-xl">
-            <p className="text-xs font-black text-brand-950 uppercase tracking-widest mb-1">
-              Authorized Partner
-            </p>
-            <p className="text-sm font-bold text-brand-600">V-Guard · Wilo · Zero B · Bluewave</p>
-          </div>
         </motion.div>
       </div>
     </section>

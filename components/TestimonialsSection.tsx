@@ -58,20 +58,12 @@ function TestimonialSkeleton() {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-interface TestimonialsSectionProps {
-  badge?: string;
-  titleHtml?: string;
-}
-
-export default function TestimonialsSection(props: TestimonialsSectionProps) {
+export default function TestimonialsSection() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, dragFree: false });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  
-  const badge = props.badge || 'Testimonials';
-  const titleHtml = props.titleHtml || 'What Our Customers Say';
 
   useEffect(() => {
     fetch('/api/testimonials')
@@ -119,9 +111,11 @@ export default function TestimonialsSection(props: TestimonialsSectionProps) {
         {/* Header */}
         <div className="text-center mb-10 sm:mb-14 lg:mb-16">
           <p className="text-xs font-black text-brand-500 uppercase tracking-[0.2em] mb-3">
-            {badge}
+            Testimonials
           </p>
-          <h2 className="text-3xl sm:text-4xl font-black text-brand-950 tracking-tight" dangerouslySetInnerHTML={{ __html: titleHtml }} />
+          <h2 className="text-3xl sm:text-4xl font-black text-brand-950 tracking-tight">
+            What Our Customers Say
+          </h2>
         </div>
 
         {loading ? (

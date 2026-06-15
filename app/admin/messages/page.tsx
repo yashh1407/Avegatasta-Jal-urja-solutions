@@ -60,6 +60,7 @@ interface Message {
   notes?: string | null;
   tags?: string | null;
   assigned_to?: string | null;
+  gstin?: string | null;
 }
 
 type MessagePatch = Partial<
@@ -446,6 +447,7 @@ export default function AdminMessages() {
           m.name.toLowerCase().includes(q) ||
           (m.email?.toLowerCase().includes(q) ?? false) ||
           m.phone.toLowerCase().includes(q) ||
+          (m.gstin?.toLowerCase().includes(q) ?? false) ||
           (m.subject?.toLowerCase().includes(q) ?? false) ||
           m.message.toLowerCase().includes(q)
       );
@@ -601,7 +603,7 @@ export default function AdminMessages() {
 
   const handleExportCSV = (messagesToExport: Message[]) => {
     const headers: (keyof Message)[] = [
-      'name', 'email', 'phone', 'subject', 'message',
+      'name', 'email', 'phone', 'gstin', 'subject', 'message',
       'status', 'lead_status', 'priority', 'notes',
       'follow_up_date', 'tags', 'assigned_to', 'created_at',
     ];
@@ -761,7 +763,7 @@ export default function AdminMessages() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name, email, phone, subject, or message..."
+                placeholder="Search by name, email, phone, GSTIN, subject, or message..."
                 className="w-full h-10 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
               />
               {searchQuery && (
@@ -1085,6 +1087,12 @@ export default function AdminMessages() {
                               <div className="flex items-center gap-1.5 text-sm text-slate-500 font-medium">
                                 <Mail size={13} />
                                 {msg.email}
+                              </div>
+                            )}
+                            {msg.gstin && (
+                              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                                <span className="text-[9px] font-black uppercase text-slate-400">GSTIN:</span>
+                                <span className="font-mono">{msg.gstin}</span>
                               </div>
                             )}
                           </div>

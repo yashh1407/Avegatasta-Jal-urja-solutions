@@ -6,6 +6,7 @@ export const contactSchema = z.object({
   phone: z.string().max(20).optional(),
   subject: z.string().max(255).optional(),
   message: z.string().min(1).max(5000),
+  gstin: z.string().max(15).optional().or(z.literal('')),
 });
 
 export const inquirySchema = z.object({
@@ -27,6 +28,7 @@ export const registrationSchema = z.object({
   firstName: z.string().min(1).max(255),
   lastName: z.string().min(1).max(255),
   phone: z.string().min(1).max(20),
+  gstin: z.string().max(15).optional().or(z.literal('')),
 });
 
 export const productInquirySchema = z.object({
@@ -36,6 +38,7 @@ export const productInquirySchema = z.object({
   message: z.string().min(1).max(5000),
   productName: z.string().min(1).max(255),
   productId: z.string().max(255).optional(),
+  gstin: z.string().max(15).optional().or(z.literal('')),
 });
 
 export const clientSchema = z.object({
@@ -125,6 +128,7 @@ export const enterpriseInquirySchema = z.object({
   project_type: z.string().max(255).optional(),
   scale: z.string().max(100).optional(),
   message: z.string().min(1).max(5000),
+  gstin: z.string().max(15).optional().or(z.literal('')),
 });
 
 export type EnterpriseInquiryInput = z.infer<typeof enterpriseInquirySchema>;

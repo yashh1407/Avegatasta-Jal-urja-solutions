@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     const [rows] = await pool.query(
-      `SELECT id, company, name, designation, phone, email, project_type, scale, message, status, created_at
+      `SELECT id, company, name, designation, phone, email, project_type, scale, message, status, gstin, created_at
        FROM enterprise_inquiries
        ${where}
        ORDER BY created_at DESC`,

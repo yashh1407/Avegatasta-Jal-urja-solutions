@@ -3,14 +3,38 @@ import type { Metadata } from 'next';
 import Script from 'next/script';
 import { products } from '@/lib/data';
 import ProductDetailContent from './ProductDetailClient';
+import pool, { initDB } from '@/lib/db';
 
 type Props = { params: Promise<{ id: string }> };
+
+// ─── Helper to fetch product ──────────────────────────────────────────────────
+
+async function getProductById(id: string) {
+  try {
+    await initDB();
+    const [rows] = await pool.query('SELECT * FROM products WHERE id = ?', [id]);
+    const list = rows as any[];
+    if (list.length > 0) {
+      const row = list[0];
+      return {
+        ...row,
+        features: typeof row.features === 'string' ? JSON.parse(row.features) : (row.features || []),
+        specs: typeof row.specs === 'string' ? JSON.parse(row.specs) : (row.specs || {}),
+        inStock: Boolean(row.inStock),
+      };
+    }
+  } catch (error) {
+    console.error(`Failed to fetch product by id ${id}:`, error);
+  }
+  // Fallback to static list
+  return products.find((p) => p.id === id) || null;
+}
 
 // ─── Dynamic metadata ──────────────────────────────────────────────────────────
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const product = products.find((p) => p.id === id);
+  const product = await getProductById(id);
 
   if (!product) {
     return {
@@ -52,8 +76,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 // ─── Product JSON-LD ───────────────────────────────────────────────────────────
 
-function ProductJsonLd({ id }: { id: string }) {
-  const product = products.find((p) => p.id === id);
+function ProductJsonLd({ product }: { product: any }) {
   if (!product) return null;
 
   const productUrl = `https://avegatasta.com/product/${product.id}`;
@@ -82,10 +105,10 @@ function ProductJsonLd({ id }: { id: string }) {
         url: 'https://avegatasta.com',
       },
     },
-    additionalProperty: Object.entries(product.specs).map(([name, value]) => ({
+    additionalProperty: Object.entries(product.specs || {}).map(([name, value]) => ({
       '@type': 'PropertyValue',
       name,
-      value,
+      value: String(value),
     })),
   };
 
@@ -142,10 +165,22 @@ function ProductJsonLd({ id }: { id: string }) {
 
 export default async function ProductDetailPage({ params }: Props) {
   const { id } = await params;
+  const product = await getProductById(id);
+
+  if (!product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4 text-blue-950">Product Not Found</h1>
+          <a href="/products" className="text-blue-600 hover:underline font-bold">Browse Products</a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
-      <ProductJsonLd id={id} />
+      <ProductJsonLd product={product} />
       <Suspense
         fallback={
           <div className="min-h-screen flex items-center justify-center">
@@ -153,7 +188,7 @@ export default async function ProductDetailPage({ params }: Props) {
           </div>
         }
       >
-        <ProductDetailContent id={id} />
+        <ProductDetailContent product={product} />
       </Suspense>
     </>
   );

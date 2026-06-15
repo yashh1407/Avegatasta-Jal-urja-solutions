@@ -34,6 +34,7 @@ export function contactNotificationHtml(data: {
   phone?: string;
   subject?: string;
   message: string;
+  gstin?: string;
   submittedAt: string;
 }): string {
   return `
@@ -43,6 +44,7 @@ export function contactNotificationHtml(data: {
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Email</td><td style="padding:8px;background:#f8fafc">${esc(data.email)}</td></tr>
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Phone</td><td style="padding:8px;background:#f8fafc">${esc(data.phone ?? '—')}</td></tr>
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Subject</td><td style="padding:8px;background:#f8fafc">${esc(data.subject ?? '—')}</td></tr>
+      ${data.gstin ? `<tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">GSTIN</td><td style="padding:8px;background:#f8fafc">${esc(data.gstin)}</td></tr>` : ''}
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Message</td><td style="padding:8px;background:#f8fafc;white-space:pre-wrap">${esc(data.message)}</td></tr>
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Submitted At</td><td style="padding:8px;background:#f8fafc">${esc(data.submittedAt)}</td></tr>
     </table>
@@ -55,6 +57,7 @@ export function productInquiryNotificationHtml(data: {
   email?: string;
   message: string;
   productName: string;
+  gstin?: string;
   submittedAt: string;
 }): string {
   return `
@@ -64,6 +67,7 @@ export function productInquiryNotificationHtml(data: {
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Name</td><td style="padding:8px;background:#f8fafc">${esc(data.name)}</td></tr>
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Phone</td><td style="padding:8px;background:#f8fafc">${esc(data.phone)}</td></tr>
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Email</td><td style="padding:8px;background:#f8fafc">${esc(data.email ?? '—')}</td></tr>
+      ${data.gstin ? `<tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">GSTIN</td><td style="padding:8px;background:#f8fafc">${esc(data.gstin)}</td></tr>` : ''}
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Message</td><td style="padding:8px;background:#f8fafc;white-space:pre-wrap">${esc(data.message)}</td></tr>
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Submitted At</td><td style="padding:8px;background:#f8fafc">${esc(data.submittedAt)}</td></tr>
     </table>
@@ -74,6 +78,7 @@ export function registrationNotificationHtml(data: {
   firstName: string;
   lastName: string;
   phone: string;
+  gstin?: string;
   submittedAt: string;
 }): string {
   return `
@@ -82,6 +87,7 @@ export function registrationNotificationHtml(data: {
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">First Name</td><td style="padding:8px;background:#f8fafc">${esc(data.firstName)}</td></tr>
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Last Name</td><td style="padding:8px;background:#f8fafc">${esc(data.lastName)}</td></tr>
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Phone</td><td style="padding:8px;background:#f8fafc">${esc(data.phone)}</td></tr>
+      ${data.gstin ? `<tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">GSTIN</td><td style="padding:8px;background:#f8fafc">${esc(data.gstin)}</td></tr>` : ''}
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Submitted At</td><td style="padding:8px;background:#f8fafc">${esc(data.submittedAt)}</td></tr>
     </table>
   `;
@@ -96,6 +102,7 @@ export function enterpriseInquiryNotificationHtml(data: {
   project_type?: string;
   scale?: string;
   message: string;
+  gstin?: string;
   submittedAt: string;
 }): string {
   return `
@@ -108,6 +115,7 @@ export function enterpriseInquiryNotificationHtml(data: {
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Email</td><td style="padding:8px;background:#f8fafc">${esc(data.email)}</td></tr>
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Project Type</td><td style="padding:8px;background:#f8fafc">${esc(data.project_type ?? '—')}</td></tr>
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Scale</td><td style="padding:8px;background:#f8fafc">${esc(data.scale ?? '—')}</td></tr>
+      ${data.gstin ? `<tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">GSTIN</td><td style="padding:8px;background:#f8fafc">${esc(data.gstin)}</td></tr>` : ''}
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Message</td><td style="padding:8px;background:#f8fafc;white-space:pre-wrap">${esc(data.message)}</td></tr>
       <tr><td style="padding:8px;font-weight:bold;background:#f1f5f9">Submitted At</td><td style="padding:8px;background:#f8fafc">${esc(data.submittedAt)}</td></tr>
     </table>

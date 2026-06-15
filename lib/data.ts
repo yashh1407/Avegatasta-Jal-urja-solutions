@@ -1,4 +1,4 @@
-﻿export interface Product {
+export interface Product {
   id: string;
   name: string;
   brand: "V-Guard" | "Zero B" | "Wilo" | "Bluewave India" | "Pure Energy";
@@ -9,6 +9,8 @@
   features: string[];
   specs: Record<string, string>;
   inStock: boolean;
+  hsn_code?: string;
+  sac_code?: string;
 }
 
 export const categories = [
@@ -316,7 +318,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-solar-aux-pro",
-    "name": "V Guar Solar Water Heaters-WIN-HOT (AUX)-PRO SERIES",
+    "name": "V-Guard Solar Water Heaters-WIN-HOT (AUX)-PRO SERIES",
     "brand": "V-Guard",
     "category": "Solar Water Heaters",
     "description": "Premium solar water heater that does not require an air vent. Features 3 layered vacuum tubes made from Borosilicate.",
@@ -357,7 +359,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-hp-vhp150",
-    "name": "V Guard Domestic Heat Pump Water Heater - V-HP 150",
+    "name": "V-Guard Domestic Heat Pump Water Heater - V-HP 150",
     "brand": "V-Guard",
     "category": "Heat Pumps",
     "subCategory": "Domestic",
@@ -378,7 +380,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-hp-commercial",
-    "name": "V Guard Commercial Heat Pump Water Heater Series",
+    "name": "V-Guard Commercial Heat Pump Water Heater Series",
     "brand": "V-Guard",
     "category": "Heat Pumps",
     "subCategory": "Commercial",
@@ -399,7 +401,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-hp-vhp200",
-    "name": "V Guard Domestic Heat Pump Water Heater - V-HP 200",
+    "name": "V-Guard Domestic Heat Pump Water Heater - V-HP 200",
     "brand": "V-Guard",
     "category": "Heat Pumps",
     "subCategory": "Domestic",
@@ -422,7 +424,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-hp-vhp300",
-    "name": "V Guard Domestic Heat Pump Water Heater - V-HP 300",
+    "name": "V-Guard Domestic Heat Pump Water Heater - V-HP 300",
     "brand": "V-Guard",
     "category": "Heat Pumps",
     "subCategory": "Domestic",
@@ -445,7 +447,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-hp-vhp500",
-    "name": "V Guard Domestic Heat Pump Water Heater - V-HP 500",
+    "name": "V-Guard Domestic Heat Pump Water Heater - V-HP 500",
     "brand": "V-Guard",
     "category": "Heat Pumps",
     "subCategory": "Domestic",
@@ -468,7 +470,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-hp-vhp1t",
-    "name": "V Guard Commercial Heat Pump Water Heater - V-HP 1T",
+    "name": "V-Guard Commercial Heat Pump Water Heater - V-HP 1T",
     "brand": "V-Guard",
     "category": "Heat Pumps",
     "subCategory": "Commercial",
@@ -491,7 +493,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-hp-vhp15t",
-    "name": "V Guard Commercial Heat Pump Water Heater - V-HP 1.5T",
+    "name": "V-Guard Commercial Heat Pump Water Heater - V-HP 1.5T",
     "brand": "V-Guard",
     "category": "Heat Pumps",
     "subCategory": "Commercial",
@@ -514,7 +516,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-hp-vhp2t",
-    "name": "V Guard Commercial Heat Pump Water Heater - V-HP 2T",
+    "name": "V-Guard Commercial Heat Pump Water Heater - V-HP 2T",
     "brand": "V-Guard",
     "category": "Heat Pumps",
     "subCategory": "Commercial",
@@ -537,7 +539,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-hp-vhp3t",
-    "name": "V Guard Commercial Heat Pump Water Heater - V-HP 3T",
+    "name": "V-Guard Commercial Heat Pump Water Heater - V-HP 3T",
     "brand": "V-Guard",
     "category": "Heat Pumps",
     "subCategory": "Commercial",
@@ -560,7 +562,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-hp-vhp5t",
-    "name": "V Guard Commercial Heat Pump Water Heater - V-HP 5T",
+    "name": "V-Guard Commercial Heat Pump Water Heater - V-HP 5T",
     "brand": "V-Guard",
     "category": "Heat Pumps",
     "subCategory": "Commercial",
@@ -583,7 +585,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-hp-vhp6t",
-    "name": "V Guard Commercial Heat Pump Water Heater - V-HP 6T",
+    "name": "V-Guard Commercial Heat Pump Water Heater - V-HP 6T",
     "brand": "V-Guard",
     "category": "Heat Pumps",
     "subCategory": "Commercial",
@@ -606,7 +608,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-hp-vhp10t",
-    "name": "V Guard Commercial Heat Pump Water Heater - V-HP 10T",
+    "name": "V-Guard Commercial Heat Pump Water Heater - V-HP 10T",
     "brand": "V-Guard",
     "category": "Heat Pumps",
     "subCategory": "Commercial",
@@ -629,7 +631,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-hp-vhp15t-commercial",
-    "name": "V Guard Commercial Heat Pump Water Heater - V-HP 15T",
+    "name": "V-Guard Commercial Heat Pump Water Heater - V-HP 15T",
     "brand": "V-Guard",
     "category": "Heat Pumps",
     "subCategory": "Commercial",
@@ -652,7 +654,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-solar-aux",
-    "name": "V Guard Solar Water Heaters - WIN-HOT ECO AUX SERIES",
+    "name": "V-Guard Solar Water Heaters - WIN-HOT ECO AUX SERIES",
     "brand": "V-Guard",
     "category": "Solar Water Heaters",
     "description": "Efficient and eco-friendly heating solution. Features high density PUF insulation to minimize heat loss and sacrificial anodic protection.",
@@ -672,7 +674,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-solar-pro",
-    "name": "V Guard Solar Water Heaters-WIN-HOT ECO PRO SERIES",
+    "name": "V-Guard Solar Water Heaters-WIN-HOT ECO PRO SERIES",
     "brand": "V-Guard",
     "category": "Solar Water Heaters",
     "description": "Available in 100, 150, and 200 liters. 3 layered borosilicate tubes for maximum heat absorption. Saves power and money.",
@@ -692,7 +694,7 @@ export const products: Product[] = [
   },
   {
     "id": "vg-solar-za",
-    "name": "V Guard Solar Water Heaters-WIN-HOT ZA SERIES",
+    "name": "V-Guard Solar Water Heaters-WIN-HOT ZA SERIES",
     "brand": "V-Guard",
     "category": "Solar Water Heaters",
     "description": "Premium ZA Series solar water heater with advanced heat retention technology. Features Zn Al outer coating for supreme corrosion protection.",

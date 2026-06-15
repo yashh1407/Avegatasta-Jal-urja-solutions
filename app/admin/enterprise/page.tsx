@@ -33,6 +33,7 @@ interface EnterpriseInquiry {
   message: string | null;
   status: PipelineStatus;
   created_at: string;
+  gstin?: string | null;
 }
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -315,7 +316,7 @@ export default function AdminEnterprisePage() {
                             <span className="text-xs font-bold text-slate-600">{item.name}
                               {item.designation && <span className="font-normal text-slate-400"> · {item.designation}</span>}
                             </span>
-                            <div className="flex items-center gap-3 mt-0.5">
+                            <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                               <div className="flex items-center gap-1 text-xs text-slate-400">
                                 <Phone size={11} />
                                 {item.phone}
@@ -324,6 +325,11 @@ export default function AdminEnterprisePage() {
                                 <Mail size={11} />
                                 {item.email}
                               </div>
+                              {item.gstin && (
+                                <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 font-mono">
+                                  GST: {item.gstin}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -373,17 +379,27 @@ export default function AdminEnterprisePage() {
 
                       {/* Expanded message row */}
                       <AnimatePresence>
-                        {expanded === item.id && item.message && (
+                        {expanded === item.id && (item.message || item.gstin) && (
                           <tr>
                             <td colSpan={5} className="px-8 pb-6 pt-0">
                               <motion.div
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
                                 exit={{ opacity: 0, height: 0 }}
-                                className="bg-slate-50 rounded-2xl p-5 text-sm text-slate-600 leading-relaxed border border-slate-100"
+                                className="bg-slate-50 rounded-2xl p-5 text-sm text-slate-600 leading-relaxed border border-slate-100 space-y-3"
                               >
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Message</span>
-                                {item.message}
+                                {item.gstin && (
+                                  <div>
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">GSTIN</span>
+                                    <span className="font-mono text-slate-800 font-bold bg-white px-2.5 py-1 rounded border border-slate-200 w-fit block">{item.gstin}</span>
+                                  </div>
+                                )}
+                                {item.message && (
+                                  <div>
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Message</span>
+                                    <p className="text-slate-700 whitespace-pre-wrap">{item.message}</p>
+                                  </div>
+                                )}
                               </motion.div>
                             </td>
                           </tr>

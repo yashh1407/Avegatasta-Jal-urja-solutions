@@ -378,6 +378,12 @@ export default function AdminPage() {
                               <span className="text-xs text-slate-500 font-medium">{item.email}</span>
                             </div>
                           )}
+                          {item.gstin && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">GSTIN:</span>
+                              <span className="text-xs text-slate-600 font-mono font-bold bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">{item.gstin}</span>
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-8 py-6">

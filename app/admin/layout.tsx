@@ -18,11 +18,11 @@ export default function AdminLayout({
 
   // Login page gets no sidebar chrome — just render children directly
   if (pathname === '/admin/login') {
-    return <SessionProvider>{children}</SessionProvider>;
+    return <SessionProvider refetchOnWindowFocus={false}>{children}</SessionProvider>;
   }
 
   return (
-    <SessionProvider>
+    <SessionProvider refetchOnWindowFocus={false}>
     <div data-admin-shell className="flex h-screen bg-slate-50 overflow-hidden relative print:block print:h-auto print:overflow-visible">
       {/* Sidebar - Desktop */}
       <div className="hidden lg:flex w-80 fixed left-0 top-0 h-screen z-40 flex-col print:hidden">

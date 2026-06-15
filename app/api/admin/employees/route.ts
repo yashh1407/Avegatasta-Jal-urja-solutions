@@ -13,7 +13,7 @@ export async function GET() {
   try {
     await initDB();
     const [rows] = await pool.query(
-      'SELECT id, name, email, mobile_number, role, permissions, last_login, created_at FROM admin_users ORDER BY id ASC'
+      'SELECT id, name, email, mobile_number, role, permissions, last_login, failed_login_attempts, lockout_until, created_at FROM admin_users ORDER BY id ASC'
     );
 
     const formatted = (rows as any[]).map((row) => {

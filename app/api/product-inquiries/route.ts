@@ -37,6 +37,8 @@ const optionalPrice = (value: unknown) => {
 const hasValidAgreedPrice = (value: number | string | null) =>
   value !== null && Number.isFinite(Number(value)) && Number(value) > 0;
 
+import { decryptCaptcha } from '@/lib/captcha';
+
 export async function POST(request: Request) {
   const { ok } = rateLimit(`product-inquiries:${getClientIp(request)}`);
   if (!ok) {
@@ -50,24 +52,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
+  // Decrypt and verify CAPTCHA
+  const { captchaToken, captchaInput } = (body || {}) as { captchaToken?: string; captchaInput?: string };
+  if (!captchaToken || !captchaInput) {
+    return NextResponse.json({ error: 'Security verification code is required.' }, { status: 400 });
+  }
+
+  const expectedCode = decryptCaptcha(captchaToken);
+  if (!expectedCode || expectedCode.toLowerCase() !== captchaInput.toLowerCase()) {
+    return NextResponse.json({ error: 'Incorrect security verification code. Please try again.' }, { status: 400 });
+  }
+
   const parsed = productInquirySchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 422 });
   }
 
-  const { name, phone, email, message, productName, productId } = parsed.data;
+  const { name, phone, email, message, productName, productId, gstin } = parsed.data;
 
   try {
     await initDB();
     const [result] = await pool.query(
-      'INSERT INTO product_inquiries (product_id, product_name, name, phone, email, message) VALUES (?, ?, ?, ?, ?, ?)',
-      [productId ?? null, productName, name, phone, email || null, message]
+      'INSERT INTO product_inquiries (product_id, product_name, name, phone, email, message, gstin) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [productId ?? null, productName, name, phone, email || null, message, gstin ?? null]
     );
 
     const submittedAt = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
     sendOwnerNotification(
       `New Inquiry: ${productName}`,
-      productInquiryNotificationHtml({ name, phone, email: email || undefined, message, productName, submittedAt })
+      productInquiryNotificationHtml({ name, phone, email: email || undefined, message, productName, gstin, submittedAt })
     ).catch((err) => console.error('[mailer] product-inquiry notification failed:', err));
 
     return NextResponse.json({ success: true, id: (result as { insertId: number }).insertId });

@@ -10,7 +10,7 @@ async function migrate() {
     database: 'avegatasta',
   });
 
-  const query = async (sql, values) => {
+  const query = async (sql: string, values?: any[]) => {
     const [results] = await connection.execute(sql, values);
     return results;
   };

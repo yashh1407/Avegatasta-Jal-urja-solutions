@@ -41,6 +41,7 @@ interface Inquiry {
   meeting_location: string | null;
   client_id: number | null;
   created_at: string;
+  gstin?: string | null;
 }
 
 interface ProductInquiry {
@@ -59,6 +60,7 @@ interface ProductInquiry {
   meeting_location: string | null;
   client_id: number | null;
   created_at: string;
+  gstin?: string | null;
 }
 
 type Tab = 'general' | 'product';
@@ -614,6 +616,12 @@ function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast }: { in
             Email: <a href={`mailto:${inquiry.email}`} className="text-blue-600 hover:underline">{inquiry.email}</a>
           </p>
         )}
+        {inquiry.gstin && (
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 w-fit">
+            <span className="text-[9px] font-black uppercase text-slate-400">GSTIN:</span>
+            <span className="font-mono">{inquiry.gstin}</span>
+          </div>
+        )}
 
         {inquiry.status === 'wants_to_meet' && (inquiry.meeting_date || inquiry.meeting_time) && (
           <div className="bg-purple-50 p-3 rounded-xl border border-purple-100 text-xs text-purple-800">
@@ -1162,6 +1170,11 @@ export default function AdminInquiriesPage() {
                             <a href={`tel:${inquiry.phone}`} className="flex items-center gap-1 text-xs text-slate-500 hover:text-blue-600 font-medium transition-colors">
                               <Phone size={11} /> {inquiry.phone}
                             </a>
+                            {inquiry.gstin && (
+                              <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 font-mono">
+                                GST: {inquiry.gstin}
+                              </span>
+                            )}
                             <span className="flex items-center gap-1 text-[10px] text-slate-400 ml-auto">
                               <Clock size={10} />
                               {new Date(inquiry.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}

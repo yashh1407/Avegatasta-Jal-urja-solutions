@@ -40,6 +40,24 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ProductsPage() {
-  return <ProductsPageClient />;
+import pool, { initDB } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
+
+export default async function ProductsPage() {
+  let dbProducts: any[] = [];
+  try {
+    await initDB();
+    const [rows] = await pool.query('SELECT * FROM products ORDER BY name ASC');
+    dbProducts = (rows as any[]).map((row) => ({
+      ...row,
+      features: typeof row.features === 'string' ? JSON.parse(row.features) : (row.features || []),
+      specs: typeof row.specs === 'string' ? JSON.parse(row.specs) : (row.specs || {}),
+      inStock: Boolean(row.inStock),
+    }));
+  } catch (error) {
+    console.error('Failed to pre-fetch products for page:', error);
+  }
+
+  return <ProductsPageClient initialProducts={dbProducts} />;
 }

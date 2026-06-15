@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import pool, { initDB } from '@/lib/db';
 import { requireAdminSession } from '@/lib/admin-auth';
-import { products } from '@/lib/data';
 
 export async function GET() {
-  const { error } = await requireAdminSession();
+  const { error } = await requireAdminSession('products');
   if (error) return error;
 
   try {
@@ -15,7 +14,8 @@ export async function GET() {
         .map((p) => [p.product_id, p])
     );
 
-    const merged = products.map((p) => {
+    const [productRows] = await pool.query('SELECT id, name, brand, category, image, hsn_code, sac_code FROM products ORDER BY name ASC');
+    const merged = (productRows as any[]).map((p) => {
       const pricing = pricingMap.get(p.id);
       return {
         product_id: p.id,
@@ -26,6 +26,8 @@ export async function GET() {
         dp_price: pricing?.dp_price ?? null,
         mrp_price: pricing?.mrp_price ?? null,
         description: (pricing as any)?.description ?? null,
+        hsn_code: p.hsn_code ?? null,
+        sac_code: p.sac_code ?? null,
       };
     });
 
@@ -37,7 +39,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { error } = await requireAdminSession();
+  const { error } = await requireAdminSession('products');
   if (error) return error;
 
   let body: unknown;
@@ -47,7 +49,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { product_id, dp_price, mrp_price, notes, description } = body as Record<string, unknown>;
+  const { product_id, dp_price, mrp_price, notes, description, hsn_code, sac_code } = body as Record<string, unknown>;
 
   if (!product_id) {
     return NextResponse.json({ error: 'product_id is required' }, { status: 422 });
@@ -61,6 +63,25 @@ export async function POST(request: Request) {
        ON DUPLICATE KEY UPDATE dp_price = VALUES(dp_price), mrp_price = VALUES(mrp_price), notes = VALUES(notes), description = VALUES(description)`,
       [product_id, dp_price ?? null, mrp_price ?? null, notes ?? null, description ?? null]
     );
+
+    const productUpdates: string[] = [];
+    const productValues: any[] = [];
+    if (hsn_code !== undefined) {
+      productUpdates.push('hsn_code = ?');
+      productValues.push(hsn_code || null);
+    }
+    if (sac_code !== undefined) {
+      productUpdates.push('sac_code = ?');
+      productValues.push(sac_code || null);
+    }
+    if (productUpdates.length > 0) {
+      productValues.push(product_id);
+      await pool.query(
+        `UPDATE products SET ${productUpdates.join(', ')} WHERE id = ?`,
+        productValues
+      );
+    }
+
     const [rows] = await pool.query('SELECT * FROM product_pricing WHERE product_id = ?', [product_id]);
     return NextResponse.json((rows as unknown[])[0]);
   } catch (err) {

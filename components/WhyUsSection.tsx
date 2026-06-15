@@ -6,31 +6,20 @@ import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-interface WhyUsSectionProps {
-  badge?: string;
-  titleHtml?: string;
-  benefits?: string[];
-  image1?: string;
-  image2?: string;
-}
+// ── Data ─────────────────────────────────────────────────────────────────────
 
-export default function WhyUsSection(props: WhyUsSectionProps) {
-  const badge = props.badge || 'Why Choose Us';
-  const titleHtml = props.titleHtml || 'Your Enterprise <br /> Solutions Partner';
-  const image1 = props.image1 || 'https://images.unsplash.com/photo-1581093806997-124204d9fa9d?auto=format&fit=crop&q=80&w=800&h=450';
-  const image2 = props.image2 || '/about/b2b-services.jpg';
+const BENEFITS = [
+  'Authorized partner for V-Guard, Wilo, Zero B & Bluewave India',
+  'End-to-end B2B project delivery — supply, install, and support',
+  'Serving industrial, commercial, hospitality, and residential sectors',
+  'Swimming pool equipment & chemical solutions via Bluewave India',
+  'Bulk procurement and enterprise project management capabilities',
+  'Energy-efficient systems with certified after-sales service',
+];
 
-  const defaultBenefits = [
-    'Authorized partner for V-Guard, Wilo, Zero B & Bluewave India',
-    'End-to-end B2B project delivery — supply, install, and support',
-    'Serving industrial, commercial, hospitality, and residential sectors',
-    'Swimming pool equipment & chemical solutions via Bluewave India',
-    'Bulk procurement and enterprise project management capabilities',
-    'Energy-efficient systems with certified after-sales service',
-  ];
+// ── Component ─────────────────────────────────────────────────────────────────
 
-  const benefits = props.benefits && props.benefits.length > 0 ? props.benefits : defaultBenefits;
-
+export default function WhyUsSection() {
   return (
     <section className="py-16 sm:py-20 lg:py-24 bg-brand-950 text-white overflow-hidden relative">
       {/* Background glows */}
@@ -59,16 +48,19 @@ export default function WhyUsSection(props: WhyUsSectionProps) {
               variants={fadeUp}
               className="text-xs font-black text-accent-400 uppercase tracking-[0.2em] mb-4"
             >
-              {badge}
+              Why Choose Us
             </motion.p>
             <motion.h2
               variants={fadeUp}
               className="text-4xl md:text-5xl font-black tracking-tight mb-10 leading-tight"
-              dangerouslySetInnerHTML={{ __html: titleHtml }}
-            />
+            >
+              Your Enterprise{' '}
+              <br />
+              Solutions Partner
+            </motion.h2>
 
             <motion.ul variants={staggerContainer} className="space-y-5 mb-10">
-              {benefits.map((item) => (
+              {BENEFITS.map((item) => (
                 <motion.li key={item} variants={fadeUp} className="flex gap-4 items-start">
                   <div className="w-7 h-7 rounded-full bg-accent-500/20 border border-accent-500/30 flex items-center justify-center shrink-0 mt-0.5">
                     <svg
@@ -113,8 +105,8 @@ export default function WhyUsSection(props: WhyUsSectionProps) {
           >
             <div className="motion-media relative rounded-[2rem] overflow-hidden aspect-video shadow-2xl">
               <Image
-                src={image1}
-                alt="Authorized Brand Products"
+                src="https://images.unsplash.com/photo-1581093806997-124204d9fa9d?auto=format&fit=crop&q=80&w=800&h=450"
+                alt="Authorized Brand Products — V-Guard, Wilo, Zero B, Bluewave"
                 fill
                 className="object-cover"
                 referrerPolicy="no-referrer"
@@ -126,7 +118,7 @@ export default function WhyUsSection(props: WhyUsSectionProps) {
             </div>
             <div className="motion-media relative rounded-[2rem] overflow-hidden aspect-video shadow-2xl">
               <Image
-                src={image2}
+                src="/about/b2b-services.jpg"
                 alt="End-to-End B2B Project Services"
                 fill
                 className="object-cover"

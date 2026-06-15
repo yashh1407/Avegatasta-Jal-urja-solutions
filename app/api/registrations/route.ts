@@ -4,6 +4,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 import { registrationSchema } from '@/lib/validation';
 import { sendOwnerNotification, registrationNotificationHtml } from '@/lib/mailer';
 import { requireAdminSession } from '@/lib/admin-auth';
+import { decryptCaptcha } from '@/lib/captcha';
 
 export async function POST(request: Request) {
   const { ok } = rateLimit(`registrations:${getClientIp(request)}`);
@@ -18,23 +19,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
+  // Decrypt and verify CAPTCHA
+  const { captchaToken, captchaInput } = (body || {}) as { captchaToken?: string; captchaInput?: string };
+  if (!captchaToken || !captchaInput) {
+    return NextResponse.json({ error: 'Security verification code is required.' }, { status: 400 });
+  }
+
+  const expectedCode = decryptCaptcha(captchaToken);
+  if (!expectedCode || expectedCode.toLowerCase() !== captchaInput.toLowerCase()) {
+    return NextResponse.json({ error: 'Incorrect security verification code. Please try again.' }, { status: 400 });
+  }
+
   const parsed = registrationSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 422 });
   }
 
-  const { firstName, lastName, phone } = parsed.data;
+  const { firstName, lastName, phone, gstin } = parsed.data;
 
   try {
     await initDB();
     await pool.query(
-      'INSERT INTO registrations (firstName, lastName, phone) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE firstName = VALUES(firstName), lastName = VALUES(lastName)',
-      [firstName, lastName, phone]
+      'INSERT INTO registrations (firstName, lastName, phone, gstin) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE firstName = VALUES(firstName), lastName = VALUES(lastName), gstin = VALUES(gstin)',
+      [firstName, lastName, phone, gstin ?? null]
     );
     const submittedAt = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
     sendOwnerNotification(
       `New Customer Registration: ${firstName} ${lastName}`,
-      registrationNotificationHtml({ firstName, lastName, phone, submittedAt })
+      registrationNotificationHtml({ firstName, lastName, phone, gstin, submittedAt })
     ).catch((err) => console.error('[mailer] registration notification failed:', err));
 
     return NextResponse.json({ success: true });
