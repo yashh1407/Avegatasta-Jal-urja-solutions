@@ -262,6 +262,7 @@ function EditableInquiryForm({ inquiry, onSave, onDelete, onToast }: { inquiry: 
           phone: inquiry.phone || '',
           email: '', // general inquiry doesn't have email in this DB schema
           notes: `Converted from General Inquiry.\nSubject: ${inquiry.subject || 'N/A'}\nMessage: ${inquiry.message}`,
+          gstin: inquiry.gstin || '',
           source_inquiry_id: inquiry.id,
           source_inquiry_type: 'general'
         })
@@ -536,6 +537,7 @@ function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast }: { in
           product_id: inquiry.product_id,
           product_name: inquiry.product_name,
           notes: `Converted from Product Inquiry for ${inquiry.product_name}.\nMessage: ${inquiry.message}`,
+          gstin: inquiry.gstin || '',
           source_inquiry_id: inquiry.id,
           source_inquiry_type: 'product'
         })

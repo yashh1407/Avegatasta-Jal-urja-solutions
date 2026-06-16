@@ -198,6 +198,36 @@ export async function PATCH(request: Request) {
         id
       ]
     );
+
+    if (nextStatus === 'delivered') {
+      const [updatedRows] = await pool.query('SELECT * FROM product_inquiries WHERE id = ? LIMIT 1', [id]);
+      const inquiry = (updatedRows as any[])[0];
+      if (inquiry && !inquiry.client_id) {
+        // 1. Create client record
+        const [clientResult] = await pool.query(
+          `INSERT INTO clients (name, email, phone, notes, gstin) VALUES (?, ?, ?, ?, ?)`,
+          [
+            inquiry.name,
+            inquiry.email || null,
+            inquiry.phone || null,
+            `Auto-converted from Delivered Product Inquiry for ${inquiry.product_name}.\nMessage: ${inquiry.message}`,
+            inquiry.gstin || null
+          ]
+        );
+        const newClientId = (clientResult as any).insertId;
+        
+        // 2. Add product assignment to client_products
+        if (inquiry.product_name) {
+          await pool.query(
+            `INSERT INTO client_products (client_id, product_id, product_name, purchase_date) VALUES (?, ?, ?, CURDATE())`,
+            [newClientId, inquiry.product_id || null, inquiry.product_name]
+          );
+        }
+
+        // 3. Update inquiry's client_id
+        await pool.query('UPDATE product_inquiries SET client_id = ? WHERE id = ?', [newClientId, id]);
+      }
+    }
     
     return NextResponse.json({ success: true });
   } catch (error) {

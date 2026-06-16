@@ -71,14 +71,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 422 });
   }
 
-  const { name, email, phone, address, city, state, pincode, company_name, notes } = parsed.data;
+  const { name, email, phone, address, city, state, pincode, company_name, notes, gstin } = parsed.data;
   const { product_id, product_name, source_inquiry_id, source_inquiry_type } = body as { product_id?: string; product_name?: string; source_inquiry_id?: number; source_inquiry_type?: 'general' | 'product' };
 
   try {
     await initDB();
     const [result] = await pool.query(
-      `INSERT INTO clients (name, email, phone, address, city, state, pincode, company_name, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO clients (name, email, phone, address, city, state, pincode, company_name, notes, gstin)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         name,
         email || null,
@@ -89,6 +89,7 @@ export async function POST(request: Request) {
         pincode || null,
         company_name || null,
         notes || null,
+        gstin || null,
       ]
     );
     const id = (result as { insertId: number }).insertId;

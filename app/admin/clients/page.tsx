@@ -38,6 +38,7 @@ interface Client {
   pincode: string | null;
   company_name: string | null;
   notes: string | null;
+  gstin?: string | null;
   product_count: number;
   created_at: string;
 }
@@ -52,6 +53,7 @@ interface ClientFormData {
   pincode: string;
   company_name: string;
   notes: string;
+  gstin: string;
 }
 
 const EMPTY_FORM: ClientFormData = {
@@ -64,6 +66,7 @@ const EMPTY_FORM: ClientFormData = {
   pincode: '',
   company_name: '',
   notes: '',
+  gstin: '',
 };
 
 const PAGE_SIZE = 20;
@@ -190,6 +193,12 @@ function ClientFormModal({
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Company Name</label>
                 <input className={inputClass} value={form.company_name} onChange={set('company_name')} placeholder="Company / Organisation" />
                 {fieldError('company_name')}
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">GSTIN</label>
+                <input className={inputClass} value={form.gstin} onChange={set('gstin')} placeholder="15-character GSTIN" />
+                {fieldError('gstin')}
               </div>
 
               <div>
@@ -329,6 +338,7 @@ export default function AdminClientsPage() {
       pincode: c.pincode ?? '',
       company_name: c.company_name ?? '',
       notes: c.notes ?? '',
+      gstin: c.gstin ?? '',
     } as ClientFormData & { id: number });
     setModalOpen(true);
   };
@@ -485,6 +495,13 @@ export default function AdminClientsPage() {
                             <div className="flex items-center gap-1.5">
                               <Building2 size={11} className="text-slate-400" />
                               <span className="text-xs text-slate-500 font-medium">{client.company_name}</span>
+                            </div>
+                          )}
+                          {client.gstin && (
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[9px] font-black uppercase text-slate-400 bg-slate-100 rounded px-1.5 py-0.5 font-mono">
+                                GST: {client.gstin}
+                              </span>
                             </div>
                           )}
                         </div>

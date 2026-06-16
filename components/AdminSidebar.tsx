@@ -183,13 +183,6 @@ const ADMIN_SECTIONS = [
     module: 'smtp-settings'
   },
   {
-    label: 'Enterprise',
-    href: '/admin/enterprise',
-    icon: Shield,
-    category: 'management',
-    module: 'enterprise'
-  },
-  {
     label: 'Employees',
     href: '/admin/employees',
     icon: Users,

@@ -60,12 +60,12 @@ export async function PUT(
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 422 });
   }
 
-  const { name, email, phone, address, city, state, pincode, company_name, notes } = parsed.data;
+  const { name, email, phone, address, city, state, pincode, company_name, notes, gstin } = parsed.data;
 
   try {
     await initDB();
     const [result] = await pool.query(
-      `UPDATE clients SET name=?, email=?, phone=?, address=?, city=?, state=?, pincode=?, company_name=?, notes=?
+      `UPDATE clients SET name=?, email=?, phone=?, address=?, city=?, state=?, pincode=?, company_name=?, notes=?, gstin=?
        WHERE id=?`,
       [
         name,
@@ -77,6 +77,7 @@ export async function PUT(
         pincode || null,
         company_name || null,
         notes || null,
+        gstin || null,
         id,
       ]
     );

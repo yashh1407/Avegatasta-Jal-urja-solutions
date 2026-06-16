@@ -153,7 +153,7 @@ export async function initDB() {
       try { await connection.query(ddl); } catch (e: any) { if (e.code !== 'ER_DUP_FIELDNAME') throw e; }
     }
 
-    // Inquiries
+     // Inquiries
     await connection.query(`
       CREATE TABLE IF NOT EXISTS inquiries (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -170,6 +170,7 @@ export async function initDB() {
         meeting_time VARCHAR(20) NULL,
         meeting_type ENUM('office', 'custom') NULL,
         meeting_location TEXT NULL,
+        gstin VARCHAR(15) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -187,6 +188,7 @@ export async function initDB() {
       `ALTER TABLE inquiries ADD COLUMN meeting_type ENUM('office', 'custom') NULL`,
       `ALTER TABLE inquiries ADD COLUMN meeting_location TEXT NULL`,
       `ALTER TABLE inquiries ADD COLUMN client_id INT DEFAULT NULL`,
+      `ALTER TABLE inquiries ADD COLUMN gstin VARCHAR(15) DEFAULT NULL`,
     ]) {
       try { await connection.query(ddl); } catch (e: any) { if (e.code !== 'ER_DUP_FIELDNAME') throw e; }
     }
@@ -282,10 +284,18 @@ export async function initDB() {
         pincode VARCHAR(20),
         company_name VARCHAR(255),
         notes TEXT,
+        gstin VARCHAR(15) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
     `);
+
+    // Migrate clients table
+    for (const ddl of [
+      `ALTER TABLE clients ADD COLUMN gstin VARCHAR(15) DEFAULT NULL`,
+    ]) {
+      try { await connection.query(ddl); } catch (e: any) { if (e.code !== 'ER_DUP_FIELDNAME') throw e; }
+    }
 
     // Client Products (purchased product lifecycle per client)
     await connection.query(`

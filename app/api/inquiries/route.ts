@@ -177,6 +177,27 @@ export async function PATCH(request: Request) {
         id
       ]
     );
+
+    if (nextStatus === 'delivered') {
+      const [updatedRows] = await pool.query('SELECT * FROM inquiries WHERE id = ? LIMIT 1', [id]);
+      const inquiry = (updatedRows as any[])[0];
+      if (inquiry && !inquiry.client_id) {
+        // 1. Create client record
+        const [clientResult] = await pool.query(
+          `INSERT INTO clients (name, phone, notes, gstin) VALUES (?, ?, ?, ?)`,
+          [
+            inquiry.name,
+            inquiry.phone || null,
+            `Auto-converted from Delivered General Inquiry.\nSubject: ${inquiry.subject || 'N/A'}\nMessage: ${inquiry.message}`,
+            inquiry.gstin || null
+          ]
+        );
+        const newClientId = (clientResult as any).insertId;
+        
+        // 2. Update inquiry's client_id
+        await pool.query('UPDATE inquiries SET client_id = ? WHERE id = ?', [newClientId, id]);
+      }
+    }
     
     return NextResponse.json({ success: true });
   } catch (error) {

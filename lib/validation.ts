@@ -51,6 +51,7 @@ export const clientSchema = z.object({
   pincode: z.string().max(20).optional(),
   company_name: z.string().max(255).optional(),
   notes: z.string().max(5000).optional(),
+  gstin: z.string().max(15).optional().or(z.literal('')),
 });
 
 export const clientProductSchema = z.object({
