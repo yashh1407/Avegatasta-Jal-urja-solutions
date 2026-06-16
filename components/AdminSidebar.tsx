@@ -141,13 +141,6 @@ const ADMIN_SECTIONS = [
     module: 'amc-plans'
   },
   {
-    label: 'Team Members',
-    href: '/admin/team-members',
-    icon: UserCheck,
-    category: 'management',
-    module: 'team-members'
-  },
-  {
     label: 'Brands',
     href: '/admin/brands',
     icon: Tag,
