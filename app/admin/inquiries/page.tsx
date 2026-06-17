@@ -1503,6 +1503,32 @@ export default function AdminInquiriesPage() {
                   </div>
                 </div>
 
+                {/* Geolocation Manual Overrides */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Latitude (Optional)</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={gpsLatitude !== null ? gpsLatitude : ''}
+                      onChange={e => setGpsLatitude(e.target.value ? Number(e.target.value) : null)}
+                      placeholder="E.g., 20.5937"
+                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-mono text-blue-950 placeholder:text-slate-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Longitude (Optional)</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={gpsLongitude !== null ? gpsLongitude : ''}
+                      onChange={e => setGpsLongitude(e.target.value ? Number(e.target.value) : null)}
+                      placeholder="E.g., 78.9629"
+                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-mono text-blue-950 placeholder:text-slate-400"
+                    />
+                  </div>
+                </div>
+
                 {/* Basic Inputs */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
