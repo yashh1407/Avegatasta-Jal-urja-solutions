@@ -3,6 +3,8 @@ import pool, { initDB } from '@/lib/db';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 import { inquirySchema } from '@/lib/validation';
 import { requireAdminSession } from '@/lib/admin-auth';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const ALLOWED_STATUSES = [
   'new',
@@ -54,15 +56,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 422 });
   }
 
-  const { name, phone, subject, message } = parsed.data;
+  const { name, phone, subject, message, gstin, latitude, longitude, location_accuracy } = parsed.data;
+
+  const session = await getServerSession(authOptions);
+  const loggedByName = session ? (session.user as any).name : 'Public Website';
+  const loggedByEmail = session ? (session.user as any).email : 'public@website.com';
 
   try {
     await initDB();
     const [result] = await pool.query(
-      'INSERT INTO inquiries (name, phone, subject, message) VALUES (?, ?, ?, ?)',
-      [name, phone ?? null, subject ?? null, message]
+      `INSERT INTO inquiries (
+        name, phone, subject, message, gstin, 
+        latitude, longitude, location_accuracy, logged_by_name, logged_by_email
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        name, 
+        phone ?? null, 
+        subject ?? null, 
+        message, 
+        gstin ?? null,
+        latitude ?? null,
+        longitude ?? null,
+        location_accuracy ?? null,
+        loggedByName,
+        loggedByEmail
+      ]
     );
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, id: (result as any).insertId });
   } catch (error) {
     console.error('Database error:', error);
     return NextResponse.json({ error: 'Failed to save inquiry' }, { status: 500 });
@@ -111,7 +131,7 @@ export async function PATCH(request: Request) {
     const body = await request.json() as Record<string, unknown>;
     const { 
       id, name, phone, subject, message, 
-      status, meeting_date, meeting_time, meeting_type, meeting_location, agreed_price 
+      status, meeting_date, meeting_time, meeting_type, meeting_location, agreed_price, quote_number 
     } = body;
     
     if (!id || !/^\d+$/.test(String(id))) {
@@ -136,6 +156,7 @@ export async function PATCH(request: Request) {
       meeting_time: string | null;
       meeting_type: string | null;
       meeting_location: string | null;
+      quote_number: string | null;
     }>)[0];
 
     if (!current) {
@@ -155,7 +176,7 @@ export async function PATCH(request: Request) {
     await pool.query(
       `UPDATE inquiries 
        SET name = ?, phone = ?, subject = ?, message = ?, status = ?, 
-           meeting_date = ?, meeting_time = ?, meeting_type = ?, meeting_location = ?, agreed_price = ?,
+           meeting_date = ?, meeting_time = ?, meeting_type = ?, meeting_location = ?, agreed_price = ?, quote_number = ?,
            delivered_at = CASE
              WHEN ? = 'delivered' AND delivered_at IS NULL AND ? IS NOT NULL THEN NOW()
              ELSE delivered_at
@@ -172,30 +193,85 @@ export async function PATCH(request: Request) {
         has(body, 'meeting_type') ? optionalString(meeting_type) : current.meeting_type,
         has(body, 'meeting_location') ? optionalString(meeting_location) : current.meeting_location,
         nextAgreedPrice,
+        has(body, 'quote_number') ? optionalString(quote_number) : current.quote_number,
         nextStatus,
         nextAgreedPrice,
         id
       ]
     );
 
-    if (nextStatus === 'delivered') {
+    if (nextStatus === 'delivered' || nextStatus === 'order_confirmed') {
       const [updatedRows] = await pool.query('SELECT * FROM inquiries WHERE id = ? LIMIT 1', [id]);
       const inquiry = (updatedRows as any[])[0];
-      if (inquiry && !inquiry.client_id) {
-        // 1. Create client record
-        const [clientResult] = await pool.query(
-          `INSERT INTO clients (name, phone, notes, gstin) VALUES (?, ?, ?, ?)`,
-          [
-            inquiry.name,
-            inquiry.phone || null,
-            `Auto-converted from Delivered General Inquiry.\nSubject: ${inquiry.subject || 'N/A'}\nMessage: ${inquiry.message}`,
-            inquiry.gstin || null
-          ]
-        );
-        const newClientId = (clientResult as any).insertId;
-        
-        // 2. Update inquiry's client_id
-        await pool.query('UPDATE inquiries SET client_id = ? WHERE id = ?', [newClientId, id]);
+      if (inquiry) {
+        let clientId = inquiry.client_id;
+        if (!clientId) {
+          // 1. Create client record
+          const [clientResult] = await pool.query(
+            `INSERT INTO clients (name, phone, notes, gstin) VALUES (?, ?, ?, ?)`,
+            [
+              inquiry.name,
+              inquiry.phone || null,
+              `Auto-converted from General Inquiry (Status: ${nextStatus}).\nSubject: ${inquiry.subject || 'N/A'}\nMessage: ${inquiry.message}`,
+              inquiry.gstin || null
+            ]
+          );
+          clientId = (clientResult as any).insertId;
+          
+          // 2. Update inquiry's client_id
+          await pool.query('UPDATE inquiries SET client_id = ? WHERE id = ?', [clientId, id]);
+        }
+
+        // 3. If a quote is linked, parse the quote items and save to client_products
+        if (clientId && inquiry.quote_number) {
+          const [quoteRows] = await pool.query(
+            'SELECT canvas_data FROM canvas_quotations WHERE quote_number = ? LIMIT 1',
+            [inquiry.quote_number]
+          );
+          const quote = (quoteRows as any[])[0];
+          if (quote && quote.canvas_data) {
+            let items: any[] = [];
+            try {
+              const parsed = JSON.parse(quote.canvas_data);
+              if (Array.isArray(parsed)) {
+                if (parsed.length > 0 && parsed[0].type === '_v2_structured_data') {
+                  items = parsed[0].content?.items || [];
+                } else {
+                  parsed.forEach((el: any) => {
+                    if (el.type === 'pricing_table' && el.content && Array.isArray(el.content.items)) {
+                      items = el.content.items;
+                    }
+                  });
+                }
+              }
+            } catch (err) {
+              console.error('Error parsing quote canvas_data:', err);
+            }
+
+            for (const item of items) {
+              // Avoid duplicate product insertions for this quote
+              const [existing] = await pool.query(
+                'SELECT id FROM client_products WHERE client_id = ? AND quote_number = ? AND product_name = ?',
+                [clientId, inquiry.quote_number, item.name]
+              );
+              if ((existing as any[]).length === 0) {
+                await pool.query(
+                  `INSERT INTO client_products (client_id, product_name, price, qty, hsn_code, sac_code, quote_number, purchase_date)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, CURDATE())`,
+                  [
+                    clientId,
+                    item.name,
+                    item.price !== undefined ? item.price : null,
+                    item.qty || 1,
+                    item.hsn_code || null,
+                    item.sac_code || null,
+                    inquiry.quote_number
+                  ]
+                );
+              }
+            }
+          }
+        }
       }
     }
     

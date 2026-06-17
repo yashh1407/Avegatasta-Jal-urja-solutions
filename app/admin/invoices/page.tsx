@@ -462,7 +462,7 @@ export default function InvoiceBuilderPage() {
                   <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Select Client (Auto-fill)</label>
                   <select 
                     className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400"
-                    onChange={e => {
+                    onChange={async (e) => {
                       const selectedId = e.target.value;
                       if (!selectedId) return;
                       const selected = clients.find(c => String(c.id) === selectedId);
@@ -474,12 +474,38 @@ export default function InvoiceBuilderPage() {
                           fullAddress = fullAddress ? `${fullAddress}\n${cityStatePin}` : cityStatePin;
                         }
                         
+                        let clientItems: LineItem[] = [];
+                        try {
+                          const res = await fetch(`/api/admin/clients/${selectedId}/products`);
+                          if (res.ok) {
+                            const products = await res.json();
+                            if (Array.isArray(products)) {
+                              clientItems = products.map((p: any) => ({
+                                id: Math.random().toString(36).substring(7),
+                                name: p.product_name || '',
+                                brand: '',
+                                qty: Number(p.qty) || 1,
+                                unit: 'Nos',
+                                price: Number(p.price) || 0,
+                                mrp: Number(p.price) || 0,
+                                hsn_code: p.hsn_code || '',
+                                sac_code: p.sac_code || '',
+                                description: p.notes || '',
+                              }));
+                            }
+                          }
+                        } catch (err) {
+                          console.error('Failed to fetch client products for invoice:', err);
+                        }
+
                         setData(prev => ({
                           ...prev,
                           clientCompany: selected.company_name || selected.name || '',
                           clientAddress: fullAddress,
                           clientAttn: selected.name || '',
                           clientPhone: selected.phone || '',
+                          clientGstin: selected.gstin || '',
+                          items: clientItems.length > 0 ? clientItems : prev.items
                         }));
                       }
                       e.target.value = '';

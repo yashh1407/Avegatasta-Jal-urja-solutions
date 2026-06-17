@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Phone, MessageSquare, Clock, Trash2, RefreshCw, AlertTriangle, ChevronDown, Package, UserPlus, Lock } from 'lucide-react';
+import { Phone, MessageSquare, Clock, Trash2, RefreshCw, AlertTriangle, ChevronDown, Package, UserPlus, Lock, FileText, Plus, MapPin } from 'lucide-react';
 import Link from 'next/link';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -42,6 +42,12 @@ interface Inquiry {
   client_id: number | null;
   created_at: string;
   gstin?: string | null;
+  quote_number?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  location_accuracy?: number | null;
+  logged_by_name?: string | null;
+  logged_by_email?: string | null;
 }
 
 interface ProductInquiry {
@@ -61,6 +67,12 @@ interface ProductInquiry {
   client_id: number | null;
   created_at: string;
   gstin?: string | null;
+  quote_number?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  location_accuracy?: number | null;
+  logged_by_name?: string | null;
+  logged_by_email?: string | null;
 }
 
 type Tab = 'general' | 'product';
@@ -219,6 +231,7 @@ const inquiryToFormData = (inquiry: Inquiry) => ({
   meeting_time: inquiry.meeting_time || '',
   meeting_type: inquiry.meeting_type || 'office',
   meeting_location: inquiry.meeting_location || '',
+  quote_number: inquiry.quote_number || '',
 });
 
 const productInquiryToFormData = (inquiry: ProductInquiry) => ({
@@ -232,6 +245,7 @@ const productInquiryToFormData = (inquiry: ProductInquiry) => ({
   meeting_time: inquiry.meeting_time || '',
   meeting_type: inquiry.meeting_type || 'office',
   meeting_location: inquiry.meeting_location || '',
+  quote_number: inquiry.quote_number || '',
 });
 
 const parseAgreedPrice = (value: string | number | null | undefined) => {
@@ -240,47 +254,14 @@ const parseAgreedPrice = (value: string | number | null | undefined) => {
   return Number.isFinite(price) && price > 0 ? price : null;
 };
 
-function EditableInquiryForm({ inquiry, onSave, onDelete, onToast }: { inquiry: Inquiry, onSave: (data: Partial<Inquiry>) => void, onDelete: () => void, onToast: (msg: string, type: 'success' | 'error') => void }) {
+function EditableInquiryForm({ inquiry, onSave, onDelete, onToast, savedQuotes }: { inquiry: Inquiry, onSave: (data: Partial<Inquiry>) => void, onDelete: () => void, onToast: (msg: string, type: 'success' | 'error') => void, savedQuotes: any[] }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isConverted, setIsConverted] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [isConverting, setIsConverting] = useState(false);
   const [formData, setFormData] = useState(() => inquiryToFormData(inquiry));
 
   useEffect(() => {
     if (!isEditing) setFormData(inquiryToFormData(inquiry));
   }, [inquiry, isEditing]);
-
-  const handleConvertToClient = async () => {
-    setIsConverting(true);
-    try {
-      const res = await fetch('/api/admin/clients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: inquiry.name,
-          phone: inquiry.phone || '',
-          email: '', // general inquiry doesn't have email in this DB schema
-          notes: `Converted from General Inquiry.\nSubject: ${inquiry.subject || 'N/A'}\nMessage: ${inquiry.message}`,
-          gstin: inquiry.gstin || '',
-          source_inquiry_id: inquiry.id,
-          source_inquiry_type: 'general'
-        })
-      });
-      if (res.ok) {
-        setIsConverted(true);
-        onToast('Client successfully created!', 'success');
-      } else {
-        const err = await res.json();
-        onToast('Failed to create client. ' + (err.error?.phone?.[0] || 'Check the details.'), 'error');
-      }
-    } catch (e) {
-      onToast('An error occurred.', 'error');
-    } finally {
-      setIsConverting(false);
-      setShowConfirm(false);
-    }
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -322,6 +303,7 @@ function EditableInquiryForm({ inquiry, onSave, onDelete, onToast }: { inquiry: 
     meeting_time: formData.meeting_time || null,
     meeting_type: formData.meeting_type,
     meeting_location: formData.meeting_location || null,
+    quote_number: formData.quote_number || null,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -359,16 +341,54 @@ function EditableInquiryForm({ inquiry, onSave, onDelete, onToast }: { inquiry: 
           </div>
         )}
 
+        {inquiry.quote_number && (
+          <div className="bg-orange-50/60 p-3 rounded-xl border border-orange-100 text-xs text-orange-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText size={14} className="text-orange-500 shrink-0" />
+              <span>
+                <strong>Quotation Sent:</strong> <span className="font-mono bg-orange-100 px-1.5 py-0.5 rounded text-orange-950 font-bold">{inquiry.quote_number}</span>
+              </span>
+            </div>
+            <Link 
+              href={`/admin/quotations?load=${inquiry.quote_number}`} 
+              target="_blank"
+              className="text-orange-750 hover:text-orange-905 font-black uppercase tracking-wider text-[10px] bg-white px-2.5 py-1.5 rounded-lg border border-orange-200 shadow-sm transition-all flex items-center gap-1 hover:shadow-md shrink-0"
+            >
+              View/Edit Quotation
+            </Link>
+          </div>
+        )}
+
+        {inquiry.latitude !== null && inquiry.longitude !== null && inquiry.latitude !== undefined && inquiry.longitude !== undefined && (
+          <div className="bg-emerald-50/60 p-3 rounded-xl border border-emerald-100 text-xs text-emerald-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin size={14} className="text-emerald-500 shrink-0" />
+              <span>
+                <strong>Field Location:</strong> {Number(inquiry.latitude).toFixed(6)}, {Number(inquiry.longitude).toFixed(6)}
+                {inquiry.location_accuracy ? ` (accuracy: ${inquiry.location_accuracy}m)` : ''}
+                {inquiry.logged_by_name ? ` · Registered by ${inquiry.logged_by_name}` : ''}
+              </span>
+            </div>
+            <a 
+              href={`https://www.google.com/maps/search/?api=1&query=${inquiry.latitude},${inquiry.longitude}`} 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-700 hover:text-emerald-950 font-black uppercase tracking-wider text-[10px] bg-white px-2.5 py-1.5 rounded-lg border border-emerald-200 shadow-sm transition-all flex items-center gap-1 hover:shadow-md shrink-0"
+            >
+              View on Map
+            </a>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-200">
-          <div className="flex items-center gap-3">
-            <PipelineDropdowns 
-              status={formData.status} 
-              onChange={(newStatus) => handlePipelineStatusSave(newStatus as PipelineStatus)} 
-              size="xs" 
-            />
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Pipeline Stage:</span>
+            <span className={`inline-flex items-center text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${STATUS_COLORS[inquiry.status] || 'bg-slate-100 text-slate-700'}`}>
+              {STATUS_LABELS[inquiry.status] || inquiry.status}
+            </span>
           </div>
           <div className="flex items-center gap-4">
-            {inquiry.client_id || isConverted ? (
+            {(inquiry.client_id || isConverted) && (
               <>
                 <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-600">
                   <UserPlus size={10} /> Converted to Client
@@ -376,67 +396,23 @@ function EditableInquiryForm({ inquiry, onSave, onDelete, onToast }: { inquiry: 
                 <Link href="/admin/clients" className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-blue-600 hover:underline">
                    View Profile
                 </Link>
-                <button
-                  onClick={onDelete}
-                  className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-red-400 hover:text-red-600 transition-colors"
-                >
-                  <Trash2 size={10} /> Delete
-                </button>
-              </>
-            ) : (
-              <>
-                {!isConverted ? (
-                  <div className="relative flex items-center">
-                    <button
-                      onClick={() => setShowConfirm(true)}
-                      className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-emerald-600 transition-colors"
-                      title="Add to Clients Database"
-                    >
-                      <UserPlus size={10} /> Convert to Client
-                    </button>
-                    <AnimatePresence>
-                      {showConfirm && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-white rounded-2xl shadow-xl border border-slate-200 p-3 min-w-[160px] z-10 flex flex-col items-center gap-3"
-                        >
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Are you sure?</span>
-                          <div className="flex items-center gap-2 w-full">
-                            <button onClick={handleConvertToClient} disabled={isConverting} className="flex-1 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1">
-                              {isConverting && <RefreshCw size={10} className="animate-spin" />} Yes
-                            </button>
-                            <button onClick={() => setShowConfirm(false)} disabled={isConverting} className="flex-1 py-2 bg-slate-50 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-colors disabled:opacity-50">No</button>
-                          </div>
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-[1px] border-8 border-transparent border-t-slate-200"></div>
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-[2px] border-8 border-transparent border-t-white"></div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ) : (
-                  <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-600">
-                    <UserPlus size={10} /> Converted
-                  </span>
-                )}
-                <button
-                  onClick={() => {
-                    setFormData(inquiryToFormData(inquiry));
-                    setIsEditing(true);
-                  }}
-                  className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-blue-600 transition-colors"
-                >
-                   Edit Details
-                </button>
-                <button
-                  onClick={onDelete}
-                  className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-red-400 hover:text-red-600 transition-colors"
-                >
-                  <Trash2 size={10} /> Delete
-                </button>
               </>
             )}
+            <button
+              onClick={() => {
+                setFormData(inquiryToFormData(inquiry));
+                setIsEditing(true);
+              }}
+              className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-blue-600 transition-colors"
+            >
+               Edit Details
+            </button>
+            <button
+              onClick={onDelete}
+              className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-red-400 hover:text-red-600 transition-colors"
+            >
+              <Trash2 size={10} /> Delete
+            </button>
           </div>
         </div>
       </div>
@@ -471,6 +447,24 @@ function EditableInquiryForm({ inquiry, onSave, onDelete, onToast }: { inquiry: 
                status={formData.status} 
                onChange={(newStatus) => setFormData(prev => ({ ...prev, status: newStatus as PipelineStatus }))} 
              />
+
+             <div className="flex items-center gap-2">
+               <span className="text-xs font-semibold text-slate-500">Link Quote:</span>
+               <select
+                 name="quote_number"
+                 value={formData.quote_number || ''}
+                 onChange={handleChange}
+                 className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20 outline-none"
+               >
+                 <option value="">-- No Quote --</option>
+                 {savedQuotes.map((q: any) => (
+                   <option key={q.id} value={q.quote_number}>
+                     {q.quote_number} ({q.client_name || 'N/A'})
+                   </option>
+                 ))}
+               </select>
+             </div>
+
           {['order_confirmed', 'delivery_in_progress', 'delivered'].includes(formData.status) && (
             <div>
               <input name="agreed_price" type="number" min="1" step="0.01" required={formData.status === 'delivered'} placeholder="Agreed Price" value={formData.agreed_price} onChange={handleChange} className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500/20 w-[140px] font-medium text-emerald-900" />
@@ -513,49 +507,14 @@ function EditableInquiryForm({ inquiry, onSave, onDelete, onToast }: { inquiry: 
   );
 }
 
-function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast }: { inquiry: ProductInquiry, onSave: (data: Partial<ProductInquiry>) => void, onDelete: () => void, onToast: (msg: string, type: 'success' | 'error') => void }) {
+function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast, savedQuotes }: { inquiry: ProductInquiry, onSave: (data: Partial<ProductInquiry>) => void, onDelete: () => void, onToast: (msg: string, type: 'success' | 'error') => void, savedQuotes: any[] }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isConverted, setIsConverted] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [isConverting, setIsConverting] = useState(false);
   const [formData, setFormData] = useState(() => productInquiryToFormData(inquiry));
 
   useEffect(() => {
     if (!isEditing) setFormData(productInquiryToFormData(inquiry));
   }, [inquiry, isEditing]);
-
-  const handleConvertToClient = async () => {
-    setIsConverting(true);
-    try {
-      const res = await fetch('/api/admin/clients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: inquiry.name,
-          phone: inquiry.phone || '',
-          email: inquiry.email || '',
-          product_id: inquiry.product_id,
-          product_name: inquiry.product_name,
-          notes: `Converted from Product Inquiry for ${inquiry.product_name}.\nMessage: ${inquiry.message}`,
-          gstin: inquiry.gstin || '',
-          source_inquiry_id: inquiry.id,
-          source_inquiry_type: 'product'
-        })
-      });
-      if (res.ok) {
-        setIsConverted(true);
-        onToast('Client successfully created!', 'success');
-      } else {
-        const err = await res.json();
-        onToast('Failed to create client. ' + (err.error?.phone?.[0] || 'Check the details.'), 'error');
-      }
-    } catch (e) {
-      onToast('An error occurred.', 'error');
-    } finally {
-      setIsConverting(false);
-      setShowConfirm(false);
-    }
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -597,6 +556,7 @@ function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast }: { in
     meeting_time: formData.meeting_time || null,
     meeting_type: formData.meeting_type,
     meeting_location: formData.meeting_location || null,
+    quote_number: formData.quote_number || null,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -645,16 +605,54 @@ function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast }: { in
           </div>
         )}
 
+        {inquiry.quote_number && (
+          <div className="bg-orange-50/60 p-3 rounded-xl border border-orange-100 text-xs text-orange-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText size={14} className="text-orange-500 shrink-0" />
+              <span>
+                <strong>Quotation Sent:</strong> <span className="font-mono bg-orange-100 px-1.5 py-0.5 rounded text-orange-950 font-bold">{inquiry.quote_number}</span>
+              </span>
+            </div>
+            <Link 
+              href={`/admin/quotations?load=${inquiry.quote_number}`} 
+              target="_blank"
+              className="text-orange-755 hover:text-orange-905 font-black uppercase tracking-wider text-[10px] bg-white px-2.5 py-1.5 rounded-lg border border-orange-200 shadow-sm transition-all flex items-center gap-1 hover:shadow-md shrink-0"
+            >
+              View/Edit Quotation
+            </Link>
+          </div>
+        )}
+
+        {inquiry.latitude !== null && inquiry.longitude !== null && inquiry.latitude !== undefined && inquiry.longitude !== undefined && (
+          <div className="bg-emerald-50/60 p-3 rounded-xl border border-emerald-100 text-xs text-emerald-800 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin size={14} className="text-emerald-500 shrink-0" />
+              <span>
+                <strong>Field Location:</strong> {Number(inquiry.latitude).toFixed(6)}, {Number(inquiry.longitude).toFixed(6)}
+                {inquiry.location_accuracy ? ` (accuracy: ${inquiry.location_accuracy}m)` : ''}
+                {inquiry.logged_by_name ? ` · Registered by ${inquiry.logged_by_name}` : ''}
+              </span>
+            </div>
+            <a 
+              href={`https://www.google.com/maps/search/?api=1&query=${inquiry.latitude},${inquiry.longitude}`} 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-700 hover:text-emerald-950 font-black uppercase tracking-wider text-[10px] bg-white px-2.5 py-1.5 rounded-lg border border-emerald-200 shadow-sm transition-all flex items-center gap-1 hover:shadow-md shrink-0"
+            >
+              View on Map
+            </a>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-200">
-          <div className="flex items-center gap-3">
-            <PipelineDropdowns 
-              status={formData.status} 
-              onChange={(newStatus) => handlePipelineStatusSave(newStatus as PipelineStatus)} 
-              size="xs" 
-            />
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Pipeline Stage:</span>
+            <span className={`inline-flex items-center text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${STATUS_COLORS[inquiry.status] || 'bg-slate-100 text-slate-700'}`}>
+              {STATUS_LABELS[inquiry.status] || inquiry.status}
+            </span>
           </div>
           <div className="flex items-center gap-4">
-            {inquiry.client_id || isConverted ? (
+            {(inquiry.client_id || isConverted) && (
               <>
                 <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-600">
                   <UserPlus size={10} /> Converted to Client
@@ -662,67 +660,23 @@ function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast }: { in
                 <Link href="/admin/clients" className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-blue-600 hover:underline">
                    View Profile
                 </Link>
-                <button
-                  onClick={onDelete}
-                  className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-red-400 hover:text-red-600 transition-colors"
-                >
-                  <Trash2 size={10} /> Delete
-                </button>
-              </>
-            ) : (
-              <>
-                {!isConverted ? (
-                  <div className="relative flex items-center">
-                    <button
-                      onClick={() => setShowConfirm(true)}
-                      className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-emerald-600 transition-colors"
-                      title="Add to Clients Database"
-                    >
-                      <UserPlus size={10} /> Convert to Client
-                    </button>
-                    <AnimatePresence>
-                      {showConfirm && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-white rounded-2xl shadow-xl border border-slate-200 p-3 min-w-[160px] z-10 flex flex-col items-center gap-3"
-                        >
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Are you sure?</span>
-                          <div className="flex items-center gap-2 w-full">
-                            <button onClick={handleConvertToClient} disabled={isConverting} className="flex-1 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-1">
-                              {isConverting && <RefreshCw size={10} className="animate-spin" />} Yes
-                            </button>
-                            <button onClick={() => setShowConfirm(false)} disabled={isConverting} className="flex-1 py-2 bg-slate-50 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-colors disabled:opacity-50">No</button>
-                          </div>
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-[1px] border-8 border-transparent border-t-slate-200"></div>
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-[2px] border-8 border-transparent border-t-white"></div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ) : (
-                  <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-600">
-                    <UserPlus size={10} /> Converted
-                  </span>
-                )}
-                <button
-                  onClick={() => {
-                    setFormData(productInquiryToFormData(inquiry));
-                    setIsEditing(true);
-                  }}
-                  className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-blue-600 transition-colors"
-                >
-                   Edit Details
-                </button>
-                <button
-                  onClick={onDelete}
-                  className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-red-400 hover:text-red-600 transition-colors"
-                >
-                  <Trash2 size={10} /> Delete
-                </button>
               </>
             )}
+            <button
+              onClick={() => {
+                setFormData(productInquiryToFormData(inquiry));
+                setIsEditing(true);
+              }}
+              className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-blue-600 transition-colors"
+            >
+               Edit Details
+            </button>
+            <button
+              onClick={onDelete}
+              className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-red-400 hover:text-red-600 transition-colors"
+            >
+              <Trash2 size={10} /> Delete
+            </button>
           </div>
         </div>
       </div>
@@ -757,6 +711,24 @@ function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast }: { in
                status={formData.status} 
                onChange={(newStatus) => setFormData(prev => ({ ...prev, status: newStatus as PipelineStatus }))} 
              />
+
+             <div className="flex items-center gap-2">
+               <span className="text-xs font-semibold text-slate-500">Link Quote:</span>
+               <select
+                 name="quote_number"
+                 value={formData.quote_number || ''}
+                 onChange={handleChange}
+                 className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20 outline-none"
+               >
+                 <option value="">-- No Quote --</option>
+                 {savedQuotes.map((q: any) => (
+                   <option key={q.id} value={q.quote_number}>
+                     {q.quote_number} ({q.client_name || 'N/A'})
+                   </option>
+                 ))}
+               </select>
+             </div>
+
           {['order_confirmed', 'delivery_in_progress', 'delivered'].includes(formData.status) && (
             <div>
               <input name="agreed_price" type="number" min="1" step="0.01" required={formData.status === 'delivered'} placeholder="Agreed Price" value={formData.agreed_price} onChange={handleChange} className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500/20 w-[140px] font-medium text-emerald-900" />
@@ -811,6 +783,25 @@ export default function AdminInquiriesPage() {
   const [urgencyFilter, setUrgencyFilter] = useState<Urgency | 'all'>('all');
   const [expanded, setExpanded] = useState<number | null>(null);
 
+  // Saved quotations state
+  const [savedQuotes, setSavedQuotes] = useState<any[]>([]);
+
+  const fetchSavedQuotes = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/quotations');
+      const data = await res.json();
+      if (data && Array.isArray(data.quotations)) {
+        setSavedQuotes(data.quotations);
+      }
+    } catch (err) {
+      console.error('Failed to fetch saved quotations:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSavedQuotes();
+  }, [fetchSavedQuotes]);
+
   // Product inquiries state
   const [productInquiries, setProductInquiries] = useState<ProductInquiry[]>([]);
   const [loadingProduct, setLoadingProduct] = useState(true);
@@ -823,6 +814,132 @@ export default function AdminInquiriesPage() {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
   }, []);
+
+  // Add Lead Modal State
+  const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
+  const [isSavingLead, setIsSavingLead] = useState(false);
+  const [addLeadData, setAddLeadData] = useState({
+    leadType: 'general' as 'general' | 'product',
+    name: '',
+    phone: '',
+    email: '',
+    subject: '',
+    productName: '',
+    productId: '',
+    message: '',
+    gstin: '',
+  });
+
+  // Geolocation states
+  const [gpsLatitude, setGpsLatitude] = useState<number | null>(null);
+  const [gpsLongitude, setGpsLongitude] = useState<number | null>(null);
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
+  const [gpsStatus, setGpsStatus] = useState<'idle' | 'acquiring' | 'success' | 'error'>('idle');
+  const [gpsError, setGpsError] = useState<string | null>(null);
+
+  const captureLocation = useCallback(() => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      setGpsStatus('error');
+      setGpsError('Geolocation is not supported by your browser.');
+      return;
+    }
+    setGpsStatus('acquiring');
+    setGpsError(null);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setGpsLatitude(position.coords.latitude);
+        setGpsLongitude(position.coords.longitude);
+        setGpsAccuracy(position.coords.accuracy);
+        setGpsStatus('success');
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        setGpsStatus('error');
+        let errMsg = 'Failed to acquire location.';
+        if (error.code === error.PERMISSION_DENIED) {
+          errMsg = 'Permission denied. Please enable location services in your browser settings.';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          errMsg = 'Location position unavailable. Please try again.';
+        } else if (error.code === error.TIMEOUT) {
+          errMsg = 'Location request timed out. Please try again.';
+        }
+        setGpsError(errMsg);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }, []);
+
+  // Automatically trigger location capture when the Add Lead modal opens
+  useEffect(() => {
+    if (isAddLeadOpen) {
+      captureLocation();
+    } else {
+      setGpsLatitude(null);
+      setGpsLongitude(null);
+      setGpsAccuracy(null);
+      setGpsStatus('idle');
+      setGpsError(null);
+      setAddLeadData({
+        leadType: 'general',
+        name: '',
+        phone: '',
+        email: '',
+        subject: '',
+        productName: '',
+        productId: '',
+        message: '',
+        gstin: '',
+      });
+    }
+  }, [isAddLeadOpen, captureLocation]);
+
+  const handleAddLeadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingLead(true);
+
+    const payload: any = {
+      name: addLeadData.name,
+      phone: addLeadData.phone || undefined,
+      message: addLeadData.message,
+      gstin: addLeadData.gstin || undefined,
+      latitude: gpsLatitude,
+      longitude: gpsLongitude,
+      location_accuracy: gpsAccuracy,
+    };
+
+    let url = '/api/inquiries';
+    if (addLeadData.leadType === 'product') {
+      url = '/api/product-inquiries';
+      payload.productName = addLeadData.productName;
+      payload.productId = addLeadData.productId || undefined;
+      payload.email = addLeadData.email || undefined;
+    } else {
+      payload.subject = addLeadData.subject || undefined;
+    }
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const resData = await res.json();
+      if (res.ok) {
+        showToast('Lead successfully created!', 'success');
+        setIsAddLeadOpen(false);
+        fetchInquiries(true);
+        fetchProductInquiries(true);
+      } else {
+        showToast(resData.error ? JSON.stringify(resData.error) : 'Failed to create lead', 'error');
+      }
+    } catch (err) {
+      console.error('Failed to save lead:', err);
+      showToast('An error occurred. Please try again.', 'error');
+    } finally {
+      setIsSavingLead(false);
+    }
+  };
 
   const generalTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const productTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -967,13 +1084,22 @@ export default function AdminInquiriesPage() {
                 : `${productInquiries.length} product inquiries`}
             </p>
           </div>
-          <button
-            onClick={() => activeTab === 'general' ? fetchInquiries(false) : fetchProductInquiries(false)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all"
-          >
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-            Refresh
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsAddLeadOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-sm transition-all"
+            >
+              <Plus size={14} />
+              Add Lead
+            </button>
+            <button
+              onClick={() => activeTab === 'general' ? fetchInquiries(false) : fetchProductInquiries(false)}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all"
+            >
+              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+              Refresh
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -1098,7 +1224,19 @@ export default function AdminInquiriesPage() {
                           <p className="text-sm text-slate-600 line-clamp-1 leading-relaxed">{inquiry.message}</p>
                           <div className="mt-2 flex flex-col gap-1">
                             <TriageBadge urgency={inquiry.ai_urgency} category={inquiry.ai_category} intent={inquiry.ai_intent} />
-                            <StatusBadge status={inquiry.status} meetingDate={inquiry.meeting_date} meetingTime={inquiry.meeting_time} meetingType={inquiry.meeting_type} />
+                            <div className="flex flex-wrap gap-2 items-center">
+                              <StatusBadge status={inquiry.status} meetingDate={inquiry.meeting_date} meetingTime={inquiry.meeting_time} meetingType={inquiry.meeting_type} />
+                              {inquiry.quote_number && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
+                                  <FileText size={10} /> {inquiry.quote_number}
+                                </span>
+                              )}
+                              {inquiry.latitude !== null && inquiry.longitude !== null && inquiry.latitude !== undefined && inquiry.longitude !== undefined && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200" title="Geolocation coordinates available">
+                                  <MapPin size={10} /> Geo
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -1122,6 +1260,7 @@ export default function AdminInquiriesPage() {
                               onSave={(data) => handleStatusChange(inquiry.id, data)} 
                               onDelete={() => handleDelete(inquiry.id)}
                               onToast={showToast}
+                              savedQuotes={savedQuotes}
                             />
                           </motion.div>
                         )}
@@ -1186,7 +1325,19 @@ export default function AdminInquiriesPage() {
                             <Package size={11} /> {inquiry.product_name}
                           </p>
                           <p className="text-sm text-slate-600 line-clamp-1 leading-relaxed">{inquiry.message}</p>
-                          <StatusBadge status={inquiry.status} meetingDate={inquiry.meeting_date} meetingTime={inquiry.meeting_time} meetingType={inquiry.meeting_type} />
+                          <div className="flex flex-wrap gap-2 items-center">
+                            <StatusBadge status={inquiry.status} meetingDate={inquiry.meeting_date} meetingTime={inquiry.meeting_time} meetingType={inquiry.meeting_type} />
+                            {inquiry.quote_number && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200">
+                                <FileText size={10} /> {inquiry.quote_number}
+                              </span>
+                            )}
+                            {inquiry.latitude !== null && inquiry.longitude !== null && inquiry.latitude !== undefined && inquiry.longitude !== undefined && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200" title="Geolocation coordinates available">
+                                <MapPin size={10} /> Geo
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         <ChevronDown
@@ -1208,6 +1359,7 @@ export default function AdminInquiriesPage() {
                               onSave={(data) => handleProductStatusChange(inquiry.id, data)} 
                               onDelete={() => handleDeleteProduct(inquiry.id)} 
                               onToast={showToast}
+                              savedQuotes={savedQuotes}
                             />
                           </motion.div>
                         )}
@@ -1221,7 +1373,240 @@ export default function AdminInquiriesPage() {
         )}
       </div>
 
-      {/* Global Animated Toast */}
+      {/* Add Lead Modal */}
+      <AnimatePresence>
+        {isAddLeadOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !isSavingLead && setIsAddLeadOpen(false)}
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            />
+
+            {/* Modal Container */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="relative bg-white rounded-3xl border border-slate-100 shadow-2xl max-w-lg w-full overflow-hidden z-10 flex flex-col max-h-[90vh]"
+            >
+              {/* Header */}
+              <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div>
+                  <h2 className="text-lg font-black text-blue-950">Create New Lead</h2>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">Field Lead Logging Console</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsAddLeadOpen(false)}
+                  disabled={isSavingLead}
+                  className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
+                >
+                  <Plus className="rotate-45" size={20} />
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleAddLeadSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 [scrollbar-width:thin]">
+                {/* Lead Type */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-2">Lead Type</label>
+                  <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-2xl">
+                    <button
+                      type="button"
+                      onClick={() => setAddLeadData(prev => ({ ...prev, leadType: 'general' }))}
+                      className={`py-2 rounded-xl text-xs font-bold transition-all ${
+                        addLeadData.leadType === 'general'
+                          ? 'bg-white text-blue-600 shadow-sm'
+                          : 'text-slate-600 hover:text-slate-950'
+                      }`}
+                    >
+                      General Lead
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAddLeadData(prev => ({ ...prev, leadType: 'product' }))}
+                      className={`py-2 rounded-xl text-xs font-bold transition-all ${
+                        addLeadData.leadType === 'product'
+                          ? 'bg-white text-blue-600 shadow-sm'
+                          : 'text-slate-600 hover:text-slate-950'
+                      }`}
+                    >
+                      Product Lead
+                    </button>
+                  </div>
+                </div>
+
+                {/* Geolocation Status Card */}
+                <div className={`p-4 rounded-2xl border text-xs flex flex-col gap-2 transition-colors ${
+                  gpsStatus === 'acquiring' ? 'bg-blue-50/50 border-blue-100 text-blue-800' :
+                  gpsStatus === 'success'   ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800' :
+                  gpsStatus === 'error'     ? 'bg-red-50/50 border-red-100 text-red-800' :
+                                              'bg-slate-50 border-slate-100 text-slate-600'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[10px]">
+                      <MapPin size={12} className={gpsStatus === 'acquiring' ? 'animate-bounce text-blue-500' : gpsStatus === 'success' ? 'text-emerald-500' : gpsStatus === 'error' ? 'text-red-500' : 'text-slate-400'} />
+                      GPS Tracking Status
+                    </span>
+                    {gpsStatus === 'error' && (
+                      <button
+                        type="button"
+                        onClick={captureLocation}
+                        className="px-2 py-1 bg-white hover:bg-red-100 border border-red-200 text-red-700 text-[10px] font-black uppercase rounded-lg transition-colors"
+                      >
+                        Retry Capture
+                      </button>
+                    )}
+                    {gpsStatus === 'success' && (
+                      <button
+                        type="button"
+                        onClick={captureLocation}
+                        className="px-2 py-1 bg-white hover:bg-emerald-100 border border-emerald-200 text-emerald-700 text-[10px] font-black uppercase rounded-lg transition-colors"
+                      >
+                        Recapture
+                      </button>
+                    )}
+                  </div>
+                  <div>
+                    {gpsStatus === 'idle' && 'Waiting for trigger...'}
+                    {gpsStatus === 'acquiring' && 'Requesting device coordinates from browser...'}
+                    {gpsStatus === 'success' && gpsLatitude && gpsLongitude && (
+                      <span>
+                        <strong>Location Captured:</strong> {gpsLatitude.toFixed(6)}, {gpsLongitude.toFixed(6)}
+                        {gpsAccuracy ? ` (accurate to ${gpsAccuracy.toFixed(1)} meters)` : ''}
+                      </span>
+                    )}
+                    {gpsStatus === 'error' && (
+                      <span>
+                        <strong>Warning:</strong> {gpsError || 'Device location could not be captured automatically. You can still save the lead manually.'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Basic Inputs */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Customer Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={addLeadData.name}
+                      onChange={e => setAddLeadData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="John Doe"
+                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Mobile Number *</label>
+                    <input
+                      type="text"
+                      required
+                      value={addLeadData.phone}
+                      onChange={e => setAddLeadData(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="9876543210"
+                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400 font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Email (Optional)</label>
+                    <input
+                      type="email"
+                      value={addLeadData.email}
+                      onChange={e => setAddLeadData(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="customer@domain.com"
+                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">GSTIN (Optional)</label>
+                    <input
+                      type="text"
+                      value={addLeadData.gstin}
+                      onChange={e => setAddLeadData(prev => ({ ...prev, gstin: e.target.value.toUpperCase() }))}
+                      placeholder="15-digit code"
+                      maxLength={15}
+                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400 font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* General Specific Inputs */}
+                {addLeadData.leadType === 'general' && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Subject (Optional)</label>
+                    <input
+                      type="text"
+                      value={addLeadData.subject}
+                      onChange={e => setAddLeadData(prev => ({ ...prev, subject: e.target.value }))}
+                      placeholder="E.g., Pumping Solutions requirements"
+                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400"
+                    />
+                  </div>
+                )}
+
+                {/* Product Specific Inputs */}
+                {addLeadData.leadType === 'product' && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Product Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={addLeadData.productName}
+                      onChange={e => setAddLeadData(prev => ({ ...prev, productName: e.target.value }))}
+                      placeholder="E.g., Wilo Submersible Pump"
+                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400"
+                    />
+                  </div>
+                )}
+
+                {/* Message */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Inquiry Message / Requirement *</label>
+                  <textarea
+                    required
+                    value={addLeadData.message}
+                    onChange={e => setAddLeadData(prev => ({ ...prev, message: e.target.value }))}
+                    placeholder="Write brief description of what the customer is looking for..."
+                    rows={3}
+                    className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400"
+                  />
+                </div>
+
+                {/* Submit buttons */}
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                  <button
+                    type="submit"
+                    disabled={isSavingLead}
+                    className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isSavingLead && <RefreshCw size={12} className="animate-spin" />}
+                    Save Lead
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddLeadOpen(false)}
+                    disabled={isSavingLead}
+                    className="px-4 py-3 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+
+    {/* Global Animated Toast */}
       <AnimatePresence>
         {toast && (
           <motion.div

@@ -14,6 +14,12 @@ export const inquirySchema = z.object({
   phone: z.string().max(20).optional(),
   subject: z.string().max(255).optional(),
   message: z.string().min(1).max(5000),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
+  location_accuracy: z.number().nullable().optional(),
+  logged_by_name: z.string().nullable().optional(),
+  logged_by_email: z.string().nullable().optional(),
+  gstin: z.string().max(15).optional().or(z.literal('')),
 });
 
 export const orderSchema = z.object({
@@ -39,6 +45,11 @@ export const productInquirySchema = z.object({
   productName: z.string().min(1).max(255),
   productId: z.string().max(255).optional(),
   gstin: z.string().max(15).optional().or(z.literal('')),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
+  location_accuracy: z.number().nullable().optional(),
+  logged_by_name: z.string().nullable().optional(),
+  logged_by_email: z.string().nullable().optional(),
 });
 
 export const clientSchema = z.object({

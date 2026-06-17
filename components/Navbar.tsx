@@ -30,6 +30,41 @@ const NAV_LINKS = [
   { label: "Contact", href: "/contact" },
 ];
 
+let cachedProducts: Product[] | null = null;
+let activeFetchPromise: Promise<Product[]> | null = null;
+
+async function getProducts(): Promise<Product[]> {
+  if (cachedProducts) {
+    return cachedProducts;
+  }
+  if (activeFetchPromise) {
+    return activeFetchPromise;
+  }
+
+  activeFetchPromise = fetch("/api/products")
+    .then((res) => {
+      if (!res.ok) throw new Error("Failed to fetch products");
+      return res.json();
+    })
+    .then((data) => {
+      if (Array.isArray(data) && data.length > 0) {
+        cachedProducts = data;
+        return data;
+      }
+      throw new Error("Invalid products response format");
+    })
+    .catch(async (err) => {
+      console.warn("Falling back to static products:", err);
+      const { products } = await import("@/lib/data");
+      return products;
+    })
+    .finally(() => {
+      activeFetchPromise = null;
+    });
+
+  return activeFetchPromise;
+}
+
 function useSearch(query: string) {
   const [result, setResult] = useState<SearchResult | null>(null);
 
@@ -41,7 +76,7 @@ function useSearch(query: string) {
 
     let cancelled = false;
     const timeout = window.setTimeout(() => {
-      import("@/lib/data").then(({ products }) => {
+      getProducts().then((products) => {
         if (cancelled) return;
 
         const lq = query.toLowerCase();
@@ -50,7 +85,8 @@ function useSearch(query: string) {
             (p) =>
               p.name.toLowerCase().includes(lq) ||
               p.brand.toLowerCase().includes(lq) ||
-              p.category.toLowerCase().includes(lq),
+              p.category.toLowerCase().includes(lq) ||
+              p.subCategory?.toLowerCase().includes(lq),
           )
           .slice(0, 5);
 

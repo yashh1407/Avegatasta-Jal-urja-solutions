@@ -75,7 +75,12 @@ function getRequiredModule(pathname: string): string | null {
   if (pathname.startsWith('/admin/team-members') || pathname.startsWith('/api/admin/team-members')) return 'team-members';
   if (pathname.startsWith('/admin/brands') || pathname.startsWith('/api/admin/brands')) return 'brands';
   if (pathname.startsWith('/admin/orders') || pathname.startsWith('/api/admin/orders')) return 'orders';
-  if (pathname.startsWith('/admin/inquiries') || pathname.startsWith('/api/admin/inquiries')) return 'inquiries';
+  if (
+    pathname.startsWith('/admin/inquiries') || 
+    pathname.startsWith('/api/admin/inquiries') ||
+    pathname.startsWith('/admin/marketing-tracker') ||
+    pathname.startsWith('/api/admin/marketing-tracker')
+  ) return 'inquiries';
   if (pathname.startsWith('/admin/email-templates') || pathname.startsWith('/api/admin/email-templates')) return 'email-templates';
   if (pathname.startsWith('/admin/smtp-settings') || pathname.startsWith('/api/admin/smtp-settings')) return 'smtp-settings';
   

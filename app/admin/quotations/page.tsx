@@ -77,7 +77,6 @@ export default function ProposalBuilderPage() {
 
   const [mounted, setMounted] = useState(false);
   const [dbProducts, setDbProducts] = useState<any[]>([]);
-  const [clients, setClients] = useState<any[]>([]);
   const [savedQuotations, setSavedQuotations] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null);
@@ -110,14 +109,13 @@ export default function ProposalBuilderPage() {
       })
       .catch(console.error);
 
-    fetch('/api/admin/clients')
-      .then(r => r.json())
-      .then(res => {
-        if (Array.isArray(res)) setClients(res);
-      })
-      .catch(console.error);
-
     fetchSavedQuotations();
+
+    const params = new URLSearchParams(window.location.search);
+    const loadQuote = params.get('load');
+    if (loadQuote) {
+      loadQuotation(loadQuote);
+    }
   }, []);
 
   const fetchSavedQuotations = () => {
@@ -389,34 +387,7 @@ export default function ProposalBuilderPage() {
                     <input type="date" className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 outline-none focus:border-blue-500" value={data.date} onChange={e => setData({...data, date: e.target.value})} />
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Select Client (Auto-fill)</label>
-                  <select 
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 font-semibold outline-none focus:border-blue-500"
-                    onChange={e => {
-                      const selectedId = e.target.value;
-                      if (!selectedId) return;
-                      const selected = clients.find(c => String(c.id) === selectedId);
-                      if (selected) {
-                        setData(prev => ({
-                          ...prev,
-                          clientCompany: selected.company_name || selected.name || '',
-                          clientName: selected.name || '',
-                          clientPhone: selected.phone || '',
-                        }));
-                      }
-                      e.target.value = '';
-                    }}
-                    defaultValue=""
-                  >
-                    <option value="">-- Select Client to Auto-fill --</option>
-                    {clients.map(c => (
-                      <option key={c.id} value={c.id}>
-                        {c.company_name ? `${c.company_name} (${c.name})` : c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Company Name</label>
                   <input className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500" value={data.clientCompany} onChange={e => setData({...data, clientCompany: e.target.value})} placeholder="e.g. Acme Corp" />

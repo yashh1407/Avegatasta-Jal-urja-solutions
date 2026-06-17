@@ -61,6 +61,14 @@ CREATE TABLE IF NOT EXISTS inquiries (
   meeting_time VARCHAR(20) NULL,
   meeting_type ENUM('office', 'custom') NULL,
   meeting_location TEXT NULL,
+  client_id   INT DEFAULT NULL,
+  gstin       VARCHAR(15) DEFAULT NULL,
+  quote_number VARCHAR(100) DEFAULT NULL,
+  latitude    DECIMAL(10, 8) NULL,
+  longitude   DECIMAL(11, 8) NULL,
+  location_accuracy DECIMAL(10, 2) NULL,
+  logged_by_name VARCHAR(255) NULL,
+  logged_by_email VARCHAR(255) NULL,
   created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -107,7 +115,14 @@ CREATE TABLE IF NOT EXISTS product_inquiries (
   meeting_time VARCHAR(20) NULL,
   meeting_type ENUM('office', 'custom') NULL,
   meeting_location TEXT NULL,
+  client_id    INT DEFAULT NULL,
   gstin        VARCHAR(15) DEFAULT NULL,
+  quote_number VARCHAR(100) DEFAULT NULL,
+  latitude    DECIMAL(10, 8) NULL,
+  longitude   DECIMAL(11, 8) NULL,
+  location_accuracy DECIMAL(10, 2) NULL,
+  logged_by_name VARCHAR(255) NULL,
+  logged_by_email VARCHAR(255) NULL,
   created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -145,6 +160,11 @@ CREATE TABLE IF NOT EXISTS client_products (
   warranty_end_date DATE,
   next_service_date DATE,
   notes            TEXT,
+  price            DECIMAL(10, 2) DEFAULT NULL,
+  qty              INT DEFAULT 1,
+  hsn_code         VARCHAR(50) DEFAULT NULL,
+  sac_code         VARCHAR(50) DEFAULT NULL,
+  quote_number     VARCHAR(255) DEFAULT NULL,
   created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -171,6 +171,12 @@ export async function initDB() {
         meeting_type ENUM('office', 'custom') NULL,
         meeting_location TEXT NULL,
         gstin VARCHAR(15) DEFAULT NULL,
+        quote_number VARCHAR(100) DEFAULT NULL,
+        latitude DECIMAL(10, 8) NULL,
+        longitude DECIMAL(11, 8) NULL,
+        location_accuracy DECIMAL(10, 2) NULL,
+        logged_by_name VARCHAR(255) NULL,
+        logged_by_email VARCHAR(255) NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -189,6 +195,12 @@ export async function initDB() {
       `ALTER TABLE inquiries ADD COLUMN meeting_location TEXT NULL`,
       `ALTER TABLE inquiries ADD COLUMN client_id INT DEFAULT NULL`,
       `ALTER TABLE inquiries ADD COLUMN gstin VARCHAR(15) DEFAULT NULL`,
+      `ALTER TABLE inquiries ADD COLUMN quote_number VARCHAR(100) DEFAULT NULL`,
+      `ALTER TABLE inquiries ADD COLUMN latitude DECIMAL(10, 8) NULL`,
+      `ALTER TABLE inquiries ADD COLUMN longitude DECIMAL(11, 8) NULL`,
+      `ALTER TABLE inquiries ADD COLUMN location_accuracy DECIMAL(10, 2) NULL`,
+      `ALTER TABLE inquiries ADD COLUMN logged_by_name VARCHAR(255) NULL`,
+      `ALTER TABLE inquiries ADD COLUMN logged_by_email VARCHAR(255) NULL`,
     ]) {
       try { await connection.query(ddl); } catch (e: any) { if (e.code !== 'ER_DUP_FIELDNAME') throw e; }
     }
@@ -247,6 +259,12 @@ export async function initDB() {
         meeting_type ENUM('office', 'custom') NULL,
         meeting_location TEXT NULL,
         gstin VARCHAR(15) DEFAULT NULL,
+        quote_number VARCHAR(100) DEFAULT NULL,
+        latitude DECIMAL(10, 8) NULL,
+        longitude DECIMAL(11, 8) NULL,
+        location_accuracy DECIMAL(10, 2) NULL,
+        logged_by_name VARCHAR(255) NULL,
+        logged_by_email VARCHAR(255) NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -262,6 +280,12 @@ export async function initDB() {
       `ALTER TABLE product_inquiries ADD COLUMN meeting_location TEXT NULL`,
       `ALTER TABLE product_inquiries ADD COLUMN client_id INT DEFAULT NULL`,
       `ALTER TABLE product_inquiries ADD COLUMN gstin VARCHAR(15) DEFAULT NULL`,
+      `ALTER TABLE product_inquiries ADD COLUMN quote_number VARCHAR(100) DEFAULT NULL`,
+      `ALTER TABLE product_inquiries ADD COLUMN latitude DECIMAL(10, 8) NULL`,
+      `ALTER TABLE product_inquiries ADD COLUMN longitude DECIMAL(11, 8) NULL`,
+      `ALTER TABLE product_inquiries ADD COLUMN location_accuracy DECIMAL(10, 2) NULL`,
+      `ALTER TABLE product_inquiries ADD COLUMN logged_by_name VARCHAR(255) NULL`,
+      `ALTER TABLE product_inquiries ADD COLUMN logged_by_email VARCHAR(255) NULL`,
     ]) {
       try { await connection.query(ddl); } catch (e: any) { if (e.code !== 'ER_DUP_FIELDNAME') throw e; }
     }
@@ -311,10 +335,26 @@ export async function initDB() {
         warranty_end_date DATE,
         next_service_date DATE,
         notes TEXT,
+        price DECIMAL(10, 2) DEFAULT NULL,
+        qty INT DEFAULT 1,
+        hsn_code VARCHAR(50) DEFAULT NULL,
+        sac_code VARCHAR(50) DEFAULT NULL,
+        quote_number VARCHAR(255) DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       )
     `);
+
+    // Migrate existing client_products table (safe, idempotent)
+    for (const ddl of [
+      `ALTER TABLE client_products ADD COLUMN price DECIMAL(10, 2) DEFAULT NULL`,
+      `ALTER TABLE client_products ADD COLUMN qty INT DEFAULT 1`,
+      `ALTER TABLE client_products ADD COLUMN hsn_code VARCHAR(50) DEFAULT NULL`,
+      `ALTER TABLE client_products ADD COLUMN sac_code VARCHAR(50) DEFAULT NULL`,
+      `ALTER TABLE client_products ADD COLUMN quote_number VARCHAR(255) DEFAULT NULL`,
+    ]) {
+      try { await connection.query(ddl); } catch (e: any) { if (e.code !== 'ER_DUP_FIELDNAME' && e.code !== 'ER_DUP_COLUMNNAME') throw e; }
+    }
 
     // AMC Plans
     await connection.query(`

@@ -25,6 +25,7 @@ import {
   Tag,
   ShoppingCart,
   Receipt,
+  MapPin,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -158,6 +159,13 @@ const ADMIN_SECTIONS = [
     label: 'Inquiries',
     href: '/admin/inquiries',
     icon: HelpCircle,
+    category: 'sales',
+    module: 'inquiries'
+  },
+  {
+    label: 'Marketing Tracker',
+    href: '/admin/marketing-tracker',
+    icon: MapPin,
     category: 'sales',
     module: 'inquiries'
   },
