@@ -818,6 +818,7 @@ export default function AdminInquiriesPage() {
   // Add Lead Modal State
   const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
   const [isSavingLead, setIsSavingLead] = useState(false);
+  const [productsList, setProductsList] = useState<any[]>([]);
   const [addLeadData, setAddLeadData] = useState({
     leadType: 'general' as 'general' | 'product',
     name: '',
@@ -829,6 +830,16 @@ export default function AdminInquiriesPage() {
     message: '',
     gstin: '',
   });
+
+  // Fetch product catalog for auto-suggest
+  useEffect(() => {
+    fetch('/api/products')
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setProductsList(data);
+      })
+      .catch((err) => console.error('Failed to fetch products for autocomplete:', err));
+  }, []);
 
   // Geolocation states
   const [gpsLatitude, setGpsLatitude] = useState<number | null>(null);
@@ -911,7 +922,10 @@ export default function AdminInquiriesPage() {
     if (addLeadData.leadType === 'product') {
       url = '/api/product-inquiries';
       payload.productName = addLeadData.productName;
-      payload.productId = addLeadData.productId || undefined;
+      const matched = productsList.find(
+        (p) => p.name.toLowerCase() === addLeadData.productName.trim().toLowerCase()
+      );
+      payload.productId = matched ? String(matched.id) : (addLeadData.productId || undefined);
       payload.email = addLeadData.email || undefined;
     } else {
       payload.subject = addLeadData.subject || undefined;
@@ -1560,11 +1574,19 @@ export default function AdminInquiriesPage() {
                     <input
                       type="text"
                       required
+                      list="products-datalist"
                       value={addLeadData.productName}
                       onChange={e => setAddLeadData(prev => ({ ...prev, productName: e.target.value }))}
-                      placeholder="E.g., Wilo Submersible Pump"
+                      placeholder="Type or select a product..."
                       className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400"
                     />
+                    <datalist id="products-datalist">
+                      {productsList.map((prod) => (
+                        <option key={prod.id} value={prod.name}>
+                          {prod.brand ? `${prod.brand} • ` : ''}{prod.category}
+                        </option>
+                      ))}
+                    </datalist>
                   </div>
                 )}
 
