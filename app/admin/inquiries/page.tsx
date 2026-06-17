@@ -864,7 +864,7 @@ export default function AdminInquiriesPage() {
         setGpsStatus('success');
       },
       (error) => {
-        console.error('Geolocation error details:', { code: error.code, message: error.message });
+        console.error(`Geolocation error details: code=${error.code}, message="${error.message || 'N/A'}"`);
         setGpsStatus('error');
         let errMsg = 'Failed to acquire location.';
         if (error.code === error.PERMISSION_DENIED) {
