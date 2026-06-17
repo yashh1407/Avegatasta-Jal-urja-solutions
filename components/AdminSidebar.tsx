@@ -217,6 +217,21 @@ const CATEGORIES = {
   config: 'Configuration',
 };
 
+function hasModuleAccess(permissions: any, module: string): boolean {
+  if (!permissions) return false;
+  if (Array.isArray(permissions)) {
+    return permissions.includes(module);
+  }
+  if (typeof permissions === 'object') {
+    const modulePerms = permissions[module];
+    if (!modulePerms || typeof modulePerms !== 'object') {
+      return false;
+    }
+    return !!(modulePerms.view || modulePerms.add || modulePerms.edit || modulePerms.delete);
+  }
+  return false;
+}
+
 // Returns the sidebar category key for the given pathname.
 // Sorts by href length descending so more-specific routes (e.g. /admin/messages)
 // match before shorter prefixes (e.g. /admin).
@@ -274,8 +289,8 @@ export default function AdminSidebar() {
     if (userRole === 'admin' && !(session.user as any).permissions) return true; // dev credentials fallback
 
     // Normal employee permissions check
-    const userPermissions = (session.user as any).permissions as string[] | null;
-    return userPermissions?.includes(section.module) ?? false;
+    const userPermissions = (session.user as any).permissions;
+    return hasModuleAccess(userPermissions, section.module);
   });
 
   const groupedSections = filteredSections.reduce((acc, section) => {
