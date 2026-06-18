@@ -26,6 +26,7 @@ import {
   ShoppingCart,
   Receipt,
   MapPin,
+  Clock,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -36,6 +37,7 @@ const ADMIN_SECTIONS = [
     icon: LayoutDashboard,
     category: 'main'
   },
+
   {
     label: 'Products',
     href: '/admin/products',
@@ -198,6 +200,13 @@ const ADMIN_SECTIONS = [
     module: 'employees'
   },
   {
+    label: 'Attendance Logs',
+    href: '/admin/attendance',
+    icon: Clock,
+    category: 'staff',
+    module: 'employees'
+  },
+  {
     label: 'Settings',
     href: '/admin/site-settings',
     icon: Settings,
@@ -266,7 +275,7 @@ export default function AdminSidebar() {
   }, [pathname]); // re-fetch when navigating back to sidebar routes
 
   const handleLogout = async () => {
-    await signOut({ callbackUrl: '/admin/login' });
+    await signOut({ callbackUrl: '/admin' });
   };
 
   // Group sections by category, filtering by permissions

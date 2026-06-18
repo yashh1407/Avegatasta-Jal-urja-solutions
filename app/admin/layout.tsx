@@ -6,23 +6,40 @@ import AdminSidebar from '@/components/AdminSidebar';
 import NotificationBell from '@/components/NotificationBell';
 import { AnimatePresence, motion } from 'motion/react';
 import { usePathname } from 'next/navigation';
-import { SessionProvider } from 'next-auth/react';
+import { SessionProvider, useSession } from 'next-auth/react';
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  return (
+    <SessionProvider refetchOnWindowFocus={false}>
+      <AdminShell>{children}</AdminShell>
+    </SessionProvider>
+  );
+}
+
+function AdminShell({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { status } = useSession();
 
-  // Login page gets no sidebar chrome — just render children directly
-  if (pathname === '/admin/login') {
-    return <SessionProvider refetchOnWindowFocus={false}>{children}</SessionProvider>;
+  // If loading session, show a spinner to avoid flash of login page or dashboard
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // If unauthenticated or accessing /admin/login directly, render children directly without sidebars
+  if (status === 'unauthenticated' || pathname === '/admin/login') {
+    return <>{children}</>;
   }
 
   return (
-    <SessionProvider refetchOnWindowFocus={false}>
     <div data-admin-shell className="flex h-screen bg-slate-50 overflow-hidden relative print:block print:h-auto print:overflow-visible">
       {/* Sidebar - Desktop */}
       <div className="hidden lg:flex w-80 fixed left-0 top-0 h-screen z-40 flex-col print:hidden">
@@ -75,6 +92,5 @@ export default function AdminLayout({
         </div>
       </div>
     </div>
-    </SessionProvider>
   );
 }

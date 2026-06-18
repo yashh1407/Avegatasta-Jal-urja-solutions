@@ -360,23 +360,36 @@ function EditableInquiryForm({ inquiry, onSave, onDelete, onToast, savedQuotes }
         )}
 
         {inquiry.latitude !== null && inquiry.longitude !== null && inquiry.latitude !== undefined && inquiry.longitude !== undefined && (
-          <div className="bg-emerald-50/60 p-3 rounded-xl border border-emerald-100 text-xs text-emerald-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MapPin size={14} className="text-emerald-500 shrink-0" />
-              <span>
-                <strong>Field Location:</strong> {Number(inquiry.latitude).toFixed(6)}, {Number(inquiry.longitude).toFixed(6)}
-                {inquiry.location_accuracy ? ` (accuracy: ${inquiry.location_accuracy}m)` : ''}
-                {inquiry.logged_by_name ? ` · Registered by ${inquiry.logged_by_name}` : ''}
-              </span>
+          <div className="bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-100 text-xs text-emerald-800 flex flex-col gap-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MapPin size={14} className="text-emerald-500 shrink-0" />
+                <span>
+                  <strong>Field Location:</strong> {Number(inquiry.latitude).toFixed(6)}, {Number(inquiry.longitude).toFixed(6)}
+                  {inquiry.location_accuracy ? ` (accuracy: ${inquiry.location_accuracy}m)` : ''}
+                  {inquiry.logged_by_name ? ` · Registered by ${inquiry.logged_by_name}` : ''}
+                </span>
+              </div>
+              <a 
+                href={`https://www.google.com/maps/search/?api=1&query=${inquiry.latitude},${inquiry.longitude}`} 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-700 hover:text-emerald-950 font-black uppercase tracking-wider text-[10px] bg-white px-2.5 py-1.5 rounded-lg border border-emerald-200 shadow-sm transition-all flex items-center gap-1 hover:shadow-md shrink-0"
+              >
+                Open Google Maps
+              </a>
             </div>
-            <a 
-              href={`https://www.google.com/maps/search/?api=1&query=${inquiry.latitude},${inquiry.longitude}`} 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-emerald-700 hover:text-emerald-950 font-black uppercase tracking-wider text-[10px] bg-white px-2.5 py-1.5 rounded-lg border border-emerald-200 shadow-sm transition-all flex items-center gap-1 hover:shadow-md shrink-0"
-            >
-              View on Map
-            </a>
+            <div className="rounded-lg overflow-hidden border border-emerald-200/80 h-44 w-full shadow-sm bg-white">
+              <iframe
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                style={{ border: 0 }}
+                src={`https://maps.google.com/maps?q=${inquiry.latitude},${inquiry.longitude}&z=14&output=embed`}
+                allowFullScreen
+                loading="lazy"
+              ></iframe>
+            </div>
           </div>
         )}
 
@@ -624,23 +637,36 @@ function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast, savedQ
         )}
 
         {inquiry.latitude !== null && inquiry.longitude !== null && inquiry.latitude !== undefined && inquiry.longitude !== undefined && (
-          <div className="bg-emerald-50/60 p-3 rounded-xl border border-emerald-100 text-xs text-emerald-800 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MapPin size={14} className="text-emerald-500 shrink-0" />
-              <span>
-                <strong>Field Location:</strong> {Number(inquiry.latitude).toFixed(6)}, {Number(inquiry.longitude).toFixed(6)}
-                {inquiry.location_accuracy ? ` (accuracy: ${inquiry.location_accuracy}m)` : ''}
-                {inquiry.logged_by_name ? ` · Registered by ${inquiry.logged_by_name}` : ''}
-              </span>
+          <div className="bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-100 text-xs text-emerald-800 flex flex-col gap-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MapPin size={14} className="text-emerald-500 shrink-0" />
+                <span>
+                  <strong>Field Location:</strong> {Number(inquiry.latitude).toFixed(6)}, {Number(inquiry.longitude).toFixed(6)}
+                  {inquiry.location_accuracy ? ` (accuracy: ${inquiry.location_accuracy}m)` : ''}
+                  {inquiry.logged_by_name ? ` · Registered by ${inquiry.logged_by_name}` : ''}
+                </span>
+              </div>
+              <a 
+                href={`https://www.google.com/maps/search/?api=1&query=${inquiry.latitude},${inquiry.longitude}`} 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-700 hover:text-emerald-950 font-black uppercase tracking-wider text-[10px] bg-white px-2.5 py-1.5 rounded-lg border border-emerald-200 shadow-sm transition-all flex items-center gap-1 hover:shadow-md shrink-0"
+              >
+                Open Google Maps
+              </a>
             </div>
-            <a 
-              href={`https://www.google.com/maps/search/?api=1&query=${inquiry.latitude},${inquiry.longitude}`} 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-emerald-700 hover:text-emerald-950 font-black uppercase tracking-wider text-[10px] bg-white px-2.5 py-1.5 rounded-lg border border-emerald-200 shadow-sm transition-all flex items-center gap-1 hover:shadow-md shrink-0"
-            >
-              View on Map
-            </a>
+            <div className="rounded-lg overflow-hidden border border-emerald-200/80 h-44 w-full shadow-sm bg-white">
+              <iframe
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                style={{ border: 0 }}
+                src={`https://maps.google.com/maps?q=${inquiry.latitude},${inquiry.longitude}&z=14&output=embed`}
+                allowFullScreen
+                loading="lazy"
+              ></iframe>
+            </div>
           </div>
         )}
 
@@ -847,15 +873,42 @@ export default function AdminInquiriesPage() {
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
   const [gpsStatus, setGpsStatus] = useState<'idle' | 'acquiring' | 'success' | 'error'>('idle');
   const [gpsError, setGpsError] = useState<string | null>(null);
+  const [isIpFallback, setIsIpFallback] = useState(false);
 
   const captureLocation = useCallback(() => {
-    if (typeof window === 'undefined' || !navigator.geolocation) {
-      setGpsStatus('error');
-      setGpsError('Geolocation is not supported by your browser.');
-      return;
-    }
+    if (typeof window === 'undefined') return;
     setGpsStatus('acquiring');
     setGpsError(null);
+    setIsIpFallback(false);
+
+    const fallbackToIp = async (browserErrorMsg: string) => {
+      try {
+        console.log('Attempting IP Geolocation fallback via /api/geolocation...');
+        const res = await fetch('/api/geolocation');
+        if (!res.ok) throw new Error('IP geolocation request failed');
+        const data = await res.json();
+        if (data.latitude && data.longitude) {
+          setGpsLatitude(Number(data.latitude));
+          setGpsLongitude(Number(data.longitude));
+          setGpsAccuracy(data.accuracy ? Number(data.accuracy) : null);
+          setIsIpFallback(true);
+          setGpsStatus('success');
+          console.log('IP Geolocation fallback successful:', data.city, data.latitude, data.longitude);
+        } else {
+          throw new Error('Invalid IP geolocation data');
+        }
+      } catch (err) {
+        console.error('IP Geolocation fallback failed:', err);
+        setGpsStatus('error');
+        setGpsError(browserErrorMsg);
+      }
+    };
+
+    if (!navigator.geolocation) {
+      fallbackToIp('Geolocation not supported by browser.');
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setGpsLatitude(position.coords.latitude);
@@ -865,7 +918,6 @@ export default function AdminInquiriesPage() {
       },
       (error) => {
         console.error(`Geolocation error details: code=${error.code}, message="${error.message || 'N/A'}"`);
-        setGpsStatus('error');
         let errMsg = 'Failed to acquire location.';
         if (error.code === error.PERMISSION_DENIED) {
           errMsg = 'Permission denied. Please enable location services in your browser settings.';
@@ -874,9 +926,9 @@ export default function AdminInquiriesPage() {
         } else if (error.code === error.TIMEOUT) {
           errMsg = 'Location request timed out. Please try again.';
         }
-        setGpsError(errMsg);
+        fallbackToIp(errMsg);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     );
   }, []);
 
@@ -890,6 +942,7 @@ export default function AdminInquiriesPage() {
       setGpsAccuracy(null);
       setGpsStatus('idle');
       setGpsError(null);
+      setIsIpFallback(false);
       setAddLeadData({
         leadType: 'general',
         name: '',
@@ -1490,10 +1543,23 @@ export default function AdminInquiriesPage() {
                     {gpsStatus === 'idle' && 'Waiting for trigger...'}
                     {gpsStatus === 'acquiring' && 'Requesting device coordinates from browser...'}
                     {gpsStatus === 'success' && gpsLatitude && gpsLongitude && (
-                      <span>
-                        <strong>Location Captured:</strong> {gpsLatitude.toFixed(6)}, {gpsLongitude.toFixed(6)}
-                        {gpsAccuracy ? ` (accurate to ${gpsAccuracy.toFixed(1)} meters)` : ''}
-                      </span>
+                      <div className="flex flex-col gap-2">
+                        <span>
+                          <strong>Location Captured{isIpFallback ? ' (Approx. IP-based)' : ''}:</strong> {gpsLatitude.toFixed(6)}, {gpsLongitude.toFixed(6)}
+                          {!isIpFallback && gpsAccuracy ? ` (accurate to ${gpsAccuracy.toFixed(1)} meters)` : ''}
+                        </span>
+                        <div className="mt-1 rounded-xl overflow-hidden border border-emerald-250/70 h-36 w-full shadow-sm bg-white">
+                          <iframe
+                            width="100%"
+                            height="100%"
+                            frameBorder="0"
+                            style={{ border: 0 }}
+                            src={`https://maps.google.com/maps?q=${gpsLatitude},${gpsLongitude}&z=14&output=embed`}
+                            allowFullScreen
+                            loading="lazy"
+                          ></iframe>
+                        </div>
+                      </div>
                     )}
                     {gpsStatus === 'error' && (
                       <span>

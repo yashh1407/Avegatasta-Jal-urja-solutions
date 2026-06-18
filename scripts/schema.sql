@@ -427,6 +427,52 @@ CREATE TABLE IF NOT EXISTS enterprise_inquiries (
   created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- -----------------------------------------------------------------------------
+-- Sales Attendance
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS sales_attendance (
+  id                    INT AUTO_INCREMENT PRIMARY KEY,
+  user_id               INT NOT NULL,
+  check_in_time         TIMESTAMP NULL,
+  check_out_time        TIMESTAMP NULL,
+  check_in_latitude     DECIMAL(10, 8) NULL,
+  check_in_longitude    DECIMAL(11, 8) NULL,
+  check_in_accuracy     DECIMAL(10, 2) NULL,
+  check_in_ip           VARCHAR(45) NULL,
+  check_in_method       ENUM('gps', 'ip') NULL,
+  check_out_latitude    DECIMAL(10, 8) NULL,
+  check_out_longitude   DECIMAL(11, 8) NULL,
+  check_out_accuracy    DECIMAL(10, 2) NULL,
+  check_out_ip          VARCHAR(45) NULL,
+  check_out_method      ENUM('gps', 'ip') NULL,
+  check_in_address      VARCHAR(500) NULL,
+  check_out_address     VARCHAR(500) NULL,
+  work_duration_minutes INT NULL,
+  status                ENUM('checked_in', 'completed') NOT NULL DEFAULT 'checked_in',
+  created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES admin_users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- Marketing Visits
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS marketing_visits (
+  id                    INT AUTO_INCREMENT PRIMARY KEY,
+  user_id               INT NOT NULL,
+  attendance_id         INT NULL,
+  latitude              DECIMAL(10, 8) NOT NULL,
+  longitude             DECIMAL(11, 8) NOT NULL,
+  location_accuracy     DECIMAL(10, 2) NULL,
+  location_method       ENUM('gps', 'ip') NOT NULL DEFAULT 'gps',
+  visit_title           VARCHAR(255) NOT NULL,
+  notes                 TEXT NULL,
+  image_url             VARCHAR(500) NOT NULL,
+  visit_address         VARCHAR(500) NULL,
+  created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES admin_users(id) ON DELETE CASCADE,
+  FOREIGN KEY (attendance_id) REFERENCES sales_attendance(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- =============================================================================
 -- End of schema
 -- NOTE: Reference/seed data (site_settings, about_content, services, etc.)

@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import toast, { Toaster } from 'react-hot-toast';
+import AdminLoginForm from '@/components/AdminLoginForm';
 import {
   Search,
   RefreshCw,
@@ -39,12 +40,10 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/admin/login');
-    } else if (status === 'authenticated') {
+    if (status === 'authenticated') {
       fetchData();
     }
-  }, [status, router]);
+  }, [status]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -122,7 +121,11 @@ export default function AdminPage() {
     );
   }) : [];
 
-  if (status === 'loading' || status === 'unauthenticated') return null;
+  if (status === 'loading') return null;
+
+  if (status === 'unauthenticated') {
+    return <AdminLoginForm />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">

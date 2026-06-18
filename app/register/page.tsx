@@ -171,7 +171,7 @@ export default function RegisterPage() {
                 </button>
 
                 <p className="text-center text-xs text-slate-400 font-bold mt-6">
-                  Are you a team member? <Link href="/admin/login" className="text-blue-600 hover:underline">Staff Login</Link>
+                  Are you a team member? <Link href="/admin" className="text-blue-600 hover:underline">Staff Login</Link>
                 </p>
               </form>
             </>

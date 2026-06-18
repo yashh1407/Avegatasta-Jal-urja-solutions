@@ -1,5 +1,6 @@
-import { withAuth } from 'next-auth/middleware';
+import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 function checkPermission(
   permissions: any,
@@ -130,16 +131,70 @@ function getModulePath(moduleKey: string): string | null {
   return mapping[moduleKey] || null;
 }
 
-export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token;
-    const pathname = req.nextUrl.pathname;
+export async function middleware(req: NextRequest) {
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const pathname = req.nextUrl.pathname;
 
+  // 1. Handle Sales Portal Login Path
+  if (pathname === '/sales-portal/login') {
+    if (token) {
+      return NextResponse.redirect(new URL('/sales-portal', req.url));
+    }
+    return NextResponse.next();
+  }
+
+  // 2. Handle General Admin Login Path (Redirect to /admin)
+  if (pathname === '/admin/login') {
+    if (token) {
+      if (token.role === 'sales') {
+        return NextResponse.redirect(new URL('/sales-portal', req.url));
+      }
+      return NextResponse.redirect(new URL('/admin', req.url));
+    }
+    return NextResponse.redirect(new URL('/admin', req.url));
+  }
+
+  // 3. Require authentication for /admin paths, admin API paths, and /sales-portal paths
+  const isSalesPortalPath = pathname === '/sales-portal' || pathname.startsWith('/sales-portal/');
+  const isAdminPath = pathname.startsWith('/admin');
+  const isAdminApiPath = pathname.startsWith('/api/admin');
+
+  if (isSalesPortalPath || isAdminPath || isAdminApiPath) {
+    if (!token) {
+      // If unauthenticated: redirect to sales portal login for sales portal paths, else general login
+      if (isSalesPortalPath) {
+        return NextResponse.redirect(new URL('/sales-portal/login', req.url));
+      }
+      if (isAdminApiPath) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      // If exactly '/admin', let it pass to render the login page directly
+      if (pathname === '/admin') {
+        return NextResponse.next();
+      }
+      return NextResponse.redirect(new URL('/admin', req.url));
+    }
+
+    // 4. Authenticated check - enforce sales role restrictions
+    if (token.role === 'sales') {
+      // Sales users can ONLY access sales portal and its APIs
+      const isAllowedSalesPath = pathname === '/sales-portal' || pathname.startsWith('/api/admin/sales-portal/') || pathname === '/api/products' || pathname === '/api/inquiries' || pathname === '/api/product-inquiries' || pathname === '/api/admin/upload';
+      
+      if (!isAllowedSalesPath) {
+        if (pathname.startsWith('/api/')) {
+          return NextResponse.json({ error: 'Forbidden: Sales role restricted' }, { status: 403 });
+        }
+        return NextResponse.redirect(new URL('/sales-portal', req.url));
+      }
+      return NextResponse.next();
+    }
+
+    // 5. Non-sales role: prevent sales-only portal navigation or handle dashboard redirects
     // If accessing the main admin root (Dashboard) and NOT a superadmin, redirect to first allowed module
     if (pathname === '/admin') {
-      const role = token?.role;
+      const role = token.role;
       if (role !== 'superadmin') {
-        const permissions = token?.permissions;
+        const permissions = token.permissions;
         if (permissions) {
           let firstAllowedModule: string | null = null;
           if (Array.isArray(permissions)) {
@@ -167,22 +222,22 @@ export default withAuth(
       }
     }
 
+    // 6. Enforce module-specific permissions for standard admins
     const requiredModule = getRequiredModule(pathname);
     if (requiredModule) {
-      const role = token?.role;
-      const permissions = token?.permissions;
+      const role = token.role;
+      const permissions = token.permissions;
 
       if (role !== 'superadmin') {
         // Allow dev fallback if no permissions are set on the admin user at all
         const isDevFallback = role === 'admin' && permissions === null;
         
         let hasAccess = false;
-        let action: 'view' | 'edit' | 'delete' = 'view';
+        let action: 'view' | 'add' | 'edit' | 'delete' = 'view';
 
         if (isDevFallback) {
           hasAccess = true;
         } else {
-          let action: 'view' | 'add' | 'edit' | 'delete' = 'view';
           if (req.method === 'DELETE') {
             action = 'delete';
           } else if (req.method === 'POST') {
@@ -194,36 +249,27 @@ export default withAuth(
         }
 
         if (!hasAccess) {
-          // If they are calling an API, return a 403 JSON response
           if (pathname.startsWith('/api/')) {
             return NextResponse.json(
               { error: `Forbidden: Missing ${action} access to module '${requiredModule}'` },
               { status: 403 }
             );
           }
-          // Redirect page requests to admin dashboard with a forbidden error
           return NextResponse.redirect(new URL('/admin?error=forbidden', req.url));
         }
       }
     }
-
-    return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ token }) => !!token,
-    },
-    pages: {
-      signIn: '/admin/login',
-    },
   }
-);
 
-// Protect all /admin/* routes except the login page, and protect admin API endpoints
+  return NextResponse.next();
+}
+
 export const config = {
   matcher: [
     '/admin',
-    '/admin/((?!login).*)',
-    '/api/admin/:path*'
+    '/admin/:path*',
+    '/api/admin/:path*',
+    '/sales-portal',
+    '/sales-portal/:path*'
   ],
 };

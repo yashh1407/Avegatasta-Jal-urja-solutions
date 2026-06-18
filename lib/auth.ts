@@ -132,11 +132,12 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: '/admin/login',
+    signIn: '/admin',
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        token.id = user.id;
         token.role = (user as any).role;
         token.permissions = (user as any).permissions;
       }
@@ -144,6 +145,7 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
+        (session.user as any).id = token.id as string;
         (session.user as any).role = token.role as string;
         (session.user as any).permissions = token.permissions as any;
       }
