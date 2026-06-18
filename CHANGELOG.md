@@ -6,6 +6,24 @@ newest entry (top) to see what changed, why, and anything you must do locally
 
 ---
 
+## 2026-06-18 — Auto-invoice on order confirmation
+
+### Added
+- **Orders auto-generate an invoice on confirmation.** When an order's status is set to
+  `active` (confirmed) or `completed`, a **draft invoice is created automatically** (if
+  one doesn't already exist) in `admin_invoices`: amount = sum of line items, status
+  `draft`, today's date. It shows immediately on the order panel and on the client's
+  profile **Invoices** section — closing the order → invoice → client loop without a
+  manual "Generate Invoice" click. Idempotent (never duplicates) and non-fatal (a failure
+  is logged and never blocks the order update). Implemented in the order `PUT` handler
+  (`app/api/admin/orders/[id]/route.ts`).
+
+### Dev notes
+- No schema change, no new env vars, no new dependencies. The manual "Generate Invoice"
+  button still works for `pending` orders.
+
+---
+
 ## 2026-06-18 — Stability, full audit fixes, client-hub features, admin UI overhaul
 
 ### ⚠️ Dev notes — do this after pulling
