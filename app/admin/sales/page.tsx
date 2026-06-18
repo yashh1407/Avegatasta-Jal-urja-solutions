@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import { products } from '@/lib/data';
+import toast from 'react-hot-toast';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -146,6 +147,8 @@ function LogSaleModal({
       setClients(Array.isArray(clientList) ? clientList : (clientList.clients ?? []));
       setPricing(Array.isArray(pricingList) ? pricingList : []);
       setDbProducts(Array.isArray(productsList) ? productsList : []);
+    }).catch(() => {
+      toast.error('Failed to load form data. Please try again.');
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -187,19 +190,26 @@ function LogSaleModal({
         body: JSON.stringify(payload),
       });
       if (res.ok) {
+        toast.success('Sale logged.');
         onSaved();
         onClose();
       } else {
         const data = await res.json();
-        setError(data.error || 'Failed to log sale.');
+        const msg = data.error || 'Failed to log sale.';
+        setError(msg);
+        toast.error(msg);
       }
+    } catch {
+      const msg = 'Failed to log sale. Please try again.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
   };
 
   const inputClass =
-    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all';
+    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all';
 
   return (
     <AnimatePresence>
@@ -218,9 +228,10 @@ function LogSaleModal({
             className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between px-8 pt-7 pb-5 border-b border-slate-100">
-              <h2 className="text-lg font-black text-blue-950">Log Sale</h2>
+              <h2 className="text-lg font-black text-brand-950">Log Sale</h2>
               <button
                 onClick={onClose}
+                aria-label="Close dialog"
                 className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
               >
                 <X size={18} />
@@ -234,10 +245,10 @@ function LogSaleModal({
 
               {/* Team Member */}
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                <label htmlFor="sale-member" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
                   Team Member *
                 </label>
-                <select className={inputClass} value={form.sales_team_id} onChange={set('sales_team_id')} required>
+                <select id="sale-member" className={inputClass} value={form.sales_team_id} onChange={set('sales_team_id')} required>
                   <option value="">Select team member…</option>
                   {teamMembers.map((m) => (
                     <option key={m.id} value={m.id}>{m.name}</option>
@@ -247,17 +258,17 @@ function LogSaleModal({
 
               {/* Product */}
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                <label htmlFor="sale-product" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
                   Product *
                 </label>
-                <select className={inputClass} value={form.product_id} onChange={set('product_id')} required>
+                <select id="sale-product" className={inputClass} value={form.product_id} onChange={set('product_id')} required>
                   <option value="">Select product…</option>
                   {(dbProducts.length > 0 ? dbProducts : products).map((p) => (
                     <option key={p.id} value={p.id}>{p.name} — {p.brand}</option>
                   ))}
                 </select>
                 {selectedPricing && (
-                  <p className="text-[11px] text-slate-400 font-medium mt-1.5 px-1">
+                  <p className="text-xs text-slate-500 font-medium mt-1.5 px-1">
                     DP: {selectedPricing.dp_price != null ? fmt(selectedPricing.dp_price) : '—'}
                     &nbsp;·&nbsp;
                     MRP: {selectedPricing.mrp_price != null ? fmt(selectedPricing.mrp_price) : '—'}
@@ -268,10 +279,10 @@ function LogSaleModal({
 
               {/* Client (optional) */}
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                <label htmlFor="sale-client" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
                   Client <span className="font-medium normal-case tracking-normal text-slate-400">(optional)</span>
                 </label>
-                <select className={inputClass} value={form.client_id} onChange={set('client_id')}>
+                <select id="sale-client" className={inputClass} value={form.client_id} onChange={set('client_id')}>
                   <option value="">No client / walk-in</option>
                   {clients.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -284,10 +295,11 @@ function LogSaleModal({
               <div className="grid grid-cols-2 gap-4">
                 {/* Quantity */}
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                  <label htmlFor="sale-quantity" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
                     Quantity *
                   </label>
                   <input
+                    id="sale-quantity"
                     className={inputClass}
                     type="number"
                     min={1}
@@ -299,10 +311,11 @@ function LogSaleModal({
 
                 {/* Unit Price Sold */}
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                  <label htmlFor="sale-price" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
                     Unit Price Sold (INR) *
                   </label>
                   <input
+                    id="sale-price"
                     className={inputClass}
                     type="number"
                     min={0}
@@ -317,18 +330,19 @@ function LogSaleModal({
 
               {/* Sale Date */}
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                <label htmlFor="sale-date" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
                   Sale Date *
                 </label>
-                <input className={inputClass} type="date" value={form.sale_date} onChange={set('sale_date')} required />
+                <input id="sale-date" className={inputClass} type="date" value={form.sale_date} onChange={set('sale_date')} required />
               </div>
 
               {/* Notes */}
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                <label htmlFor="sale-notes" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
                   Notes <span className="font-medium normal-case tracking-normal text-slate-400">(optional)</span>
                 </label>
                 <textarea
+                  id="sale-notes"
                   className={`${inputClass} resize-none`}
                   rows={2}
                   value={form.notes}
@@ -348,7 +362,7 @@ function LogSaleModal({
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {saving && <RefreshCw size={14} className="animate-spin" />}
                   {saving ? 'Saving…' : 'Log Sale'}
@@ -401,6 +415,7 @@ export default function AdminSalesPage() {
       setDashboard(data);
     } catch {
       setDashboard(null);
+      toast.error('Failed to load sales dashboard.');
     } finally {
       setLoadingDash(false);
     }
@@ -413,6 +428,7 @@ export default function AdminSalesPage() {
       setTeamMembers(Array.isArray(data) ? data : []);
     } catch {
       setTeamMembers([]);
+      toast.error('Failed to load team members.');
     }
   }, []);
 
@@ -432,6 +448,7 @@ export default function AdminSalesPage() {
       setRecords(Array.isArray(data) ? data : []);
     } catch {
       setRecords([]);
+      toast.error('Failed to load sales records.');
     } finally {
       setLoadingRecords(false);
     }
@@ -474,10 +491,10 @@ export default function AdminSalesPage() {
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+              <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-200">
                 <TrendingUp size={20} />
               </div>
-              <h1 className="text-4xl font-black text-blue-950 tracking-tight">Sales Dashboard</h1>
+              <h1 className="text-4xl font-black text-brand-950 tracking-tight">Sales Dashboard</h1>
             </div>
             <p className="text-slate-500 font-medium">Track team sales performance and log new transactions.</p>
           </div>
@@ -485,14 +502,14 @@ export default function AdminSalesPage() {
           <div className="flex items-center gap-3 flex-shrink-0">
             <button
               onClick={refreshAll}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-blue-200 hover:text-blue-600 transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-brand-200 hover:text-brand-600 transition-all"
             >
               <RefreshCw size={16} className={loadingDash || loadingRecords ? 'animate-spin' : ''} />
               Refresh
             </button>
             <button
               onClick={() => setModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-blue-200"
+              className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-brand-200"
             >
               <Plus size={16} />
               Log Sale
@@ -513,35 +530,38 @@ export default function AdminSalesPage() {
           className="bg-white rounded-[2rem] border border-slate-100 shadow-sm px-6 py-4 mb-8 flex flex-wrap items-end gap-4"
         >
           <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">
+            <label htmlFor="filter-from" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
               From
             </label>
             <input
+              id="filter-from"
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+              className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
             />
           </div>
           <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">
+            <label htmlFor="filter-to" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
               To
             </label>
             <input
+              id="filter-to"
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+              className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
             />
           </div>
           <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">
+            <label htmlFor="filter-member" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
               Team Member
             </label>
             <select
+              id="filter-member"
               value={memberId}
               onChange={(e) => setMemberId(e.target.value)}
-              className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all min-w-[160px]"
+              className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all min-w-[160px]"
             >
               <option value="">All members</option>
               {teamMembers.map((m) => (
@@ -551,7 +571,7 @@ export default function AdminSalesPage() {
           </div>
           <button
             type="submit"
-            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-black rounded-xl transition-all"
+            className="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-black rounded-xl transition-all"
           >
             Apply
           </button>
@@ -585,12 +605,12 @@ export default function AdminSalesPage() {
                 className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6"
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center">
-                    <TrendingUp size={16} className="text-blue-600" />
+                  <div className="w-8 h-8 bg-brand-50 rounded-xl flex items-center justify-center">
+                    <TrendingUp size={16} className="text-brand-600" />
                   </div>
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sales Today</span>
                 </div>
-                <p className="text-2xl font-black text-blue-950 mb-1">
+                <p className="text-2xl font-black text-brand-950 mb-1">
                   {dashboard?.today.count ?? 0}
                   <span className="text-sm font-medium text-slate-400 ml-1">sales</span>
                 </p>
@@ -610,7 +630,7 @@ export default function AdminSalesPage() {
                   </div>
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">This Month</span>
                 </div>
-                <p className="text-2xl font-black text-blue-950 mb-1">
+                <p className="text-2xl font-black text-brand-950 mb-1">
                   {dashboard?.this_month.count ?? 0}
                   <span className="text-sm font-medium text-slate-400 ml-1">sales</span>
                 </p>
@@ -630,7 +650,7 @@ export default function AdminSalesPage() {
                   </div>
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Gross Margin</span>
                 </div>
-                <p className={`text-2xl font-black mb-1 ${(dashboard?.this_month.margin ?? 0) >= 0 ? 'text-blue-950' : 'text-red-600'}`}>
+                <p className={`text-2xl font-black mb-1 ${(dashboard?.this_month.margin ?? 0) >= 0 ? 'text-brand-950' : 'text-red-600'}`}>
                   {fmt(dashboard?.this_month.margin ?? 0)}
                 </p>
                 <p className="text-sm font-black text-slate-400">Revenue − DP cost</p>
@@ -651,7 +671,7 @@ export default function AdminSalesPage() {
                 </div>
                 {dashboard?.top_performer.name ? (
                   <>
-                    <p className="text-lg font-black text-blue-950 mb-1 truncate">{dashboard.top_performer.name}</p>
+                    <p className="text-lg font-black text-brand-950 mb-1 truncate">{dashboard.top_performer.name}</p>
                     <p className="text-sm font-black text-slate-500">{fmt(dashboard.top_performer.revenue)}</p>
                   </>
                 ) : (
@@ -680,7 +700,7 @@ export default function AdminSalesPage() {
                   transition={{ delay: i * 0.04 }}
                   className="bg-slate-50 rounded-2xl px-5 py-4 min-w-[160px]"
                 >
-                  <p className="text-sm font-black text-blue-950 mb-1">{m.name}</p>
+                  <p className="text-sm font-black text-brand-950 mb-1">{m.name}</p>
                   <p className="text-xs text-slate-500 font-medium">{m.count} sale{m.count !== 1 ? 's' : ''}</p>
                   <p className="text-sm font-black text-emerald-600 mt-1">{fmt(m.revenue)}</p>
                 </motion.div>
@@ -697,7 +717,7 @@ export default function AdminSalesPage() {
             </h2>
             <button
               onClick={() => fetchRecords()}
-              className="p-2 text-slate-400 hover:text-blue-600 rounded-xl hover:bg-blue-50 transition-all"
+              className="p-2 text-slate-400 hover:text-brand-600 rounded-xl hover:bg-brand-50 transition-all"
               title="Refresh"
             >
               <RefreshCw size={16} className={loadingRecords ? 'animate-spin' : ''} />
@@ -731,7 +751,7 @@ export default function AdminSalesPage() {
                       <p className="text-slate-500 font-medium">No sales records found.</p>
                       <button
                         onClick={() => setModalOpen(true)}
-                        className="mt-4 text-blue-600 text-sm font-black hover:underline"
+                        className="mt-4 text-brand-600 text-sm font-black hover:underline"
                       >
                         Log the first sale →
                       </button>
@@ -757,7 +777,7 @@ export default function AdminSalesPage() {
                           })}
                         </td>
                         <td className="px-5 py-4">
-                          <span className="text-sm font-black text-blue-950">{r.member_name}</span>
+                          <span className="text-sm font-black text-brand-950">{r.member_name}</span>
                         </td>
                         <td className="px-5 py-4">
                           <span className="text-xs text-slate-600 font-medium max-w-[200px] block truncate">
@@ -770,7 +790,7 @@ export default function AdminSalesPage() {
                           </span>
                         </td>
                         <td className="px-5 py-4 text-right">
-                          <span className="text-sm font-black text-blue-950">{r.quantity}</span>
+                          <span className="text-sm font-black text-brand-950">{r.quantity}</span>
                         </td>
                         <td className="px-5 py-4 text-right">
                           <span className="text-xs text-slate-400 font-medium">
@@ -778,7 +798,7 @@ export default function AdminSalesPage() {
                           </span>
                         </td>
                         <td className="px-5 py-4 text-right">
-                          <span className={`text-sm font-black ${belowDP ? 'text-red-600' : 'text-blue-950'}`}>
+                          <span className={`text-sm font-black ${belowDP ? 'text-red-600' : 'text-brand-950'}`}>
                             {fmt(r.unit_price_sold)}
                           </span>
                           {belowDP && (

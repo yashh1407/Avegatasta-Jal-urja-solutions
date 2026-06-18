@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import { BookOpen, LogOut } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Footer from '@/components/Footer';
 import CaseStudyForm, { type CaseStudyInitialData } from '../../CaseStudyForm';
 
@@ -50,7 +51,10 @@ export default function EditCaseStudyPage() {
           longitude: data.longitude ?? null,
         });
       })
-      .catch(() => setNotFound(true))
+      .catch(() => {
+        setNotFound(true);
+        toast.error('Failed to load case study.');
+      })
       .finally(() => setLoading(false));
   }, [status, router, params]);
 
@@ -61,17 +65,18 @@ export default function EditCaseStudyPage() {
 
       <main className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-24 pt-8 pb-16 sm:pb-24">
         <div className="flex items-center gap-3 mb-10">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+          <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-200">
             <BookOpen size={20} />
           </div>
           <div>
-            <h1 className="text-4xl font-black text-blue-950 tracking-tight">Edit Case Study</h1>
+            <h1 className="text-4xl font-black text-brand-950 tracking-tight">Edit Case Study</h1>
             <p className="text-slate-500 font-medium">Update case study details and images.</p>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: '/admin/login' })}
             className="ml-auto p-2.5 bg-white border border-red-200 rounded-2xl text-red-500 hover:bg-red-50 transition-all"
             title="Logout"
+            aria-label="Logout"
           >
             <LogOut size={18} />
           </button>
@@ -79,7 +84,7 @@ export default function EditCaseStudyPage() {
 
         {loading ? (
           <div className="flex items-center justify-center py-32">
-            <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : notFound ? (
           <div className="text-center py-32">

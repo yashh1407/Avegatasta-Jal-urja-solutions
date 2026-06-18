@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Tag, RefreshCw, LogOut, Save, AlertTriangle, FileDown, X } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
 import 'react-quill-new/dist/quill.snow.css';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -101,6 +102,7 @@ export default function AdminPricingPage() {
       setRowState(initial);
     } catch {
       setProducts([]);
+      toast.error('Failed to load pricing. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -183,14 +185,17 @@ export default function AdminPricingPage() {
           )
         );
         setEditingProductId(null);
+        toast.success('Pricing saved.');
         setTimeout(() => {
           setRowState((prev) => ({ ...prev, [productId]: { ...prev[productId], saved: false } }));
         }, 2000);
       } else {
         setRowState((prev) => ({ ...prev, [productId]: { ...prev[productId], saving: false } }));
+        toast.error('Failed to save pricing.');
       }
     } catch {
       setRowState((prev) => ({ ...prev, [productId]: { ...prev[productId], saving: false } }));
+      toast.error('A network error occurred while saving.');
     }
   };
 
@@ -215,12 +220,13 @@ export default function AdminPricingPage() {
         const htmlWithFileName = `<!-- FILENAME: ${file.name} -->\n${data.text}`;
         handleChange(productId, 'description', htmlWithFileName);
         handleChange(productId, 'fileName', file.name);
+        toast.success('Word document imported.');
       } else {
-        alert('Failed to parse the Word document.');
+        toast.error('Failed to parse the Word document.');
       }
     } catch (err) {
       console.error(err);
-      alert('Error uploading file.');
+      toast.error('Error uploading file.');
     } finally {
       setIsUploading(null);
     }
@@ -240,10 +246,10 @@ export default function AdminPricingPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+              <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-200">
                 <Tag size={20} />
               </div>
-              <h1 className="text-4xl font-black text-blue-950 tracking-tight">Pricing</h1>
+              <h1 className="text-4xl font-black text-brand-950 tracking-tight">Pricing</h1>
             </div>
             <p className="text-slate-500 font-medium">Set dealer and MRP prices for all products.</p>
           </div>
@@ -257,7 +263,7 @@ export default function AdminPricingPage() {
             )}
             <button
               onClick={fetchPricing}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-blue-200 hover:text-blue-600 transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-brand-200 hover:text-brand-600 transition-all"
             >
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
               Refresh
@@ -266,6 +272,7 @@ export default function AdminPricingPage() {
               onClick={() => signOut({ callbackUrl: '/admin/login' })}
               className="p-2.5 bg-white border border-red-200 rounded-2xl text-red-500 hover:bg-red-50 transition-all"
               title="Logout"
+              aria-label="Logout"
             >
               <LogOut size={18} />
             </button>
@@ -331,11 +338,11 @@ export default function AdminPricingPage() {
                             ) : (
                               <div className="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 flex-shrink-0 shadow-sm" />
                             )}
-                            <span className="font-black text-sm text-blue-950 leading-snug block max-w-[260px] break-words">{product.name}</span>
+                            <span className="font-black text-sm text-brand-950 leading-snug block max-w-[260px] break-words">{product.name}</span>
                           </div>
                         </td>
                         <td className="px-6 py-5 w-[10%] align-middle">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-black">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-brand-50 text-brand-700 text-xs font-black">
                             {product.brand}
                           </span>
                         </td>
@@ -345,25 +352,25 @@ export default function AdminPricingPage() {
                         <td className="px-6 py-5 w-[30%] align-middle">
                           <div className="flex flex-col gap-1.5 text-xs text-slate-700 py-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider w-24">DP Price (₹):</span>
+                              <span className="text-slate-500 font-semibold text-xs uppercase tracking-wider w-24">DP Price (₹):</span>
                               <span className="font-bold text-slate-800">
                                 {product.dp_price != null ? `₹${Number(product.dp_price).toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '—'}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider w-24">MRP Price (₹):</span>
+                              <span className="text-slate-500 font-semibold text-xs uppercase tracking-wider w-24">MRP Price (₹):</span>
                               <span className="font-bold text-slate-800">
                                 {product.mrp_price != null ? `₹${Number(product.mrp_price).toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '—'}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider w-24">HSN Code:</span>
+                              <span className="text-slate-500 font-semibold text-xs uppercase tracking-wider w-24">HSN Code:</span>
                               <span className="font-semibold text-slate-700">
                                 {product.hsn_code || '—'}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wider w-24">SAC Code:</span>
+                              <span className="text-slate-500 font-semibold text-xs uppercase tracking-wider w-24">SAC Code:</span>
                               <span className="font-semibold text-slate-700">
                                 {product.sac_code || '—'}
                               </span>
@@ -373,7 +380,7 @@ export default function AdminPricingPage() {
                         <td className="px-6 py-5 text-right w-[12%] align-middle">
                           <button
                             onClick={() => startEditing(product.product_id)}
-                            className="flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-black bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all ml-auto animate-duration-200 shadow-sm hover:shadow-none"
+                            className="flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-black bg-brand-50 text-brand-600 hover:bg-brand-600 hover:text-white transition-all ml-auto animate-duration-200 shadow-sm hover:shadow-none"
                           >
                             Edit
                           </button>
@@ -409,13 +416,14 @@ export default function AdminPricingPage() {
               >
                 {/* Modal Header */}
                 <div className="flex items-center justify-between px-8 pt-7 pb-5 border-b border-slate-100">
-                  <h2 className="text-lg font-black text-blue-950 flex items-center gap-2">
-                    <Tag size={18} className="text-blue-600" />
+                  <h2 className="text-lg font-black text-brand-950 flex items-center gap-2">
+                    <Tag size={18} className="text-brand-600" />
                     Edit Product Details
                   </h2>
                   <button
                     onClick={() => cancelEditing(editingProductId)}
                     className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 transition-all"
+                    aria-label="Close editor"
                   >
                     <X size={18} />
                   </button>
@@ -439,11 +447,11 @@ export default function AdminPricingPage() {
                       <div className="w-12 h-12 rounded-xl bg-slate-100 flex-shrink-0" />
                     )}
                     <div>
-                      <h3 className="font-bold text-sm text-blue-950 leading-tight">
+                      <h3 className="font-bold text-sm text-brand-950 leading-tight">
                         {editingProduct.name}
                       </h3>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[10px] font-black">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-brand-50 text-brand-700 text-[10px] font-black">
                           {editingProduct.brand}
                         </span>
                         <span className="text-xs text-slate-400 font-medium">
@@ -456,55 +464,59 @@ export default function AdminPricingPage() {
                   {/* Form Grid */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">
+                      <label htmlFor="pricing-edit-dp" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">
                         DP Price (₹)
                       </label>
                       <input
+                        id="pricing-edit-dp"
                         type="number"
                         min={0}
                         step={0.01}
                         placeholder="0.00"
                         value={editingRowState.dp}
                         onChange={(e) => handleChange(editingProductId, 'dp', e.target.value)}
-                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-semibold"
+                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-semibold"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">
+                      <label htmlFor="pricing-edit-mrp" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">
                         MRP Price (₹)
                       </label>
                       <input
+                        id="pricing-edit-mrp"
                         type="number"
                         min={0}
                         step={0.01}
                         placeholder="0.00"
                         value={editingRowState.mrp}
                         onChange={(e) => handleChange(editingProductId, 'mrp', e.target.value)}
-                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-semibold"
+                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-semibold"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">
+                      <label htmlFor="pricing-edit-hsn" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">
                         HSN Code
                       </label>
                       <input
+                        id="pricing-edit-hsn"
                         type="text"
                         placeholder="e.g. 84191920"
                         value={editingRowState.hsn}
                         onChange={(e) => handleChange(editingProductId, 'hsn', e.target.value)}
-                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-semibold"
+                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-semibold"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">
+                      <label htmlFor="pricing-edit-sac" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">
                         SAC Code
                       </label>
                       <input
+                        id="pricing-edit-sac"
                         type="text"
                         placeholder="e.g. 998719"
                         value={editingRowState.sac}
                         onChange={(e) => handleChange(editingProductId, 'sac', e.target.value)}
-                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-semibold"
+                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-semibold"
                       />
                     </div>
                   </div>
@@ -515,7 +527,7 @@ export default function AdminPricingPage() {
                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block">
                         Quotation Word File (.docx)
                       </label>
-                      <label className={`cursor-pointer ${isUploading === editingProductId ? 'bg-slate-100 text-slate-400' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'} px-3 py-1.5 rounded-xl text-xs font-black transition-colors flex items-center gap-1.5`}>
+                      <label className={`cursor-pointer ${isUploading === editingProductId ? 'bg-slate-100 text-slate-400' : 'bg-brand-50 text-brand-600 hover:bg-brand-100'} px-3 py-1.5 rounded-xl text-xs font-black transition-colors flex items-center gap-1.5`}>
                         {isUploading === editingProductId ? (
                           <><RefreshCw size={14} className="animate-spin" /> Importing...</>
                         ) : (
@@ -532,9 +544,9 @@ export default function AdminPricingPage() {
                     </div>
                     <div className="min-h-[50px] flex items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
                       {editingRowState.description ? (
-                        <div className="inline-flex items-center gap-3 bg-blue-50 border border-blue-100 px-4 py-2 rounded-xl text-sm font-medium text-blue-700 shadow-sm">
+                        <div className="inline-flex items-center gap-3 bg-brand-50 border border-brand-100 px-4 py-2 rounded-xl text-sm font-medium text-brand-700 shadow-sm">
                           <div className="flex items-center gap-2">
-                            <FileDown size={16} className="text-blue-500" />
+                            <FileDown size={16} className="text-brand-500" />
                             <span className="font-bold text-xs max-w-[280px] truncate">{editingRowState.fileName || 'Quotation template attached'}</span>
                           </div>
                           <button
@@ -542,7 +554,7 @@ export default function AdminPricingPage() {
                               handleChange(editingProductId, 'description', '');
                               handleChange(editingProductId, 'fileName', '');
                             }}
-                            className="p-1 hover:bg-blue-200 rounded-lg text-blue-500 hover:text-blue-800 transition-colors ml-2"
+                            className="p-1 hover:bg-brand-200 rounded-lg text-brand-500 hover:text-brand-800 transition-colors ml-2"
                             title="Remove attachment"
                           >
                             <X size={14} strokeWidth={3} />
@@ -571,7 +583,7 @@ export default function AdminPricingPage() {
                     type="button"
                     onClick={() => handleSave(editingProductId)}
                     disabled={editingRowState.saving || isUploading === editingProductId}
-                    className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-xs font-black text-white transition-all disabled:opacity-60 flex items-center gap-2 shadow-lg shadow-blue-200"
+                    className="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-xl text-xs font-black text-white transition-all disabled:opacity-60 flex items-center gap-2 shadow-lg shadow-brand-200"
                   >
                     {editingRowState.saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
                     {editingRowState.saving ? 'Saving…' : 'Save Details'}

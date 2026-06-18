@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 export default function PagesList() {
   const [pages, setPages] = useState<any[]>([]);
@@ -20,9 +21,12 @@ export default function PagesList() {
       if (res.ok) {
         const data = await res.json();
         setPages(data);
+      } else {
+        toast.error('Failed to load pages.');
       }
     } catch (e) {
       console.error(e);
+      toast.error('Failed to load pages.');
     } finally {
       setLoading(false);
     }
@@ -45,28 +49,30 @@ export default function PagesList() {
       });
       const data = await res.json();
       if (res.ok) {
+        toast.success('Page created.');
         router.push(`/admin/content/pages/${data.id}`);
       } else {
-        alert(data.error);
+        toast.error(data.error || 'Failed to create page.');
       }
     } catch (e: any) {
-      alert(e.message);
+      toast.error(e.message || 'Failed to create page.');
     }
   };
 
   const deletePage = async (id: number, title: string) => {
     if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
-    
+
     try {
       const res = await fetch(`/api/admin/content/pages/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setPages(pages.filter(p => p.id !== id));
+        toast.success(`Deleted "${title}".`);
       } else {
         const data = await res.json();
-        alert(data.error);
+        toast.error(data.error || 'Failed to delete page.');
       }
     } catch (e: any) {
-      alert(e.message);
+      toast.error(e.message || 'Failed to delete page.');
     }
   };
 
@@ -91,9 +97,10 @@ export default function PagesList() {
       </div>
 
       <div className="mb-6">
-        <input 
-          type="text" 
-          placeholder="Search by slug or title..." 
+        <input
+          type="text"
+          placeholder="Search by slug or title..."
+          aria-label="Search pages by slug or title"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full md:w-96 px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1B3636]/20 focus:border-[#1B3636]/40"
@@ -152,9 +159,10 @@ export default function PagesList() {
                         <Link href={`/admin/content/pages/${page.id}/faqs`}>
                           <button className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-medium px-4 py-1.5 rounded transition-colors">FAQs</button>
                         </Link>
-                        <button 
+                        <button
                           onClick={() => deletePage(page.id, page.title)}
                           className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 text-xs font-medium px-4 py-1.5 rounded transition-colors"
+                          aria-label={`Delete page ${page.title}`}
                         >
                           Del
                         </button>

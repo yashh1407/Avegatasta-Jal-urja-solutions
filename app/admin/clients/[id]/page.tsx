@@ -22,9 +22,12 @@ import {
   Pencil,
   ChevronDown,
   ChevronUp,
+  FileText,
+  ExternalLink,
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import { products as catalogProducts } from '@/lib/data';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -57,6 +60,16 @@ interface ClientProduct {
   next_service_date: string | null;
   notes: string | null;
   created_at: string;
+}
+
+interface ClientInvoice {
+  source: 'gst' | 'order';
+  invoice_number: string;
+  amount: number | null;
+  status?: string;
+  invoice_date?: string | null;
+  created_at?: string;
+  order_id?: number;
 }
 
 interface AmcRecord {
@@ -250,13 +263,23 @@ function ProductPurchaseModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
-      if (res.ok) { onSaved(); onClose(); }
+      if (res.ok) {
+        toast.success(initial ? 'Product updated.' : 'Product added.');
+        onSaved();
+        onClose();
+      } else {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error && typeof data.error === 'string' ? data.error : 'Failed to save product.');
+      }
+    } catch {
+      toast.error('Failed to save product. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
-  const inputClass = 'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all';
+  const idPrefix = initial ? 'edit-product' : 'add-product';
+  const inputClass = 'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all';
 
   return (
     <AnimatePresence>
@@ -275,8 +298,8 @@ function ProductPurchaseModal({
             className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between px-8 pt-7 pb-5 border-b border-slate-100">
-              <h2 className="text-lg font-black text-blue-950">{initial ? 'Edit Product Purchase' : 'Add Product Purchase'}</h2>
-              <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
+              <h2 className="text-lg font-black text-brand-950">{initial ? 'Edit Product Purchase' : 'Add Product Purchase'}</h2>
+              <button onClick={onClose} aria-label="Close dialog" className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
                 <X size={18} />
               </button>
             </div>
@@ -284,9 +307,10 @@ function ProductPurchaseModal({
             <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
               {/* Product picker */}
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Product Name *</label>
+                <label htmlFor={`${idPrefix}-name`} className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Product Name *</label>
                 <div className="flex gap-2">
                   <input
+                    id={`${idPrefix}-name`}
                     className={`${inputClass} flex-1`}
                     value={form.product_name}
                     onChange={set('product_name')}
@@ -296,7 +320,7 @@ function ProductPurchaseModal({
                   <button
                     type="button"
                     onClick={() => setCatalogOpen((o) => !o)}
-                    className="px-3 py-2.5 bg-slate-100 hover:bg-blue-50 border border-slate-200 rounded-xl text-xs font-black text-slate-600 hover:text-blue-600 transition-all flex items-center gap-1"
+                    className="px-3 py-2.5 bg-slate-100 hover:bg-brand-50 border border-slate-200 rounded-xl text-xs font-black text-slate-600 hover:text-brand-600 transition-all flex items-center gap-1"
                   >
                     Catalog {catalogOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                   </button>
@@ -315,7 +339,7 @@ function ProductPurchaseModal({
                             key={p.id}
                             type="button"
                             onClick={() => pickFromCatalog(p)}
-                            className="w-full text-left px-4 py-2.5 hover:bg-blue-50 text-xs font-medium text-slate-700 hover:text-blue-700 border-b border-slate-50 last:border-0 transition-colors"
+                            className="w-full text-left px-4 py-2.5 hover:bg-brand-50 text-xs font-medium text-slate-700 hover:text-brand-700 border-b border-slate-50 last:border-0 transition-colors"
                           >
                             <span className="font-black">{p.name}</span>
                             <span className="text-slate-400 ml-2">{p.brand} · {p.category}</span>
@@ -329,40 +353,40 @@ function ProductPurchaseModal({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Serial Number</label>
-                  <input className={inputClass} value={form.serial_number} onChange={set('serial_number')} placeholder="SN-XXXXXX" />
+                  <label htmlFor={`${idPrefix}-serial`} className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Serial Number</label>
+                  <input id={`${idPrefix}-serial`} className={inputClass} value={form.serial_number} onChange={set('serial_number')} placeholder="SN-XXXXXX" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Batch Number</label>
-                  <input className={inputClass} value={form.batch_number} onChange={set('batch_number')} placeholder="BT-XXXXXX" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Purchase Date</label>
-                  <input className={inputClass} type="date" value={form.purchase_date} onChange={set('purchase_date')} />
-                </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Install Date</label>
-                  <input className={inputClass} type="date" value={form.install_date} onChange={set('install_date')} />
+                  <label htmlFor={`${idPrefix}-batch`} className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Batch Number</label>
+                  <input id={`${idPrefix}-batch`} className={inputClass} value={form.batch_number} onChange={set('batch_number')} placeholder="BT-XXXXXX" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Warranty End</label>
-                  <input className={inputClass} type="date" value={form.warranty_end_date} onChange={set('warranty_end_date')} />
+                  <label htmlFor={`${idPrefix}-purchase`} className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Purchase Date</label>
+                  <input id={`${idPrefix}-purchase`} className={inputClass} type="date" value={form.purchase_date} onChange={set('purchase_date')} />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Next Service</label>
-                  <input className={inputClass} type="date" value={form.next_service_date} onChange={set('next_service_date')} />
+                  <label htmlFor={`${idPrefix}-install`} className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Install Date</label>
+                  <input id={`${idPrefix}-install`} className={inputClass} type="date" value={form.install_date} onChange={set('install_date')} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor={`${idPrefix}-warranty`} className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Warranty End</label>
+                  <input id={`${idPrefix}-warranty`} className={inputClass} type="date" value={form.warranty_end_date} onChange={set('warranty_end_date')} />
+                </div>
+                <div>
+                  <label htmlFor={`${idPrefix}-service`} className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Next Service</label>
+                  <input id={`${idPrefix}-service`} className={inputClass} type="date" value={form.next_service_date} onChange={set('next_service_date')} />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Notes</label>
-                <textarea className={`${inputClass} resize-none`} rows={2} value={form.notes} onChange={set('notes')} placeholder="Optional notes…" />
+                <label htmlFor={`${idPrefix}-notes`} className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Notes</label>
+                <textarea id={`${idPrefix}-notes`} className={`${inputClass} resize-none`} rows={2} value={form.notes} onChange={set('notes')} placeholder="Optional notes…" />
               </div>
 
               <div className="flex gap-3 pt-2">
@@ -372,7 +396,7 @@ function ProductPurchaseModal({
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {saving && <RefreshCw size={14} className="animate-spin" />}
                   {saving ? 'Saving…' : initial ? 'Save Product' : 'Add Product'}
@@ -492,10 +516,13 @@ function AssignAmcModal({
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(formatApiError(payload));
+      toast.success('AMC assigned.');
       await onSaved();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to assign AMC');
+      const msg = err instanceof Error ? err.message : 'Failed to assign AMC';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -521,10 +548,10 @@ function AssignAmcModal({
           >
             <div className="flex items-center justify-between px-8 pt-7 pb-5 border-b border-slate-100">
               <div>
-                <h2 className="text-lg font-black text-blue-950">Assign AMC</h2>
+                <h2 className="text-lg font-black text-brand-950">Assign AMC</h2>
                 <p className="text-xs text-slate-400 font-medium mt-1">{product.product_name}</p>
               </div>
-              <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
+              <button onClick={onClose} aria-label="Close dialog" className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
                 <X size={18} />
               </button>
             </div>
@@ -534,15 +561,15 @@ function AssignAmcModal({
                 <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3">
                   <p className="text-sm font-black text-amber-700">No AMC plans available</p>
                   <p className="text-xs text-amber-600 mt-1">Create an AMC plan first from the AMC Plans page, then assign it to this product.</p>
-                  <Link href="/admin/amc-plans" className="inline-flex mt-3 text-xs font-black text-blue-600 hover:underline">
+                  <Link href="/admin/amc-plans" className="inline-flex mt-3 text-xs font-black text-brand-600 hover:underline">
                     Go to AMC Plans →
                   </Link>
                 </div>
               ) : (
                 <>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">AMC Plan *</label>
-                    <select className={inputClass} value={form.amc_plan_id} onChange={set('amc_plan_id')} required>
+                    <label htmlFor="amc-plan" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">AMC Plan *</label>
+                    <select id="amc-plan" className={inputClass} value={form.amc_plan_id} onChange={set('amc_plan_id')} required>
                       {plans.map((plan) => (
                         <option key={plan.id} value={plan.id}>
                           {plan.name} · {plan.duration_months} months · ₹{Number(plan.price || 0).toLocaleString('en-IN')}
@@ -550,7 +577,7 @@ function AssignAmcModal({
                       ))}
                     </select>
                     {selectedPlan && (
-                      <p className="text-[10px] text-slate-400 font-medium mt-1">
+                      <p className="text-xs text-slate-500 font-medium mt-1">
                         Duration: {selectedPlan.duration_months} months · Price: ₹{Number(selectedPlan.price || 0).toLocaleString('en-IN')}
                       </p>
                     )}
@@ -558,18 +585,18 @@ function AssignAmcModal({
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Start Date *</label>
-                      <input className={inputClass} type="date" value={form.start_date} onChange={set('start_date')} required />
+                      <label htmlFor="amc-start" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Start Date *</label>
+                      <input id="amc-start" className={inputClass} type="date" value={form.start_date} onChange={set('start_date')} required />
                     </div>
                     <div>
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">End Date *</label>
-                      <input className={inputClass} type="date" value={form.end_date} onChange={set('end_date')} required />
+                      <label htmlFor="amc-end" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">End Date *</label>
+                      <input id="amc-end" className={inputClass} type="date" value={form.end_date} onChange={set('end_date')} required />
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Status</label>
-                    <select className={inputClass} value={form.status} onChange={set('status')}>
+                    <label htmlFor="amc-status" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Status</label>
+                    <select id="amc-status" className={inputClass} value={form.status} onChange={set('status')}>
                       <option value="active">Active</option>
                       <option value="expired">Expired</option>
                       <option value="renewed">Renewed</option>
@@ -577,8 +604,8 @@ function AssignAmcModal({
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Notes</label>
-                    <textarea className={`${inputClass} resize-none`} rows={3} value={form.notes} onChange={set('notes')} placeholder="Optional AMC notes…" />
+                    <label htmlFor="amc-notes" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Notes</label>
+                    <textarea id="amc-notes" className={`${inputClass} resize-none`} rows={3} value={form.notes} onChange={set('notes')} placeholder="Optional AMC notes…" />
                   </div>
                 </>
               )}
@@ -655,13 +682,22 @@ function EditClientModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
-      if (res.ok) { onSaved(); onClose(); }
+      if (res.ok) {
+        toast.success('Client updated.');
+        onSaved();
+        onClose();
+      } else {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error && typeof data.error === 'string' ? data.error : 'Failed to update client.');
+      }
+    } catch {
+      toast.error('Failed to update client. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
-  const inputClass = 'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all';
+  const inputClass = 'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all';
 
   return (
     <AnimatePresence>
@@ -680,57 +716,57 @@ function EditClientModal({
             className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between px-8 pt-7 pb-5 border-b border-slate-100">
-              <h2 className="text-lg font-black text-blue-950">Edit Client</h2>
-              <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
+              <h2 className="text-lg font-black text-brand-950">Edit Client</h2>
+              <button onClick={onClose} aria-label="Close dialog" className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
                 <X size={18} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Full Name *</label>
-                <input className={inputClass} value={form.name} onChange={set('name')} required />
+                <label htmlFor="edit-client-name" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Full Name *</label>
+                <input id="edit-client-name" className={inputClass} value={form.name} onChange={set('name')} required />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Email</label>
-                  <input className={inputClass} type="email" value={form.email} onChange={set('email')} />
+                  <label htmlFor="edit-client-email" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Email</label>
+                  <input id="edit-client-email" className={inputClass} type="email" value={form.email} onChange={set('email')} />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Phone</label>
-                  <input className={inputClass} value={form.phone} onChange={set('phone')} />
+                  <label htmlFor="edit-client-phone" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Phone</label>
+                  <input id="edit-client-phone" className={inputClass} value={form.phone} onChange={set('phone')} />
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Company</label>
-                <input className={inputClass} value={form.company_name} onChange={set('company_name')} />
+                <label htmlFor="edit-client-company" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Company</label>
+                <input id="edit-client-company" className={inputClass} value={form.company_name} onChange={set('company_name')} />
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Address</label>
-                <input className={inputClass} value={form.address} onChange={set('address')} />
+                <label htmlFor="edit-client-address" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Address</label>
+                <input id="edit-client-address" className={inputClass} value={form.address} onChange={set('address')} />
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">City</label>
-                  <input className={inputClass} value={form.city} onChange={set('city')} />
+                  <label htmlFor="edit-client-city" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">City</label>
+                  <input id="edit-client-city" className={inputClass} value={form.city} onChange={set('city')} />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">State</label>
-                  <input className={inputClass} value={form.state} onChange={set('state')} />
+                  <label htmlFor="edit-client-state" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">State</label>
+                  <input id="edit-client-state" className={inputClass} value={form.state} onChange={set('state')} />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Pincode</label>
-                  <input className={inputClass} value={form.pincode} onChange={set('pincode')} />
+                  <label htmlFor="edit-client-pincode" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Pincode</label>
+                  <input id="edit-client-pincode" className={inputClass} value={form.pincode} onChange={set('pincode')} />
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Notes</label>
-                <textarea className={`${inputClass} resize-none`} rows={3} value={form.notes} onChange={set('notes')} />
+                <label htmlFor="edit-client-notes" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Notes</label>
+                <textarea id="edit-client-notes" className={`${inputClass} resize-none`} rows={3} value={form.notes} onChange={set('notes')} />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={onClose} className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-black text-slate-600 hover:bg-slate-50 transition-all">
                   Cancel
                 </button>
-                <button type="submit" disabled={saving} className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+                <button type="submit" disabled={saving} className="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                   {saving && <RefreshCw size={14} className="animate-spin" />}
                   {saving ? 'Saving…' : 'Save Changes'}
                 </button>
@@ -754,6 +790,7 @@ export default function ClientDetailPage() {
   const [client, setClient] = useState<ClientDetail | null>(null);
   const [amcs, setAmcs] = useState<AmcRecord[]>([]);
   const [amcPlans, setAmcPlans] = useState<AmcPlan[]>([]);
+  const [invoices, setInvoices] = useState<ClientInvoice[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [addProductOpen, setAddProductOpen] = useState(false);
@@ -770,19 +807,24 @@ export default function ClientDetailPage() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [clientRes, amcRes, plansRes] = await Promise.all([
+      const [clientRes, amcRes, plansRes, invoicesRes] = await Promise.all([
         fetch(`/api/admin/clients/${clientId}`),
         fetch(`/api/admin/clients/${clientId}/amc`),
         fetch('/api/admin/amc-plans'),
+        fetch(`/api/admin/clients/${clientId}/invoices`),
       ]);
-      const [clientData, amcData, plansData] = await Promise.all([
+      const [clientData, amcData, plansData, invoicesData] = await Promise.all([
         clientRes.json(),
         amcRes.json(),
         plansRes.json(),
+        invoicesRes.json(),
       ]);
       if (clientRes.ok) setClient(clientData);
       if (amcRes.ok) setAmcs(Array.isArray(amcData) ? amcData : []);
       if (plansRes.ok) setAmcPlans(Array.isArray(plansData) ? plansData : []);
+      if (invoicesRes.ok) setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
+    } catch {
+      toast.error('Failed to load client details. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -800,7 +842,7 @@ export default function ClientDetailPage() {
         {/* Back */}
         <Link
           href="/admin/clients"
-          className="inline-flex items-center gap-2 text-sm font-black text-slate-500 hover:text-blue-600 mb-8 transition-colors group"
+          className="inline-flex items-center gap-2 text-sm font-black text-slate-500 hover:text-brand-600 mb-8 transition-colors group"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
           All Clients
@@ -822,7 +864,7 @@ export default function ClientDetailPage() {
         ) : !client ? (
           <div className="text-center py-32">
             <p className="text-slate-500 font-medium">Client not found.</p>
-            <Link href="/admin/clients" className="mt-4 inline-block text-blue-600 font-black hover:underline">
+            <Link href="/admin/clients" className="mt-4 inline-block text-brand-600 font-black hover:underline">
               ← Back to clients
             </Link>
           </div>
@@ -832,11 +874,11 @@ export default function ClientDetailPage() {
             <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8">
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
                 <div className="flex items-start gap-5">
-                  <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl font-black shrink-0 shadow-lg shadow-blue-200">
+                  <div className="w-16 h-16 bg-brand-600 rounded-2xl flex items-center justify-center text-white text-2xl font-black shrink-0 shadow-lg shadow-brand-200">
                     {client.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h1 className="text-3xl font-black text-blue-950 tracking-tight">{client.name}</h1>
+                    <h1 className="text-3xl font-black text-brand-950 tracking-tight">{client.name}</h1>
                     {client.company_name && (
                       <div className="flex items-center gap-1.5 mt-1">
                         <Building2 size={13} className="text-slate-400" />
@@ -846,19 +888,19 @@ export default function ClientDetailPage() {
                     <div className="flex flex-wrap gap-4 mt-3">
                       {client.phone && (
                         <div className="flex items-center gap-1.5 text-sm text-slate-600">
-                          <Phone size={13} className="text-blue-400" />
+                          <Phone size={13} className="text-brand-400" />
                           {client.phone}
                         </div>
                       )}
                       {client.email && (
                         <div className="flex items-center gap-1.5 text-sm text-slate-600">
-                          <Mail size={13} className="text-blue-400" />
+                          <Mail size={13} className="text-brand-400" />
                           {client.email}
                         </div>
                       )}
                       {(client.city || client.state) && (
                         <div className="flex items-center gap-1.5 text-sm text-slate-600">
-                          <MapPin size={13} className="text-blue-400" />
+                          <MapPin size={13} className="text-brand-400" />
                           {[client.address, client.city, client.state, client.pincode].filter(Boolean).join(', ')}
                         </div>
                       )}
@@ -873,7 +915,7 @@ export default function ClientDetailPage() {
                 <div className="flex flex-col items-end gap-2 shrink-0">
                   <button
                     onClick={() => setEditOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:border-blue-300 rounded-2xl text-sm font-black text-slate-600 hover:text-blue-600 transition-all"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:border-brand-300 rounded-2xl text-sm font-black text-slate-600 hover:text-brand-600 transition-all"
                   >
                     <Pencil size={14} />
                     Edit Profile
@@ -890,14 +932,14 @@ export default function ClientDetailPage() {
             <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
               <div className="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
                 <div className="flex items-center gap-3">
-                  <Package size={16} className="text-blue-600" />
+                  <Package size={16} className="text-brand-600" />
                   <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                     Purchased Products ({client.products.length})
                   </h2>
                 </div>
                 <button
                   onClick={() => setAddProductOpen(true)}
-                  className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-xs font-black text-white transition-all shadow-sm shadow-blue-200"
+                  className="flex items-center gap-2 px-3 py-2 bg-brand-600 hover:bg-brand-700 rounded-xl text-xs font-black text-white transition-all shadow-sm shadow-brand-200"
                 >
                   <Plus size={13} />
                   Add Product
@@ -912,7 +954,7 @@ export default function ClientDetailPage() {
                   <p className="text-slate-500 font-medium text-sm">No products linked yet.</p>
                   <button
                     onClick={() => setAddProductOpen(true)}
-                    className="mt-3 text-blue-600 text-sm font-black hover:underline"
+                    className="mt-3 text-brand-600 text-sm font-black hover:underline"
                   >
                     Add first product →
                   </button>
@@ -930,17 +972,17 @@ export default function ClientDetailPage() {
                           className="px-8 py-5 flex items-center gap-4 cursor-pointer hover:bg-slate-50/50 transition-colors group"
                           onClick={() => setExpandedProduct(isExpanded ? null : cp.id)}
                         >
-                          <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
-                            <Package size={16} className="text-blue-500" />
+                          <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center shrink-0">
+                            <Package size={16} className="text-brand-500" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-black text-sm text-blue-950 truncate">{cp.product_name}</p>
+                            <p className="font-black text-sm text-brand-950 truncate">{cp.product_name}</p>
                             <div className="flex flex-wrap gap-3 mt-1">
                               {cp.serial_number && (
-                                <span className="text-[10px] font-medium text-slate-400">S/N: {cp.serial_number}</span>
+                                <span className="text-xs font-medium text-slate-500">S/N: {cp.serial_number}</span>
                               )}
                               {cp.purchase_date && (
-                                <span className="text-[10px] font-medium text-slate-400">
+                                <span className="text-xs font-medium text-slate-500">
                                   Purchased: {fmt(cp.purchase_date)}
                                 </span>
                               )}
@@ -988,7 +1030,7 @@ export default function ClientDetailPage() {
                                         e.stopPropagation();
                                         setEditProduct(cp);
                                       }}
-                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-blue-300 rounded-xl text-[11px] font-black text-slate-600 hover:text-blue-600 transition-all shadow-sm"
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-brand-300 rounded-xl text-[11px] font-black text-slate-600 hover:text-brand-600 transition-all shadow-sm"
                                     >
                                       <Pencil size={12} />
                                       Edit Product
@@ -1008,7 +1050,7 @@ export default function ClientDetailPage() {
                                   ].map(({ label, value }) => (
                                     <div key={label}>
                                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{label}</p>
-                                      <p className="text-sm font-bold text-blue-950">{value ?? '—'}</p>
+                                      <p className="text-sm font-bold text-brand-950">{value ?? '—'}</p>
                                     </div>
                                   ))}
                                 </div>
@@ -1027,8 +1069,8 @@ export default function ClientDetailPage() {
                                         <div key={amc.id} className="bg-white rounded-2xl border border-slate-100 px-5 py-3 flex items-center gap-4">
                                           <AmcBadge endDate={amc.end_date} status={amc.status} />
                                           <div className="flex-1">
-                                            <p className="text-xs font-black text-blue-950">{amc.plan_name}</p>
-                                            <p className="text-[10px] text-slate-400 font-medium">
+                                            <p className="text-xs font-black text-brand-950">{amc.plan_name}</p>
+                                            <p className="text-xs text-slate-500 font-medium">
                                               {fmt(amc.start_date)} → {fmt(amc.end_date)} · ₹{amc.price.toLocaleString('en-IN')}
                                             </p>
                                           </div>
@@ -1039,8 +1081,8 @@ export default function ClientDetailPage() {
                                 ) : (
                                   <div className="bg-white rounded-2xl border border-dashed border-slate-200 px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                     <div>
-                                      <p className="text-xs font-black text-blue-950">No AMC assigned yet</p>
-                                      <p className="text-[10px] text-slate-400 font-medium mt-0.5">Assign an AMC plan to track renewals and service coverage.</p>
+                                      <p className="text-xs font-black text-brand-950">No AMC assigned yet</p>
+                                      <p className="text-xs text-slate-500 font-medium mt-0.5">Assign an AMC plan to track renewals and service coverage.</p>
                                     </div>
                                     <button
                                       type="button"
@@ -1062,6 +1104,83 @@ export default function ClientDetailPage() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+            </div>
+
+            {/* Invoices (GST canvas invoices + order invoices) */}
+            <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+              <div className="px-8 py-5 border-b border-slate-50 bg-slate-50/30">
+                <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <FileText size={13} className="text-brand-600" />
+                  Invoices ({invoices.length})
+                </h2>
+              </div>
+
+              {invoices.length === 0 ? (
+                <div className="py-16 text-center">
+                  <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-200">
+                    <FileText size={28} />
+                  </div>
+                  <p className="text-slate-500 font-medium text-sm">No invoices linked yet.</p>
+                  <Link href="/admin/invoices" className="mt-3 inline-block text-brand-600 text-sm font-black hover:underline">
+                    Open Invoice Builder →
+                  </Link>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50/50">
+                        {['Invoice', 'Type', 'Amount', 'Status / Date', ''].map((h, i) => (
+                          <th key={i} className="px-6 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {invoices.map((inv, idx) => {
+                        const viewHref =
+                          inv.source === 'order' && inv.order_id
+                            ? `/api/admin/orders/${inv.order_id}/invoice?format=html`
+                            : inv.source === 'gst'
+                            ? `/admin/invoices?invoice=${encodeURIComponent(inv.invoice_number)}`
+                            : null;
+                        return (
+                          <tr key={`${inv.source}-${inv.invoice_number}-${idx}`} className="hover:bg-slate-50/40 transition-colors">
+                            <td className="px-6 py-4 text-xs font-black text-brand-950">{inv.invoice_number}</td>
+                            <td className="px-6 py-4">
+                              {inv.source === 'gst' ? (
+                                <span className="inline-block text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-50 text-brand-700">GST</span>
+                              ) : (
+                                <span className="inline-block text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700">Order</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-xs font-black text-brand-950">
+                              {inv.amount != null ? `₹${Number(inv.amount).toLocaleString('en-IN')}` : '—'}
+                            </td>
+                            <td className="px-6 py-4 text-xs font-medium text-slate-500">
+                              {inv.status && (
+                                <span className="inline-block text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 mr-2">{inv.status}</span>
+                              )}
+                              {fmt(inv.invoice_date ?? inv.created_at ?? null)}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              {viewHref ? (
+                                <a
+                                  href={viewHref}
+                                  target={inv.source === 'order' ? '_blank' : undefined}
+                                  rel={inv.source === 'order' ? 'noopener noreferrer' : undefined}
+                                  className="inline-flex items-center gap-1.5 text-xs font-black text-brand-600 hover:text-brand-700 hover:underline"
+                                >
+                                  View <ExternalLink size={12} />
+                                </a>
+                              ) : null}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
@@ -1088,8 +1207,8 @@ export default function ClientDetailPage() {
                       {amcs.map((amc) => (
                         <tr key={amc.id} className="hover:bg-slate-50/40 transition-colors">
                           <td className="px-6 py-4">
-                            <p className="text-xs font-black text-blue-950">{amc.product_name}</p>
-                            {amc.serial_number && <p className="text-[10px] text-slate-400">{amc.serial_number}</p>}
+                            <p className="text-xs font-black text-brand-950">{amc.product_name}</p>
+                            {amc.serial_number && <p className="text-xs text-slate-500">{amc.serial_number}</p>}
                           </td>
                           <td className="px-6 py-4 text-xs font-bold text-slate-600">{amc.plan_name}</td>
                           <td className="px-6 py-4 text-xs text-slate-500 font-medium">
@@ -1098,7 +1217,7 @@ export default function ClientDetailPage() {
                           <td className="px-6 py-4">
                             <AmcBadge endDate={amc.end_date} status={amc.status} />
                           </td>
-                          <td className="px-6 py-4 text-xs font-black text-blue-950">₹{amc.price.toLocaleString('en-IN')}</td>
+                          <td className="px-6 py-4 text-xs font-black text-brand-950">₹{amc.price.toLocaleString('en-IN')}</td>
                         </tr>
                       ))}
                     </tbody>

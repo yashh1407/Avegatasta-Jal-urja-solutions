@@ -4,7 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import {
   Users,
   Search,
@@ -431,7 +432,7 @@ function EmployeeModal({
             <div className="flex items-center justify-between px-8 py-5 border-b border-slate-100 flex-shrink-0 bg-slate-50/50">
               <div>
                 <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                  <Shield size={22} className="text-blue-600" />
+                  <Shield size={22} className="text-brand-600" />
                   {initial?.id ? 'Edit Employee Access Settings' : 'Create Employee Account'}
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
@@ -459,13 +460,13 @@ function EmployeeModal({
                     onClick={() => setActiveCategory('Account')}
                     className={`w-full flex items-center justify-between text-left p-3 rounded-2xl transition-all border ${
                       activeCategory === 'Account'
-                        ? 'bg-blue-50/70 border-blue-100 text-blue-900 shadow-sm shadow-blue-50/50'
+                        ? 'bg-brand-50/70 border-brand-100 text-brand-900 shadow-sm shadow-brand-50/50'
                         : 'bg-white border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className={`p-2 rounded-xl flex-shrink-0 ${
-                        activeCategory === 'Account' ? 'bg-blue-600 text-white shadow-md shadow-blue-200/50' : 'bg-slate-100 text-slate-500'
+                        activeCategory === 'Account' ? 'bg-brand-600 text-white shadow-md shadow-brand-200/50' : 'bg-slate-100 text-slate-500'
                       }`}>
                         <UserCheck size={16} />
                       </div>
@@ -506,13 +507,13 @@ function EmployeeModal({
                         disabled={form.role === 'superadmin'}
                         className={`w-full flex items-center justify-between text-left p-3 rounded-2xl transition-all border disabled:opacity-50 ${
                           isActive
-                            ? 'bg-blue-50/70 border-blue-100 text-blue-900 shadow-sm shadow-blue-50/50'
+                            ? 'bg-brand-50/70 border-brand-100 text-brand-900 shadow-sm shadow-brand-50/50'
                             : 'bg-white border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className={`p-2 rounded-xl flex-shrink-0 ${
-                            isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-200/50' : 'bg-slate-100 text-slate-500'
+                            isActive ? 'bg-brand-600 text-white shadow-md shadow-brand-200/50' : 'bg-slate-100 text-slate-500'
                           }`}>
                             <Icon size={16} />
                           </div>
@@ -525,7 +526,7 @@ function EmployeeModal({
                         </div>
                         {form.role !== 'superadmin' && activeInCatCount > 0 && (
                           <div className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold flex-shrink-0 ${
-                            isActive ? 'bg-blue-200/60 text-blue-800' : 'bg-slate-100 text-slate-600'
+                            isActive ? 'bg-brand-200/60 text-brand-800' : 'bg-slate-100 text-slate-600'
                           }`}>
                             {activeInCatCount}/{totalPossible}
                           </div>
@@ -540,7 +541,7 @@ function EmployeeModal({
                       <button
                         type="button"
                         onClick={selectAllPermissions}
-                        className="w-full text-xs font-extrabold text-blue-600 hover:text-blue-700 bg-blue-50/80 hover:bg-blue-100/80 py-2.5 rounded-xl transition-all border border-blue-100/50 text-center"
+                        className="w-full text-xs font-extrabold text-brand-600 hover:text-brand-700 bg-brand-50/80 hover:bg-brand-100/80 py-2.5 rounded-xl transition-all border border-brand-100/50 text-center"
                       >
                         Enable All Modules
                       </button>
@@ -560,7 +561,7 @@ function EmployeeModal({
                   {activeCategory === 'Account' ? (
                     <div className="space-y-6 max-w-3xl">
                       <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                        <UserCheck size={18} className="text-blue-600" />
+                        <UserCheck size={18} className="text-brand-600" />
                         <h3 className="text-sm font-black text-slate-900">Account Credentials & System Role</h3>
                       </div>
 
@@ -618,9 +619,10 @@ function EmployeeModal({
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">Full Name *</label>
+                          <label htmlFor="emp-name" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">Full Name *</label>
                           <input
-                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800 font-semibold"
+                            id="emp-name"
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-slate-800 font-semibold"
                             value={form.name}
                             onChange={(e) => setField('name', e.target.value)}
                             required
@@ -629,9 +631,10 @@ function EmployeeModal({
                         </div>
 
                         <div>
-                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">Email Address * (Login ID)</label>
+                          <label htmlFor="emp-email" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">Email Address * (Login ID)</label>
                           <input
-                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800 font-semibold"
+                            id="emp-email"
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-slate-800 font-semibold"
                             type="email"
                             value={form.email}
                             onChange={(e) => setField('email', e.target.value)}
@@ -641,9 +644,10 @@ function EmployeeModal({
                         </div>
 
                         <div>
-                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">Mobile Number</label>
+                          <label htmlFor="emp-mobile" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">Mobile Number</label>
                           <input
-                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800 font-semibold"
+                            id="emp-mobile"
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-slate-800 font-semibold"
                             value={form.mobile_number}
                             onChange={(e) => setField('mobile_number', e.target.value)}
                             placeholder="e.g. +91 98765 43210"
@@ -651,9 +655,10 @@ function EmployeeModal({
                         </div>
 
                         <div>
-                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">System Role *</label>
+                          <label htmlFor="emp-role" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">System Role *</label>
                           <select
-                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800 font-semibold cursor-pointer disabled:opacity-50"
+                            id="emp-role"
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-slate-800 font-semibold cursor-pointer disabled:opacity-50"
                             value={form.role}
                             onChange={(e) => {
                               const newRole = e.target.value;
@@ -695,11 +700,12 @@ function EmployeeModal({
                         </div>
 
                         <div className="md:col-span-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">
+                          <label htmlFor="emp-password" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">
                             {initial?.id ? 'New Password (Optional)' : 'Password *'}
                           </label>
                           <input
-                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800 font-semibold"
+                            id="emp-password"
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-slate-800 font-semibold"
                             type="password"
                             value={form.password || ''}
                             onChange={(e) => setField('password', e.target.value)}
@@ -710,10 +716,10 @@ function EmployeeModal({
                       </div>
                     </div>
                   ) : form.role === 'superadmin' ? (
-                    <div className="bg-blue-50 border border-blue-100 rounded-3xl p-8 text-center my-auto max-w-xl mx-auto">
-                      <Shield size={42} className="text-blue-500 mx-auto mb-4" />
-                      <h4 className="text-base font-black text-blue-900">Unrestricted Access Role</h4>
-                      <p className="text-xs text-blue-600 max-w-lg mx-auto mt-2 leading-relaxed font-semibold">
+                    <div className="bg-brand-50 border border-brand-100 rounded-3xl p-8 text-center my-auto max-w-xl mx-auto">
+                      <Shield size={42} className="text-brand-500 mx-auto mb-4" />
+                      <h4 className="text-base font-black text-brand-900">Unrestricted Access Role</h4>
+                      <p className="text-xs text-brand-600 max-w-lg mx-auto mt-2 leading-relaxed font-semibold">
                         Users designated as <strong>Superadmin</strong> automatically inherit full read and write privileges across all system configurations, databases, and administrative modules. Individual permission override presets cannot be modified.
                       </p>
                     </div>
@@ -751,7 +757,7 @@ function EmployeeModal({
                                     return { ...prev, permissions: updated };
                                   });
                                 }}
-                                className="text-[10px] font-black uppercase tracking-wider text-blue-600 hover:bg-blue-50/60 px-3 py-2 border border-blue-100 rounded-xl transition-all bg-white"
+                                className="text-[10px] font-black uppercase tracking-wider text-brand-600 hover:bg-brand-50/60 px-3 py-2 border border-brand-100 rounded-xl transition-all bg-white"
                               >
                                 Select Category
                               </button>
@@ -782,7 +788,7 @@ function EmployeeModal({
                           return (
                             <div
                               key={mod.key}
-                              className="bg-white border border-slate-200/60 rounded-3xl p-5 hover:border-blue-200 hover:shadow-md hover:shadow-blue-50/10 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                              className="bg-white border border-slate-200/60 rounded-3xl p-5 hover:border-brand-200 hover:shadow-md hover:shadow-brand-50/10 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
                             >
                               <div className="max-w-md">
                                 <span className="text-sm font-black block leading-none text-slate-900">{mod.label}</span>
@@ -798,7 +804,7 @@ function EmployeeModal({
                                     onClick={() => handlePermissionActionToggle(mod.key, 'view')}
                                     className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border ${
                                       perms.view
-                                        ? 'bg-blue-50/80 border-blue-200 text-blue-700 shadow-sm shadow-blue-100/30'
+                                        ? 'bg-brand-50/80 border-brand-200 text-brand-700 shadow-sm shadow-brand-100/30'
                                         : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
                                     }`}
                                   >
@@ -876,7 +882,7 @@ function EmployeeModal({
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 disabled:opacity-50"
+                  className="px-6 py-3 bg-brand-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-brand-700 transition-all shadow-lg shadow-brand-100 disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : initial?.id ? 'Save Access Settings' : 'Create Account'}
                 </button>
@@ -901,6 +907,7 @@ export default function EmployeesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalInitial, setModalInitial] = useState<(EmployeeForm & { id?: number }) | null>(null);
   const [roles, setRoles] = useState<any[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; email: string } | null>(null);
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
@@ -914,6 +921,7 @@ export default function EmployeesPage() {
       }
     } catch {
       setEmployees([]);
+      toast.error('Failed to load employees');
     } finally {
       setLoading(false);
     }
@@ -928,6 +936,7 @@ export default function EmployeesPage() {
       }
     } catch (error) {
       console.error('Failed to fetch roles:', error);
+      toast.error('Failed to load roles');
     }
   }, []);
 
@@ -946,7 +955,7 @@ export default function EmployeesPage() {
   if (status === 'loading') {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
-        <RefreshCw className="animate-spin text-blue-600" size={32} />
+        <RefreshCw className="animate-spin text-brand-600" size={32} />
       </div>
     );
   }
@@ -969,10 +978,14 @@ export default function EmployeesPage() {
     );
   }
 
-  const handleDelete = async (id: number, email: string) => {
-    if (!confirm(`Are you sure you want to delete employee "${email}"? This action is permanent and cannot be undone.`)) {
-      return;
-    }
+  const handleDelete = (id: number, email: string) => {
+    setDeleteTarget({ id, email });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const { id, email } = deleteTarget;
+    setDeleteTarget(null);
 
     try {
       const res = await fetch(`/api/admin/employees/${id}`, {
@@ -1020,13 +1033,12 @@ export default function EmployeesPage() {
 
   return (
     <div className="p-8 lg:p-12 min-h-screen bg-slate-50/50">
-      <Toaster position="top-right" />
-      
+
       {/* Header section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl text-white flex items-center justify-center">
+            <div className="w-10 h-10 bg-brand-600 rounded-xl text-white flex items-center justify-center">
               <Users size={20} />
             </div>
             Employees & Access Management
@@ -1038,7 +1050,7 @@ export default function EmployeesPage() {
         
         <button
           onClick={openAdd}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-black text-sm px-5 py-3 rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all flex items-center justify-center gap-2 self-start md:self-auto"
+          className="bg-brand-600 hover:bg-brand-700 text-white font-black text-sm px-5 py-3 rounded-xl shadow-lg shadow-brand-500/20 hover:shadow-brand-500/30 transition-all flex items-center justify-center gap-2 self-start md:self-auto"
         >
           <Plus size={16} />
           Create Account
@@ -1054,10 +1066,11 @@ export default function EmployeesPage() {
             <Search className="absolute left-4 top-3.5 text-slate-400" size={16} />
             <input
               type="text"
+              aria-label="Search admin users by name or email"
               placeholder="Search admin users by name or email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800"
+              className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-slate-800"
             />
           </div>
           <button
@@ -1073,7 +1086,7 @@ export default function EmployeesPage() {
         <div className="overflow-x-auto">
           {loading ? (
             <div className="py-24 text-center">
-              <RefreshCw size={32} className="animate-spin text-blue-600 mx-auto mb-4" />
+              <RefreshCw size={32} className="animate-spin text-brand-600 mx-auto mb-4" />
               <p className="text-slate-500 text-xs font-semibold">Loading admin users list...</p>
             </div>
           ) : filteredEmployees.length === 0 ? (
@@ -1085,7 +1098,7 @@ export default function EmployeesPage() {
           ) : (
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                <tr className="bg-slate-50/50 border-b border-slate-100 text-xs font-black uppercase tracking-wider text-slate-500">
                   <th className="px-6 py-4">Employee & Contact</th>
                   <th className="px-6 py-4">System Role</th>
                   <th className="px-6 py-4">Authorized Access</th>
@@ -1104,14 +1117,14 @@ export default function EmployeesPage() {
                       {/* Identity Column */}
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 font-black text-xs flex items-center justify-center flex-shrink-0">
+                          <div className="w-9 h-9 rounded-xl bg-brand-50 text-brand-700 font-black text-xs flex items-center justify-center flex-shrink-0">
                             {initials}
                           </div>
                           <div>
                             <span className="text-xs font-black text-slate-900 block flex items-center gap-2">
                               {emp.name}
                               {isCurrentSessionUser && (
-                                <span className="bg-blue-100 text-blue-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                                <span className="bg-brand-100 text-brand-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
                                   You
                                 </span>
                               )}
@@ -1121,10 +1134,10 @@ export default function EmployeesPage() {
                                 </span>
                               )}
                             </span>
-                            <span className="text-[10px] text-slate-500 block mt-0.5 font-medium">
+                            <span className="text-xs text-slate-500 block mt-0.5 font-medium">
                               {emp.email} {emp.mobile_number ? `• ${emp.mobile_number}` : ''}
                             </span>
-                            <span className="text-[9px] text-slate-400 block mt-0.5 flex items-center gap-1">
+                            <span className="text-xs text-slate-500 block mt-0.5 flex items-center gap-1">
                               <Calendar size={10} />
                               Created: {new Date(emp.created_at).toLocaleDateString()}
                             </span>
@@ -1145,7 +1158,7 @@ export default function EmployeesPage() {
                             Sales
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border border-blue-100">
+                          <span className="inline-flex items-center gap-1 bg-brand-50 text-brand-700 text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border border-brand-100">
                             <UserCheck size={10} />
                             Employee
                           </span>
@@ -1213,17 +1226,19 @@ export default function EmployeesPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => openEdit(emp)}
-                            className="p-2 border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 rounded-xl transition-all"
+                            className="p-2 border border-slate-200 text-slate-600 hover:text-brand-600 hover:bg-brand-50 hover:border-brand-200 rounded-xl transition-all"
                             title="Edit Permissions"
+                            aria-label={`Edit permissions for ${emp.name}`}
                           >
                             <Edit2 size={14} />
                           </button>
-                          
+
                           <button
                             onClick={() => handleDelete(emp.id, emp.email)}
                             className="p-2 border border-slate-200 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-200 rounded-xl transition-all disabled:opacity-30 disabled:pointer-events-none"
                             disabled={isCurrentSessionUser || (emp.role === 'superadmin' && employees.filter(e => e.role === 'superadmin').length <= 1)}
                             title={isCurrentSessionUser ? 'Cannot delete yourself' : 'Delete Account'}
+                            aria-label={isCurrentSessionUser ? 'Cannot delete your own account' : `Delete account ${emp.email}`}
                           >
                             <Trash2 size={14} />
                           </button>
@@ -1248,6 +1263,16 @@ export default function EmployeesPage() {
         onSaved={fetchEmployees}
         currentUserId={currentUser?.id}
         roles={roles}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={`Delete employee "${deleteTarget?.email ?? ''}"?`}
+        message="This action is permanent and cannot be undone."
+        confirmLabel="Delete Account"
+        destructive
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
     </div>
   );

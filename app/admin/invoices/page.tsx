@@ -7,9 +7,8 @@ import {
   Tag, 
   RefreshCw, 
   LogOut, 
-  Save, 
-  AlertTriangle, 
-  FileDown, 
+  Save,
+  FileDown,
   Plus, 
   Printer, 
   X, 
@@ -20,6 +19,7 @@ import {
   Receipt
 } from 'lucide-react';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
 import Footer from '@/components/Footer';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -46,6 +46,7 @@ interface BankDetails {
 }
 
 interface InvoiceData {
+  client_id: number | null;
   invoiceNumber: string;
   date: string;
   deliveryNote: string;
@@ -89,6 +90,7 @@ const DEFAULT_JURISDICTION = 'Subject To Nashik Jurisdiction';
 const DEFAULT_TERMS = 'Terms & Conditions - P.T.O.';
 
 const INITIAL_DATA: InvoiceData = {
+  client_id: null,
   invoiceNumber: '',
   date: new Date().toISOString().split('T')[0],
   deliveryNote: '',
@@ -179,7 +181,6 @@ export default function InvoiceBuilderPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [showSavedList, setShowSavedList] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // Sidebar sections accordion
   const [openSections, setOpenSections] = useState({
@@ -195,8 +196,8 @@ export default function InvoiceBuilderPage() {
   };
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+    if (type === 'error') toast.error(message);
+    else toast.success(message);
   };
 
   useEffect(() => {
@@ -223,13 +224,25 @@ export default function InvoiceBuilderPage() {
     fetchSavedInvoices();
   }, [status, router]);
 
+  // Deep-link support: /admin/invoices?invoice=<number> auto-loads that invoice
+  // (used by the "View" link on a client's profile for GST invoices).
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    const params = new URLSearchParams(window.location.search);
+    const invoiceParam = params.get('invoice');
+    if (invoiceParam) {
+      loadInvoice(invoiceParam);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
   const fetchSavedInvoices = () => {
     fetch('/api/admin/invoices')
       .then(r => r.json())
       .then(res => {
         if (res.invoices) setSavedInvoices(res.invoices);
       })
-      .catch(console.error);
+      .catch(() => toast.error('Failed to load saved invoices.'));
   };
 
   const saveInvoice = async () => {
@@ -246,6 +259,7 @@ export default function InvoiceBuilderPage() {
         body: JSON.stringify({
           invoice_number: data.invoiceNumber,
           client_name: data.clientCompany || data.clientAttn || 'Unknown Client',
+          client_id: data.client_id,
           invoice_data: data
         })
       });
@@ -290,16 +304,21 @@ export default function InvoiceBuilderPage() {
       const resData = await res.json();
       if (resData.invoice && resData.invoice.invoice_data) {
         const parsed = JSON.parse(resData.invoice.invoice_data);
-        
+
+        // The client_id column is the source of truth for the link (the JSON
+        // blob may predate it). Coerce to number | null and apply it last.
+        const rowClientId = resData.invoice.client_id != null ? Number(resData.invoice.client_id) : null;
+        const applyClientId = (content: InvoiceData) => ({ ...content, client_id: rowClientId });
+
         // Handle migration structure checking
         if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].type === '_v2_structured_data') {
-          setData(parsed[0].content);
+          setData(applyClientId(parsed[0].content));
         } else if (parsed.invoiceNumber !== undefined) {
-          setData(parsed);
+          setData(applyClientId(parsed));
         } else if (Array.isArray(parsed)) {
           // Fallback legacy structure wrapper
           const content = parsed.find(el => el.type === '_v2_structured_data' || el.content)?.content;
-          if (content) setData(content);
+          if (content) setData(applyClientId(content));
         }
         showToast('Invoice loaded successfully!', 'success');
         setShowSavedList(false);
@@ -347,16 +366,6 @@ export default function InvoiceBuilderPage() {
 
   return (
     <div className="h-screen bg-slate-100 flex flex-col lg:flex-row overflow-hidden print:h-auto print:overflow-visible print:block">
-      
-      {/* Toast Alert */}
-      {toast && (
-        <div className={`fixed top-6 right-6 z-[999999] px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3 text-sm font-bold border transition-all ${
-          toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'
-        }`}>
-          <AlertTriangle size={16} />
-          {toast.message}
-        </div>
-      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
@@ -379,10 +388,10 @@ export default function InvoiceBuilderPage() {
         <div className="fixed inset-0 z-[9999] bg-slate-900/40 backdrop-blur-sm flex justify-end print:hidden">
           <div className="w-[400px] bg-white h-full shadow-2xl flex flex-col p-6 animate-slide-in">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-              <h3 className="text-lg font-black text-blue-950 flex items-center gap-2">
+              <h3 className="text-lg font-black text-brand-950 flex items-center gap-2">
                 <Receipt size={18} /> Saved Invoices
               </h3>
-              <button onClick={() => setShowSavedList(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
+              <button onClick={() => setShowSavedList(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all" aria-label="Close saved invoices">
                 <X size={18} />
               </button>
             </div>
@@ -391,20 +400,20 @@ export default function InvoiceBuilderPage() {
                 <p className="text-xs text-slate-400 italic text-center py-10">No invoices saved yet.</p>
               ) : (
                 savedInvoices.map((inv) => (
-                  <div key={inv.invoice_number} className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex flex-col justify-between hover:border-blue-200 transition-all group">
+                  <div key={inv.invoice_number} className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex flex-col justify-between hover:border-brand-200 transition-all group">
                     <div className="flex items-start justify-between">
                       <div>
-                        <h4 className="font-black text-sm text-blue-900">{inv.invoice_number}</h4>
+                        <h4 className="font-black text-sm text-brand-900">{inv.invoice_number}</h4>
                         <p className="text-xs text-slate-500 font-bold mt-1 truncate max-w-[240px]">{inv.client_name}</p>
-                        <p className="text-[10px] text-slate-400 mt-2">
+                        <p className="text-xs text-slate-500 mt-2">
                           Updated: {new Date(inv.updated_at).toLocaleDateString()} {new Date(inv.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
-                      <div className="flex gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => loadInvoice(inv.invoice_number)} className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-colors" title="Load">
+                      <div className="flex gap-1.5 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+                        <button onClick={() => loadInvoice(inv.invoice_number)} className="p-2 bg-brand-50 text-brand-600 rounded-xl hover:bg-brand-600 hover:text-white transition-colors" title="Load" aria-label={`Load invoice ${inv.invoice_number}`}>
                           <Plus size={14} />
                         </button>
-                        <button onClick={() => setShowDeleteConfirm(inv.invoice_number)} className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-colors" title="Delete">
+                        <button onClick={() => setShowDeleteConfirm(inv.invoice_number)} className="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-colors" title="Delete" aria-label={`Delete invoice ${inv.invoice_number}`}>
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -423,25 +432,25 @@ export default function InvoiceBuilderPage() {
         {/* Editor Header */}
         <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+            <div className="w-9 h-9 bg-brand-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-brand-200">
               <Receipt size={18} />
             </div>
             <div>
-              <h2 className="text-sm font-black text-blue-950 uppercase tracking-wider leading-none">Invoice Builder</h2>
+              <h2 className="text-sm font-black text-brand-950 uppercase tracking-wider leading-none">Invoice Builder</h2>
               <span className="text-[10px] text-slate-400 font-bold">Tax Invoice Details</span>
             </div>
           </div>
           <div className="flex gap-1.5">
-            <button onClick={saveInvoice} disabled={isSaving} className="w-8 h-8 bg-emerald-600 text-white rounded-lg flex items-center justify-center hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50" title="Save Invoice">
+            <button onClick={saveInvoice} disabled={isSaving} className="w-8 h-8 bg-emerald-600 text-white rounded-lg flex items-center justify-center hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50" title="Save Invoice" aria-label="Save invoice">
               {isSaving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
             </button>
-            <button onClick={handlePrint} className="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors shadow-sm" title="Print Invoice">
+            <button onClick={handlePrint} className="w-8 h-8 bg-brand-600 text-white rounded-lg flex items-center justify-center hover:bg-brand-700 transition-colors shadow-sm" title="Print Invoice" aria-label="Print invoice">
               <Printer size={14} />
             </button>
-            <button onClick={() => setShowSavedList(true)} className="w-8 h-8 bg-slate-100 text-slate-600 rounded-lg flex items-center justify-center hover:bg-slate-200 transition-colors" title="Saved Invoices">
+            <button onClick={() => setShowSavedList(true)} className="w-8 h-8 bg-slate-100 text-slate-600 rounded-lg flex items-center justify-center hover:bg-slate-200 transition-colors" title="Saved Invoices" aria-label="Saved invoices">
               <Receipt size={14} />
             </button>
-            <button onClick={() => setData({ ...INITIAL_DATA })} className="w-8 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors" title="Clear/New">
+            <button onClick={() => setData({ ...INITIAL_DATA })} className="w-8 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors" title="Clear/New" aria-label="Clear and start new invoice">
               <Trash2 size={14} />
             </button>
           </div>
@@ -452,16 +461,64 @@ export default function InvoiceBuilderPage() {
 
           {/* Section: Client Details */}
           <div className="border border-slate-100 rounded-2xl overflow-hidden bg-slate-50/50">
-            <button onClick={() => toggleSection('client')} className="w-full px-4 py-3 flex items-center justify-between text-xs font-black text-blue-950 uppercase tracking-widest bg-slate-50 border-b border-slate-100">
+            <button onClick={() => toggleSection('client')} className="w-full px-4 py-3 flex items-center justify-between text-xs font-black text-brand-950 uppercase tracking-widest bg-slate-50 border-b border-slate-100">
               Client & Billing
               {openSections.client ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
             {openSections.client && (
               <div className="p-4 space-y-3">
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Select Client (Auto-fill)</label>
-                  <select 
-                    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400"
+                  <label htmlFor="inv-client-link" className="text-[10px] font-black uppercase tracking-wider text-brand-600 block mb-1">Link to Client</label>
+                  <select
+                    id="inv-client-link"
+                    className="w-full bg-white border border-brand-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400"
+                    value={data.client_id ?? ''}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      if (!selectedId) {
+                        setData(prev => ({ ...prev, client_id: null }));
+                        return;
+                      }
+                      const selected = clients.find(c => String(c.id) === selectedId);
+                      const linkedId = Number(selectedId);
+                      if (!selected) {
+                        setData(prev => ({ ...prev, client_id: linkedId }));
+                        return;
+                      }
+
+                      // Build full address by concatenating address, city, state, pincode
+                      let fullAddress = selected.address || '';
+                      const cityStatePin = [selected.city, selected.state, selected.pincode].filter(Boolean).join(', ');
+                      if (cityStatePin) {
+                        fullAddress = fullAddress ? `${fullAddress}\n${cityStatePin}` : cityStatePin;
+                      }
+
+                      // Link the client and prefill ONLY empty fields (never overwrite typed values).
+                      setData(prev => ({
+                        ...prev,
+                        client_id: linkedId,
+                        clientCompany: prev.clientCompany || selected.company_name || selected.name || '',
+                        clientAddress: prev.clientAddress || fullAddress,
+                        clientAttn: prev.clientAttn || selected.name || '',
+                        clientPhone: prev.clientPhone || selected.phone || '',
+                        clientGstin: prev.clientGstin || selected.gstin || '',
+                      }));
+                    }}
+                  >
+                    <option value="">-- Not linked to a client --</option>
+                    {clients.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.company_name ? `${c.company_name} (${c.name})` : c.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[9px] text-slate-400 font-semibold mt-1 leading-relaxed">Links this invoice to a client so it shows on their profile. Only fills empty fields below.</p>
+                </div>
+                <div>
+                  <label htmlFor="inv-client-select" className="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1">Select Client (Auto-fill)</label>
+                  <select
+                    id="inv-client-select"
+                    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400"
                     onChange={async (e) => {
                       const selectedId = e.target.value;
                       if (!selectedId) return;
@@ -500,6 +557,7 @@ export default function InvoiceBuilderPage() {
 
                         setData(prev => ({
                           ...prev,
+                          client_id: Number(selectedId),
                           clientCompany: selected.company_name || selected.name || '',
                           clientAddress: fullAddress,
                           clientAttn: selected.name || '',
@@ -521,31 +579,31 @@ export default function InvoiceBuilderPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Company / Billing Client</label>
-                  <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.clientCompany} onChange={e => setData({ ...data, clientCompany: e.target.value })} placeholder="e.g. Lokprabha Constructions" />
+                  <label htmlFor="inv-client-company" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Company / Billing Client</label>
+                  <input id="inv-client-company" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.clientCompany} onChange={e => setData({ ...data, clientCompany: e.target.value })} placeholder="e.g. Lokprabha Constructions" />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Billing Address</label>
-                  <textarea rows={2} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400 resize-none" value={data.clientAddress} onChange={e => setData({ ...data, clientAddress: e.target.value })} placeholder="Full address..." />
+                  <label htmlFor="inv-client-address" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Billing Address</label>
+                  <textarea id="inv-client-address" rows={2} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400 resize-none" value={data.clientAddress} onChange={e => setData({ ...data, clientAddress: e.target.value })} placeholder="Full address..." />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Kind Attn</label>
-                    <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.clientAttn} onChange={e => setData({ ...data, clientAttn: e.target.value })} placeholder="Contact Person" />
+                    <label htmlFor="inv-client-attn" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Kind Attn</label>
+                    <input id="inv-client-attn" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.clientAttn} onChange={e => setData({ ...data, clientAttn: e.target.value })} placeholder="Contact Person" />
                   </div>
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Contact Phone</label>
-                    <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.clientPhone} onChange={e => setData({ ...data, clientPhone: e.target.value })} placeholder="Mobile Number" />
+                    <label htmlFor="inv-client-phone" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Contact Phone</label>
+                    <input id="inv-client-phone" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.clientPhone} onChange={e => setData({ ...data, clientPhone: e.target.value })} placeholder="Mobile Number" />
                   </div>
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Client GSTIN</label>
-                  <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.clientGstin} onChange={e => setData({ ...data, clientGstin: e.target.value })} placeholder="15-character GSTIN" />
+                  <label htmlFor="inv-client-gstin" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Client GSTIN</label>
+                  <input id="inv-client-gstin" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.clientGstin} onChange={e => setData({ ...data, clientGstin: e.target.value })} placeholder="15-character GSTIN" />
                 </div>
 
                 <div className="pt-2 border-t border-slate-100">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" className="rounded border-slate-200 text-blue-600 focus:ring-blue-500/20" checked={data.consigneeSameAsBilling} onChange={e => setData({ ...data, consigneeSameAsBilling: e.target.checked })} />
+                    <input type="checkbox" className="rounded border-slate-200 text-brand-600 focus:ring-brand-500/20" checked={data.consigneeSameAsBilling} onChange={e => setData({ ...data, consigneeSameAsBilling: e.target.checked })} />
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Shipped to same address</span>
                   </label>
                 </div>
@@ -553,12 +611,12 @@ export default function InvoiceBuilderPage() {
                 {!data.consigneeSameAsBilling && (
                   <div className="pt-2 space-y-3">
                     <div>
-                      <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Consignee Name</label>
-                      <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.consigneeCompany} onChange={e => setData({ ...data, consigneeCompany: e.target.value })} placeholder="Consignee Company Name" />
+                      <label htmlFor="inv-consignee-company" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Consignee Name</label>
+                      <input id="inv-consignee-company" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.consigneeCompany} onChange={e => setData({ ...data, consigneeCompany: e.target.value })} placeholder="Consignee Company Name" />
                     </div>
                     <div>
-                      <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Delivery / Fitting Address</label>
-                      <textarea rows={2} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400 resize-none" value={data.consigneeAddress} onChange={e => setData({ ...data, consigneeAddress: e.target.value })} placeholder="Consignee delivery address..." />
+                      <label htmlFor="inv-consignee-address" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Delivery / Fitting Address</label>
+                      <textarea id="inv-consignee-address" rows={2} className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400 resize-none" value={data.consigneeAddress} onChange={e => setData({ ...data, consigneeAddress: e.target.value })} placeholder="Consignee delivery address..." />
                     </div>
                   </div>
                 )}
@@ -568,7 +626,7 @@ export default function InvoiceBuilderPage() {
 
           {/* Section: Invoice Meta Details */}
           <div className="border border-slate-100 rounded-2xl overflow-hidden bg-slate-50/50">
-            <button onClick={() => toggleSection('invoiceDetails')} className="w-full px-4 py-3 flex items-center justify-between text-xs font-black text-blue-950 uppercase tracking-widest bg-slate-50 border-b border-slate-100">
+            <button onClick={() => toggleSection('invoiceDetails')} className="w-full px-4 py-3 flex items-center justify-between text-xs font-black text-brand-950 uppercase tracking-widest bg-slate-50 border-b border-slate-100">
               Invoice Settings
               {openSections.invoiceDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
@@ -576,47 +634,47 @@ export default function InvoiceBuilderPage() {
               <div className="p-4 space-y-3">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Invoice Number *</label>
-                    <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.invoiceNumber} onChange={e => setData({ ...data, invoiceNumber: e.target.value })} placeholder="AVG/May/05/26-27" />
+                    <label htmlFor="inv-number" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Invoice Number *</label>
+                    <input id="inv-number" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.invoiceNumber} onChange={e => setData({ ...data, invoiceNumber: e.target.value })} placeholder="AVG/May/05/26-27" />
                   </div>
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Invoice Date</label>
-                    <input type="date" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.date} onChange={e => setData({ ...data, date: e.target.value })} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Payment Mode</label>
-                    <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.paymentMode} onChange={e => setData({ ...data, paymentMode: e.target.value })} placeholder="Account Pay" />
-                  </div>
-                  <div>
-                    <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Delivery Note</label>
-                    <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.deliveryNote} onChange={e => setData({ ...data, deliveryNote: e.target.value })} placeholder="Delivery notes..." />
+                    <label htmlFor="inv-date" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Invoice Date</label>
+                    <input id="inv-date" type="date" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.date} onChange={e => setData({ ...data, date: e.target.value })} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Buyer's Order No.</label>
-                    <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.buyerOrderNo} onChange={e => setData({ ...data, buyerOrderNo: e.target.value })} placeholder="Order reference..." />
+                    <label htmlFor="inv-payment-mode" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Payment Mode</label>
+                    <input id="inv-payment-mode" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.paymentMode} onChange={e => setData({ ...data, paymentMode: e.target.value })} placeholder="Account Pay" />
                   </div>
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Quote/GEM Ref No.</label>
-                    <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.quoteRefNo} onChange={e => setData({ ...data, quoteRefNo: e.target.value })} placeholder="Quote/GEM reference..." />
+                    <label htmlFor="inv-delivery-note" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Delivery Note</label>
+                    <input id="inv-delivery-note" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.deliveryNote} onChange={e => setData({ ...data, deliveryNote: e.target.value })} placeholder="Delivery notes..." />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Work Order No.</label>
-                    <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.workOrderNo} onChange={e => setData({ ...data, workOrderNo: e.target.value })} placeholder="Work order number..." />
+                    <label htmlFor="inv-buyer-order" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Buyer's Order No.</label>
+                    <input id="inv-buyer-order" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.buyerOrderNo} onChange={e => setData({ ...data, buyerOrderNo: e.target.value })} placeholder="Order reference..." />
                   </div>
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Work Order Date</label>
-                    <input type="date" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.workOrderDate} onChange={e => setData({ ...data, workOrderDate: e.target.value })} />
+                    <label htmlFor="inv-quote-ref" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Quote/GEM Ref No.</label>
+                    <input id="inv-quote-ref" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.quoteRefNo} onChange={e => setData({ ...data, quoteRefNo: e.target.value })} placeholder="Quote/GEM reference..." />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label htmlFor="inv-work-order" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Work Order No.</label>
+                    <input id="inv-work-order" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.workOrderNo} onChange={e => setData({ ...data, workOrderNo: e.target.value })} placeholder="Work order number..." />
+                  </div>
+                  <div>
+                    <label htmlFor="inv-work-order-date" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Work Order Date</label>
+                    <input id="inv-work-order-date" type="date" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.workOrderDate} onChange={e => setData({ ...data, workOrderDate: e.target.value })} />
                   </div>
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Reverse Charge</label>
-                  <select className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.reverseCharge} onChange={e => setData({ ...data, reverseCharge: e.target.value as 'Yes' | 'No' })}>
+                  <label htmlFor="inv-reverse-charge" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Reverse Charge</label>
+                  <select id="inv-reverse-charge" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.reverseCharge} onChange={e => setData({ ...data, reverseCharge: e.target.value as 'Yes' | 'No' })}>
                     <option value="No">No</option>
                     <option value="Yes">Yes</option>
                   </select>
@@ -627,7 +685,7 @@ export default function InvoiceBuilderPage() {
 
           {/* Section: Items Table */}
           <div className="border border-slate-100 rounded-2xl overflow-hidden bg-slate-50/50">
-            <button onClick={() => toggleSection('items')} className="w-full px-4 py-3 flex items-center justify-between text-xs font-black text-blue-950 uppercase tracking-widest bg-slate-50 border-b border-slate-100">
+            <button onClick={() => toggleSection('items')} className="w-full px-4 py-3 flex items-center justify-between text-xs font-black text-brand-950 uppercase tracking-widest bg-slate-50 border-b border-slate-100">
               Goods & Services ({data.items.length})
               {openSections.items ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
@@ -639,10 +697,11 @@ export default function InvoiceBuilderPage() {
                     {/* Autocomplete Search input */}
                     <div className="flex items-start justify-between">
                       <div className="flex-1 relative">
-                        <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Description of Goods</label>
+                        <label htmlFor={`inv-item-name-${item.id}`} className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Description of Goods</label>
                         <input
+                          id={`inv-item-name-${item.id}`}
                           type="text"
-                          className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-blue-400"
+                          className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-brand-400"
                           value={item.name}
                           onChange={(e) => {
                             const newItems = [...data.items];
@@ -661,7 +720,7 @@ export default function InvoiceBuilderPage() {
                               dbProducts.filter(p => p.name.toLowerCase().includes(item.name.toLowerCase())).map(p => (
                                 <div
                                   key={p.product_id}
-                                  className="p-2 border-b border-slate-50 hover:bg-blue-50 cursor-pointer transition-colors"
+                                  className="p-2 border-b border-slate-50 hover:bg-brand-50 cursor-pointer transition-colors"
                                   onClick={() => {
                                     const newItems = [...data.items];
                                     newItems[idx].name = p.name;
@@ -691,6 +750,7 @@ export default function InvoiceBuilderPage() {
                           setData({ ...data, items: newItems });
                         }}
                         className="text-slate-400 hover:text-red-500 transition-colors ml-2 mt-5"
+                        aria-label={`Remove item ${idx + 1}`}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -698,33 +758,33 @@ export default function InvoiceBuilderPage() {
 
                     <div className="grid grid-cols-3 gap-2">
                       <div>
-                        <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Qty</label>
-                        <input type="number" className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-center font-bold text-slate-800 outline-none focus:border-blue-400" value={item.qty} onChange={(e) => { const newItems = [...data.items]; newItems[idx].qty = Number(e.target.value); setData({ ...data, items: newItems }); }} />
+                        <label htmlFor={`inv-item-qty-${item.id}`} className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Qty</label>
+                        <input id={`inv-item-qty-${item.id}`} type="number" className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-center font-bold text-slate-800 outline-none focus:border-brand-400" value={item.qty} onChange={(e) => { const newItems = [...data.items]; newItems[idx].qty = Number(e.target.value); setData({ ...data, items: newItems }); }} />
                       </div>
                       <div>
-                        <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Unit</label>
-                        <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-center font-bold text-slate-800 outline-none focus:border-blue-400" value={item.unit} onChange={(e) => { const newItems = [...data.items]; newItems[idx].unit = e.target.value; setData({ ...data, items: newItems }); }} placeholder="Nos" />
+                        <label htmlFor={`inv-item-unit-${item.id}`} className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Unit</label>
+                        <input id={`inv-item-unit-${item.id}`} type="text" className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-center font-bold text-slate-800 outline-none focus:border-brand-400" value={item.unit} onChange={(e) => { const newItems = [...data.items]; newItems[idx].unit = e.target.value; setData({ ...data, items: newItems }); }} placeholder="Nos" />
                       </div>
                       <div>
-                        <label className="text-[9px] font-black uppercase tracking-wider text-emerald-600 block mb-1">Rate</label>
-                        <input type="number" className="w-full bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 text-xs text-right font-bold text-emerald-800 outline-none focus:border-emerald-400" value={item.price || ''} onChange={(e) => { const newItems = [...data.items]; newItems[idx].price = Number(e.target.value); setData({ ...data, items: newItems }); }} placeholder="0.00" />
+                        <label htmlFor={`inv-item-rate-${item.id}`} className="text-[9px] font-black uppercase tracking-wider text-emerald-600 block mb-1">Rate</label>
+                        <input id={`inv-item-rate-${item.id}`} type="number" className="w-full bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1.5 text-xs text-right font-bold text-emerald-800 outline-none focus:border-emerald-400" value={item.price || ''} onChange={(e) => { const newItems = [...data.items]; newItems[idx].price = Number(e.target.value); setData({ ...data, items: newItems }); }} placeholder="0.00" />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">HSN Code</label>
-                        <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-blue-400" value={item.hsn_code} onChange={(e) => { const newItems = [...data.items]; newItems[idx].hsn_code = e.target.value; setData({ ...data, items: newItems }); }} placeholder="Goods code" />
+                        <label htmlFor={`inv-item-hsn-${item.id}`} className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">HSN Code</label>
+                        <input id={`inv-item-hsn-${item.id}`} type="text" className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-brand-400" value={item.hsn_code} onChange={(e) => { const newItems = [...data.items]; newItems[idx].hsn_code = e.target.value; setData({ ...data, items: newItems }); }} placeholder="Goods code" />
                       </div>
                       <div>
-                        <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">SAC Code</label>
-                        <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-blue-400" value={item.sac_code} onChange={(e) => { const newItems = [...data.items]; newItems[idx].sac_code = e.target.value; setData({ ...data, items: newItems }); }} placeholder="Services code" />
+                        <label htmlFor={`inv-item-sac-${item.id}`} className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">SAC Code</label>
+                        <input id={`inv-item-sac-${item.id}`} type="text" className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none focus:border-brand-400" value={item.sac_code} onChange={(e) => { const newItems = [...data.items]; newItems[idx].sac_code = e.target.value; setData({ ...data, items: newItems }); }} placeholder="Services code" />
                       </div>
                     </div>
                   </div>
                 ))}
                 
-                <button onClick={addNewItem} className="w-full py-2.5 border border-dashed border-blue-200 rounded-xl text-blue-600 hover:bg-blue-50/50 hover:border-blue-400 text-xs font-black transition-all flex items-center justify-center gap-1.5">
+                <button onClick={addNewItem} className="w-full py-2.5 border border-dashed border-brand-200 rounded-xl text-brand-600 hover:bg-brand-50/50 hover:border-brand-400 text-xs font-black transition-all flex items-center justify-center gap-1.5">
                   <Plus size={14} /> Add Invoice Item
                 </button>
               </div>
@@ -733,42 +793,42 @@ export default function InvoiceBuilderPage() {
 
           {/* Section: Tax Settings */}
           <div className="border border-slate-100 rounded-2xl overflow-hidden bg-slate-50/50">
-            <button onClick={() => toggleSection('taxSettings')} className="w-full px-4 py-3 flex items-center justify-between text-xs font-black text-blue-950 uppercase tracking-widest bg-slate-50 border-b border-slate-100">
+            <button onClick={() => toggleSection('taxSettings')} className="w-full px-4 py-3 flex items-center justify-between text-xs font-black text-brand-950 uppercase tracking-widest bg-slate-50 border-b border-slate-100">
               Tax & Rounding
               {openSections.taxSettings ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
             {openSections.taxSettings && (
               <div className="p-4 space-y-3">
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Tax Scheme</label>
-                  <select className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.taxType} onChange={e => setData({ ...data, taxType: e.target.value as 'CGST_SGST' | 'IGST' })}>
+                  <label htmlFor="inv-tax-scheme" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Tax Scheme</label>
+                  <select id="inv-tax-scheme" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.taxType} onChange={e => setData({ ...data, taxType: e.target.value as 'CGST_SGST' | 'IGST' })}>
                     <option value="CGST_SGST">Intra-State (CGST 9% + SGST 9%)</option>
                     <option value="IGST">Inter-State (IGST 18%)</option>
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">GST Rate (%)</label>
-                    <input type="number" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.taxRate} onChange={e => setData({ ...data, taxRate: Number(e.target.value) })} />
+                    <label htmlFor="inv-gst-rate" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">GST Rate (%)</label>
+                    <input id="inv-gst-rate" type="number" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.taxRate} onChange={e => setData({ ...data, taxRate: Number(e.target.value) })} />
                   </div>
                   <div className="flex flex-col justify-end pb-1 pl-1">
                     <label className="flex items-center gap-2 cursor-pointer mt-5">
-                      <input type="checkbox" className="rounded border-slate-200 text-blue-600 focus:ring-blue-500/20" checked={data.roundOff} onChange={e => setData({ ...data, roundOff: e.target.checked })} />
+                      <input type="checkbox" className="rounded border-slate-200 text-brand-600 focus:ring-brand-500/20" checked={data.roundOff} onChange={e => setData({ ...data, roundOff: e.target.checked })} />
                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Round Off Total</span>
                     </label>
                   </div>
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Declaration</label>
-                  <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.declaration} onChange={e => setData({ ...data, declaration: e.target.value })} />
+                  <label htmlFor="inv-declaration" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Declaration</label>
+                  <input id="inv-declaration" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.declaration} onChange={e => setData({ ...data, declaration: e.target.value })} />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Jurisdiction</label>
-                  <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.jurisdiction} onChange={e => setData({ ...data, jurisdiction: e.target.value })} />
+                  <label htmlFor="inv-jurisdiction" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Jurisdiction</label>
+                  <input id="inv-jurisdiction" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.jurisdiction} onChange={e => setData({ ...data, jurisdiction: e.target.value })} />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Terms Header</label>
-                  <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.terms} onChange={e => setData({ ...data, terms: e.target.value })} />
+                  <label htmlFor="inv-terms" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Terms Header</label>
+                  <input id="inv-terms" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.terms} onChange={e => setData({ ...data, terms: e.target.value })} />
                 </div>
               </div>
             )}
@@ -776,31 +836,31 @@ export default function InvoiceBuilderPage() {
 
           {/* Section: Bank Details */}
           <div className="border border-slate-100 rounded-2xl overflow-hidden bg-slate-50/50">
-            <button onClick={() => toggleSection('bankDetails')} className="w-full px-4 py-3 flex items-center justify-between text-xs font-black text-blue-950 uppercase tracking-widest bg-slate-50 border-b border-slate-100">
+            <button onClick={() => toggleSection('bankDetails')} className="w-full px-4 py-3 flex items-center justify-between text-xs font-black text-brand-950 uppercase tracking-widest bg-slate-50 border-b border-slate-100">
               Bank Details
               {openSections.bankDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
             {openSections.bankDetails && (
               <div className="p-4 space-y-3">
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Bank Name</label>
-                  <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.bankDetails.bankName} onChange={e => setData({ ...data, bankDetails: { ...data.bankDetails, bankName: e.target.value } })} />
+                  <label htmlFor="inv-bank-name" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Bank Name</label>
+                  <input id="inv-bank-name" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.bankDetails.bankName} onChange={e => setData({ ...data, bankDetails: { ...data.bankDetails, bankName: e.target.value } })} />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Branch</label>
-                  <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.bankDetails.branch} onChange={e => setData({ ...data, bankDetails: { ...data.bankDetails, branch: e.target.value } })} />
+                  <label htmlFor="inv-bank-branch" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Branch</label>
+                  <input id="inv-bank-branch" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.bankDetails.branch} onChange={e => setData({ ...data, bankDetails: { ...data.bankDetails, branch: e.target.value } })} />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Account Holder</label>
-                  <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.bankDetails.accountName} onChange={e => setData({ ...data, bankDetails: { ...data.bankDetails, accountName: e.target.value } })} />
+                  <label htmlFor="inv-bank-account-name" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Account Holder</label>
+                  <input id="inv-bank-account-name" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.bankDetails.accountName} onChange={e => setData({ ...data, bankDetails: { ...data.bankDetails, accountName: e.target.value } })} />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">Account No</label>
-                  <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.bankDetails.accountNo} onChange={e => setData({ ...data, bankDetails: { ...data.bankDetails, accountNo: e.target.value } })} />
+                  <label htmlFor="inv-bank-account-no" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Account No</label>
+                  <input id="inv-bank-account-no" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.bankDetails.accountNo} onChange={e => setData({ ...data, bankDetails: { ...data.bankDetails, accountNo: e.target.value } })} />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-wider text-slate-400 block mb-1">IFSC Code</label>
-                  <input type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-blue-400" value={data.bankDetails.ifsc} onChange={e => setData({ ...data, bankDetails: { ...data.bankDetails, ifsc: e.target.value } })} />
+                  <label htmlFor="inv-bank-ifsc" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">IFSC Code</label>
+                  <input id="inv-bank-ifsc" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.bankDetails.ifsc} onChange={e => setData({ ...data, bankDetails: { ...data.bankDetails, ifsc: e.target.value } })} />
                 </div>
               </div>
             )}

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
+import toast from 'react-hot-toast';
 import {
   Settings,
   LogOut,
@@ -18,8 +19,8 @@ import {
   Phone,
   Info,
   Wrench,
-  Check,
   GripVertical,
+  LineChart,
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 
@@ -77,26 +78,6 @@ interface Service {
   categories: ServiceCategory[];
 }
 
-// ─── Toast ────────────────────────────────────────────────────────────────────
-
-function Toast({ message, type }: { message: string; type: 'success' | 'error' }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 24 }}
-      className={`fixed bottom-8 right-8 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-xl text-sm font-bold ${
-        type === 'success'
-          ? 'bg-emerald-600 text-white shadow-emerald-200'
-          : 'bg-red-600 text-white shadow-red-200'
-      }`}
-    >
-      {type === 'success' ? <Check size={16} /> : <X size={16} />}
-      {message}
-    </motion.div>
-  );
-}
-
 // ─── List Editor ──────────────────────────────────────────────────────────────
 
 function ListEditor({
@@ -140,7 +121,7 @@ function ListEditor({
               next[idx] = e.target.value;
               onChange(next);
             }}
-            className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20"
           />
           <button
             type="button"
@@ -174,12 +155,12 @@ function ListEditor({
           onChange={(e) => setNewItem(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), add())}
           placeholder={placeholder}
-          className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20"
         />
         <button
           type="button"
           onClick={add}
-          className="px-3 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
+          className="px-3 py-2 bg-brand-50 text-brand-600 rounded-xl hover:bg-brand-100 transition-colors"
         >
           <Plus size={14} />
         </button>
@@ -197,21 +178,23 @@ function Field({
   label: string;
   children: React.ReactNode;
 }) {
+  // Wrap the control inside the <label> so the text label is implicitly
+  // associated with the form control for screen readers (no id wiring needed).
   return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+    <label className="flex flex-col gap-1.5">
+      <span className="text-xs font-black text-slate-500 uppercase tracking-widest">
         {label}
-      </label>
+      </span>
       {children}
-    </div>
+    </label>
   );
 }
 
 const INPUT_CLS =
-  'px-4 py-3 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all w-full';
+  'px-4 py-3 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all w-full';
 
 const TEXTAREA_CLS =
-  'px-4 py-3 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all w-full resize-none';
+  'px-4 py-3 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all w-full resize-none';
 
 // ─── Service Editor ───────────────────────────────────────────────────────────
 
@@ -288,11 +271,11 @@ function ServiceEditor({
     <div className="border border-slate-100 rounded-3xl overflow-hidden">
       <div className="flex items-center justify-between px-6 py-4 bg-slate-50/50">
         <div className="flex items-center gap-3">
-          <span className="w-7 h-7 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center text-xs font-black">
+          <span className="w-7 h-7 bg-brand-100 text-brand-700 rounded-lg flex items-center justify-center text-xs font-black">
             {service.display_order}
           </span>
           <div>
-            <p className="text-sm font-black text-blue-950">{service.title}</p>
+            <p className="text-sm font-black text-brand-950">{service.title}</p>
             <p className="text-xs text-slate-400 font-medium">{service.slug}</p>
           </div>
         </div>
@@ -311,7 +294,7 @@ function ServiceEditor({
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-black text-blue-700 hover:border-blue-200 hover:bg-blue-50 transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-black text-brand-700 hover:border-brand-200 hover:bg-brand-50 transition-all"
           >
             <Edit2 size={12} />
             Edit
@@ -391,13 +374,13 @@ function ServiceEditor({
               {/* Categories */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <span className="text-xs font-black text-slate-500 uppercase tracking-widest">
                     Service Categories
                   </span>
                   <button
                     type="button"
                     onClick={addCategory}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-xl text-xs font-black hover:bg-blue-100 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-50 text-brand-600 rounded-xl text-xs font-black hover:bg-brand-100 transition-colors"
                   >
                     <Plus size={12} /> Add Category
                   </button>
@@ -442,7 +425,7 @@ function ServiceEditor({
                       {/* Lists within category */}
                       <div className="pl-4 border-l-2 border-slate-100 space-y-3">
                         <div className="flex items-center justify-between">
-                          <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
                             Sub-lists
                           </span>
                           <button
@@ -460,7 +443,7 @@ function ServiceEditor({
                           >
                             <div className="flex items-center gap-2">
                               <input
-                                className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
+                                className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 bg-white"
                                 value={lst.list_title}
                                 onChange={(e) =>
                                   updateList(catIdx, listIdx, { list_title: e.target.value })
@@ -483,7 +466,7 @@ function ServiceEditor({
                           </div>
                         ))}
                         {cat.lists.length === 0 && (
-                          <p className="text-[10px] text-slate-300 font-medium">No sub-lists yet.</p>
+                          <p className="text-xs text-slate-500 font-medium">No sub-lists yet.</p>
                         )}
                       </div>
                     </div>
@@ -501,7 +484,7 @@ function ServiceEditor({
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-black rounded-2xl hover:bg-blue-700 disabled:opacity-60 transition-all shadow-sm shadow-blue-200"
+                  className="flex items-center gap-2 px-6 py-3 bg-brand-600 text-white text-sm font-black rounded-2xl hover:bg-brand-700 disabled:opacity-60 transition-all shadow-sm shadow-brand-200"
                 >
                   {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
                   Save Service
@@ -517,13 +500,14 @@ function ServiceEditor({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-type Tab = 'stats' | 'contact' | 'about' | 'services';
+type Tab = 'stats' | 'contact' | 'about' | 'services' | 'integrations';
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'stats', label: 'Homepage Stats', icon: <BarChart3 size={15} /> },
   { id: 'contact', label: 'Contact & Footer', icon: <Phone size={15} /> },
   { id: 'about', label: 'About Page', icon: <Info size={15} /> },
   { id: 'services', label: 'Services', icon: <Wrench size={15} /> },
+  { id: 'integrations', label: 'Integrations', icon: <LineChart size={15} /> },
 ];
 
 export default function SiteSettingsPage() {
@@ -533,7 +517,6 @@ export default function SiteSettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('stats');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // Site settings
   const [settings, setSettings] = useState<SiteSettingsMap>({});
@@ -548,11 +531,6 @@ export default function SiteSettingsPage() {
 
   // Services
   const [services, setServices] = useState<Service[]>([]);
-
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
-  };
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/admin/login');
@@ -608,10 +586,37 @@ export default function SiteSettingsPage() {
       }
     } catch (err) {
       console.error('Failed to fetch site settings:', err);
+      toast.error('Failed to load site settings');
     } finally {
       setLoading(false);
     }
   }, []);
+
+  // ─ Tab: Integrations ────────────────────────────────────────────────────────
+
+  const saveIntegrations = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/site-settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify([
+          { key: 'analytics_enabled', value: settings.analytics_enabled === 'true' ? 'true' : 'false' },
+          { key: 'gtm_id', value: settings.gtm_id ?? '' },
+          { key: 'meta_pixel_id', value: settings.meta_pixel_id ?? '' },
+          { key: 'google_maps_api_key', value: settings.google_maps_api_key ?? '' },
+        ]),
+      });
+      if (!res.ok) throw new Error('save failed');
+      const data = await res.json();
+      if (data?.map) setSettings(data.map);
+      toast.success('Integration settings saved');
+    } catch {
+      toast.error('Failed to save integration settings');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // ─ Tab 1: Stats ─────────────────────────────────────────────────────────────
 
@@ -629,9 +634,9 @@ export default function SiteSettingsPage() {
         ]),
       });
       if (!res.ok) throw new Error();
-      showToast('Homepage stats saved');
+      toast.success('Homepage stats saved');
     } catch {
-      showToast('Failed to save stats', 'error');
+      toast.error('Failed to save stats');
     } finally {
       setSaving(false);
     }
@@ -657,9 +662,9 @@ export default function SiteSettingsPage() {
         ]),
       });
       if (!res.ok) throw new Error();
-      showToast('Contact info saved');
+      toast.success('Contact info saved');
     } catch {
-      showToast('Failed to save contact info', 'error');
+      toast.error('Failed to save contact info');
     } finally {
       setSaving(false);
     }
@@ -693,9 +698,9 @@ export default function SiteSettingsPage() {
         ]),
       });
       if (!res.ok) throw new Error();
-      showToast('About page saved');
+      toast.success('About page saved');
     } catch {
-      showToast('Failed to save about page', 'error');
+      toast.error('Failed to save about page');
     } finally {
       setSaving(false);
     }
@@ -741,10 +746,10 @@ export default function SiteSettingsPage() {
         }),
       ]);
       if (!svcRes.ok || !catRes.ok) throw new Error();
-      showToast('Service saved');
+      toast.success('Service saved');
       await fetchAll();
     } catch {
-      showToast('Failed to save service', 'error');
+      toast.error('Failed to save service');
     }
   };
 
@@ -759,9 +764,9 @@ export default function SiteSettingsPage() {
       setServices((prev) =>
         prev.map((s) => (s.id === id ? { ...s, is_active: active } : s))
       );
-      showToast(`Service ${active ? 'activated' : 'deactivated'}`);
+      toast.success(`Service ${active ? 'activated' : 'deactivated'}`);
     } catch {
-      showToast('Failed to toggle service', 'error');
+      toast.error('Failed to toggle service');
     }
   };
 
@@ -779,10 +784,10 @@ export default function SiteSettingsPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+              <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-200">
                 <Settings size={20} />
               </div>
-              <h1 className="text-4xl font-black text-blue-950 tracking-tight">
+              <h1 className="text-4xl font-black text-brand-950 tracking-tight">
                 Site Settings
               </h1>
             </div>
@@ -794,7 +799,7 @@ export default function SiteSettingsPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={fetchAll}
-              className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:text-blue-600 hover:border-blue-100 transition-all"
+              className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:text-brand-600 hover:border-brand-100 transition-all"
               title="Refresh"
             >
               <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
@@ -817,8 +822,8 @@ export default function SiteSettingsPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-black transition-all ${
                 activeTab === tab.id
-                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-200'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:border-blue-100 hover:text-blue-700'
+                  ? 'bg-brand-600 text-white shadow-sm shadow-brand-200'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:border-brand-100 hover:text-brand-700'
               }`}
             >
               {tab.icon}
@@ -892,7 +897,7 @@ export default function SiteSettingsPage() {
                   <button
                     onClick={saveStats}
                     disabled={saving}
-                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-black rounded-2xl hover:bg-blue-700 disabled:opacity-60 transition-all shadow-sm shadow-blue-200"
+                    className="flex items-center gap-2 px-6 py-3 bg-brand-600 text-white text-sm font-black rounded-2xl hover:bg-brand-700 disabled:opacity-60 transition-all shadow-sm shadow-brand-200"
                   >
                     {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
                     Save Stats
@@ -1002,7 +1007,7 @@ export default function SiteSettingsPage() {
                   <button
                     onClick={saveContact}
                     disabled={saving}
-                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-black rounded-2xl hover:bg-blue-700 disabled:opacity-60 transition-all shadow-sm shadow-blue-200"
+                    className="flex items-center gap-2 px-6 py-3 bg-brand-600 text-white text-sm font-black rounded-2xl hover:bg-brand-700 disabled:opacity-60 transition-all shadow-sm shadow-brand-200"
                   >
                     {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
                     Save Contact Info
@@ -1064,7 +1069,7 @@ export default function SiteSettingsPage() {
                   <button
                     onClick={saveAbout}
                     disabled={saving}
-                    className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-black rounded-2xl hover:bg-blue-700 disabled:opacity-60 transition-all shadow-sm shadow-blue-200"
+                    className="flex items-center gap-2 px-6 py-3 bg-brand-600 text-white text-sm font-black rounded-2xl hover:bg-brand-700 disabled:opacity-60 transition-all shadow-sm shadow-brand-200"
                   >
                     {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
                     Save About Page
@@ -1109,15 +1114,85 @@ export default function SiteSettingsPage() {
                 )}
               </motion.div>
             )}
+
+            {/* ── Tab: Integrations ───────────────────────────────────────── */}
+            {activeTab === 'integrations' && (
+              <motion.div
+                key="integrations"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-8 space-y-6"
+              >
+                <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                  Integrations &amp; Tracking
+                </h2>
+
+                <label className="flex items-center gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    className="h-5 w-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                    checked={settings.analytics_enabled === 'true'}
+                    onChange={(e) =>
+                      setSettings((s) => ({
+                        ...s,
+                        analytics_enabled: e.target.checked ? 'true' : 'false',
+                      }))
+                    }
+                  />
+                  <span className="text-sm font-bold text-slate-700">
+                    Enable analytics (Google Tag Manager &amp; Meta Pixel)
+                  </span>
+                </label>
+                <p className="text-xs text-slate-400 -mt-3">
+                  Leave OFF on staging/UAT. When off, no tracking scripts load on the public site.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <Field label="Google Tag Manager ID">
+                    <input
+                      className={INPUT_CLS}
+                      value={settings.gtm_id ?? ''}
+                      onChange={(e) => setSettings((s) => ({ ...s, gtm_id: e.target.value }))}
+                      placeholder="GTM-XXXXXXX"
+                    />
+                  </Field>
+                  <Field label="Meta Pixel ID">
+                    <input
+                      className={INPUT_CLS}
+                      value={settings.meta_pixel_id ?? ''}
+                      onChange={(e) => setSettings((s) => ({ ...s, meta_pixel_id: e.target.value }))}
+                      placeholder="123456789012345"
+                    />
+                  </Field>
+                  <Field label="Google Maps API Key (server-side, reverse geocoding)">
+                    <input
+                      className={INPUT_CLS}
+                      value={settings.google_maps_api_key ?? ''}
+                      onChange={(e) =>
+                        setSettings((s) => ({ ...s, google_maps_api_key: e.target.value }))
+                      }
+                      placeholder="AIza…"
+                    />
+                  </Field>
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button
+                    onClick={saveIntegrations}
+                    disabled={saving}
+                    className="flex items-center gap-2 px-6 py-3 bg-brand-600 text-white text-sm font-black rounded-2xl hover:bg-brand-700 disabled:opacity-60 transition-all shadow-sm shadow-brand-200"
+                  >
+                    {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+                    Save Integrations
+                  </button>
+                </div>
+              </motion.div>
+            )}
           </AnimatePresence>
         )}
       </main>
 
       <Footer />
-
-      <AnimatePresence>
-        {toast && <Toast message={toast.message} type={toast.type} />}
-      </AnimatePresence>
     </div>
   );
 }

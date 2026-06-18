@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -126,23 +128,32 @@ function ClientFormModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
+      const isEditFlag = isEdit;
       if (res.ok) {
+        toast.success(isEditFlag ? 'Client updated.' : 'Client added.');
         onSaved();
         onClose();
       } else {
         const data = await res.json();
-        if (data.error && typeof data.error === 'object') setErrors(data.error);
+        if (data.error && typeof data.error === 'object') {
+          setErrors(data.error);
+          toast.error('Please fix the highlighted fields.');
+        } else {
+          toast.error(typeof data.error === 'string' ? data.error : 'Failed to save client.');
+        }
       }
+    } catch {
+      toast.error('Failed to save client. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
   const fieldError = (key: keyof ClientFormData) =>
-    errors[key]?.[0] ? <p className="text-[10px] text-red-500 mt-0.5 font-medium">{errors[key]![0]}</p> : null;
+    errors[key]?.[0] ? <p className="text-xs text-red-500 mt-0.5 font-medium">{errors[key]![0]}</p> : null;
 
   const inputClass =
-    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all';
+    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all';
 
   return (
     <AnimatePresence>
@@ -161,7 +172,7 @@ function ClientFormModal({
             className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between px-8 pt-7 pb-5 border-b border-slate-100">
-              <h2 className="text-lg font-black text-blue-950">
+              <h2 className="text-lg font-black text-brand-950">
                 {(initial as Client | null)?.id ? 'Edit Client' : 'Add New Client'}
               </h2>
               <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
@@ -171,60 +182,61 @@ function ClientFormModal({
 
             <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Full Name *</label>
-                <input className={inputClass} value={form.name} onChange={set('name')} required placeholder="e.g. Rajesh Kumar" />
+                <label htmlFor="client-name" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Full Name *</label>
+                <input id="client-name" className={inputClass} value={form.name} onChange={set('name')} required placeholder="e.g. Rajesh Kumar" />
                 {fieldError('name')}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Email</label>
-                  <input className={inputClass} type="email" value={form.email} onChange={set('email')} placeholder="email@example.com" />
+                  <label htmlFor="client-email" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Email</label>
+                  <input id="client-email" className={inputClass} type="email" value={form.email} onChange={set('email')} placeholder="email@example.com" />
                   {fieldError('email')}
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Phone</label>
-                  <input className={inputClass} value={form.phone} onChange={set('phone')} placeholder="+91 98765 43210" />
+                  <label htmlFor="client-phone" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Phone</label>
+                  <input id="client-phone" className={inputClass} value={form.phone} onChange={set('phone')} placeholder="+91 98765 43210" />
                   {fieldError('phone')}
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Company Name</label>
-                <input className={inputClass} value={form.company_name} onChange={set('company_name')} placeholder="Company / Organisation" />
+                <label htmlFor="client-company" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Company Name</label>
+                <input id="client-company" className={inputClass} value={form.company_name} onChange={set('company_name')} placeholder="Company / Organisation" />
                 {fieldError('company_name')}
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">GSTIN</label>
-                <input className={inputClass} value={form.gstin} onChange={set('gstin')} placeholder="15-character GSTIN" />
+                <label htmlFor="client-gstin" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">GSTIN</label>
+                <input id="client-gstin" className={inputClass} value={form.gstin} onChange={set('gstin')} placeholder="15-character GSTIN" />
                 {fieldError('gstin')}
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Address</label>
-                <input className={inputClass} value={form.address} onChange={set('address')} placeholder="Street address" />
+                <label htmlFor="client-address" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Address</label>
+                <input id="client-address" className={inputClass} value={form.address} onChange={set('address')} placeholder="Street address" />
                 {fieldError('address')}
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">City</label>
-                  <input className={inputClass} value={form.city} onChange={set('city')} placeholder="City" />
+                  <label htmlFor="client-city" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">City</label>
+                  <input id="client-city" className={inputClass} value={form.city} onChange={set('city')} placeholder="City" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">State</label>
-                  <input className={inputClass} value={form.state} onChange={set('state')} placeholder="State" />
+                  <label htmlFor="client-state" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">State</label>
+                  <input id="client-state" className={inputClass} value={form.state} onChange={set('state')} placeholder="State" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Pincode</label>
-                  <input className={inputClass} value={form.pincode} onChange={set('pincode')} placeholder="000000" />
+                  <label htmlFor="client-pincode" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Pincode</label>
+                  <input id="client-pincode" className={inputClass} value={form.pincode} onChange={set('pincode')} placeholder="000000" />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Notes</label>
+                <label htmlFor="client-notes" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Notes</label>
                 <textarea
+                  id="client-notes"
                   className={`${inputClass} resize-none`}
                   rows={3}
                   value={form.notes}
@@ -244,7 +256,7 @@ function ClientFormModal({
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {saving && <RefreshCw size={14} className="animate-spin" />}
                   {saving ? 'Saving…' : (initial as Client | null)?.id ? 'Save Changes' : 'Add Client'}
@@ -274,6 +286,7 @@ export default function AdminClientsPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalInitial, setModalInitial] = useState<Partial<ClientFormData> | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/admin/login');
@@ -292,19 +305,27 @@ export default function AdminClientsPage() {
       setClients(Array.isArray(data) ? data : []);
     } catch {
       setClients([]);
+      toast.error('Failed to load clients. Please try again.');
     } finally {
       setLoading(false);
     }
     setPage(1);
   }, [searchQuery, dateFrom, dateTo]);
 
-  const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`Delete client "${name}"? This cannot be undone.`)) return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const { id } = deleteTarget;
+    setDeleteTarget(null);
     try {
       const res = await fetch(`/api/admin/clients/${id}`, { method: 'DELETE' });
-      if (res.ok) fetchClients();
+      if (res.ok) {
+        toast.success('Client deleted.');
+        fetchClients();
+      } else {
+        toast.error('Failed to delete client.');
+      }
     } catch {
-      // silently ignore
+      toast.error('Failed to delete client. Please try again.');
     }
   };
 
@@ -312,7 +333,10 @@ export default function AdminClientsPage() {
     setExporting(true);
     try {
       const res = await fetch('/api/admin/clients/export');
-      if (!res.ok) return;
+      if (!res.ok) {
+        toast.error('Failed to export clients.');
+        return;
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -320,6 +344,9 @@ export default function AdminClientsPage() {
       a.download = 'clients-export.csv';
       a.click();
       URL.revokeObjectURL(url);
+      toast.success('Clients exported.');
+    } catch {
+      toast.error('Failed to export clients. Please try again.');
     } finally {
       setExporting(false);
     }
@@ -357,10 +384,10 @@ export default function AdminClientsPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+              <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-200">
                 <Users size={20} />
               </div>
-              <h1 className="text-4xl font-black text-blue-950 tracking-tight">Clients</h1>
+              <h1 className="text-4xl font-black text-brand-950 tracking-tight">Clients</h1>
             </div>
             <p className="text-slate-500 font-medium">Manage all client profiles, purchased products and AMC records.</p>
           </div>
@@ -369,14 +396,14 @@ export default function AdminClientsPage() {
             <button
               onClick={handleExport}
               disabled={exporting}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-blue-200 hover:text-blue-600 transition-all disabled:opacity-60"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-brand-200 hover:text-brand-600 transition-all disabled:opacity-60"
             >
               {exporting ? <RefreshCw size={16} className="animate-spin" /> : <Download size={16} />}
               Export CSV
             </button>
             <button
               onClick={openAdd}
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-blue-200"
+              className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-brand-200"
             >
               <Plus size={16} />
               Add Client
@@ -397,33 +424,36 @@ export default function AdminClientsPage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
               type="text"
+              aria-label="Search clients"
               placeholder="Search clients…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && fetchClients()}
-              className="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-60 transition-all"
+              className="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 w-60 transition-all"
             />
           </div>
           <div className="flex items-center gap-2">
             <Calendar size={14} className="text-slate-400" />
             <input
               type="date"
+              aria-label="Filter from date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="px-3 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+              className="px-3 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
               placeholder="From"
             />
             <span className="text-slate-400 text-sm">–</span>
             <input
               type="date"
+              aria-label="Filter to date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="px-3 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+              className="px-3 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
             />
           </div>
           <button
             onClick={fetchClients}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-sm font-black transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-sm font-black transition-all"
           >
             <Search size={14} />
             Search
@@ -446,7 +476,7 @@ export default function AdminClientsPage() {
             </h2>
             <button
               onClick={fetchClients}
-              className="p-2 text-slate-400 hover:text-blue-600 rounded-xl hover:bg-blue-50 transition-all"
+              className="p-2 text-slate-400 hover:text-brand-600 rounded-xl hover:bg-brand-50 transition-all"
               title="Refresh"
             >
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
@@ -475,7 +505,7 @@ export default function AdminClientsPage() {
                         <Users size={32} />
                       </div>
                       <p className="text-slate-500 font-medium">No clients found.</p>
-                      <button onClick={openAdd} className="mt-4 text-blue-600 text-sm font-black hover:underline">
+                      <button onClick={openAdd} className="mt-4 text-brand-600 text-sm font-black hover:underline">
                         Add the first client →
                       </button>
                     </td>
@@ -490,7 +520,7 @@ export default function AdminClientsPage() {
                     >
                       <td className="px-6 py-5">
                         <div className="flex flex-col gap-1">
-                          <span className="font-black text-sm text-blue-950">{client.name}</span>
+                          <span className="font-black text-sm text-brand-950">{client.name}</span>
                           {client.company_name && (
                             <div className="flex items-center gap-1.5">
                               <Building2 size={11} className="text-slate-400" />
@@ -533,8 +563,8 @@ export default function AdminClientsPage() {
                       </td>
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-1.5">
-                          <Package size={12} className="text-blue-400" />
-                          <span className="text-xs font-black text-blue-950">{client.product_count}</span>
+                          <Package size={12} className="text-brand-400" />
+                          <span className="text-xs font-black text-brand-950">{client.product_count}</span>
                         </div>
                       </td>
                       <td className="px-6 py-5">
@@ -544,25 +574,28 @@ export default function AdminClientsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-5">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                           <Link
                             href={`/admin/clients/${client.id}`}
-                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                            className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all"
                             title="View Details"
+                            aria-label={`View details for ${client.name}`}
                           >
                             <Eye size={16} />
                           </Link>
                           <button
                             onClick={() => openEdit(client)}
-                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all text-xs font-black"
+                            className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all text-xs font-black"
                             title="Edit"
+                            aria-label={`Edit ${client.name}`}
                           >
                             Edit
                           </button>
                           <button
-                            onClick={() => handleDelete(client.id, client.name)}
+                            onClick={() => setDeleteTarget({ id: client.id, name: client.name })}
                             className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                             title="Delete"
+                            aria-label={`Delete ${client.name}`}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -585,15 +618,15 @@ export default function AdminClientsPage() {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="p-2 rounded-xl border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="p-2 rounded-xl border border-slate-200 text-slate-500 hover:text-brand-600 hover:border-brand-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                 >
                   <ChevronLeft size={16} />
                 </button>
-                <span className="text-xs font-black text-blue-950 px-2">{page} / {totalPages}</span>
+                <span className="text-xs font-black text-brand-950 px-2">{page} / {totalPages}</span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="p-2 rounded-xl border border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="p-2 rounded-xl border border-slate-200 text-slate-500 hover:text-brand-600 hover:border-brand-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                 >
                   <ChevronRight size={16} />
                 </button>
@@ -610,6 +643,16 @@ export default function AdminClientsPage() {
         initial={modalInitial}
         onClose={() => setModalOpen(false)}
         onSaved={fetchClients}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete client?"
+        message={deleteTarget ? `Delete client "${deleteTarget.name}"? This cannot be undone.` : ''}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
     </div>
   );

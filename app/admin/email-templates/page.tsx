@@ -16,6 +16,7 @@ import {
   Check,
   AlertCircle,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Footer from '@/components/Footer';
 
 interface EmailTemplate {
@@ -81,6 +82,7 @@ export default function EmailTemplatesPage() {
     } catch (err) {
       console.error('Failed to fetch templates:', err);
       setError('Failed to load email templates');
+      toast.error('Failed to load email templates.');
     } finally {
       setLoading(false);
     }
@@ -170,12 +172,16 @@ export default function EmailTemplatesPage() {
         throw new Error(data.error || 'Failed to save template');
       }
 
-      setSuccess(editingId ? 'Template updated successfully!' : 'Template created successfully!');
+      const successMsg = editingId ? 'Template updated successfully!' : 'Template created successfully!';
+      setSuccess(successMsg);
+      toast.success(successMsg);
       await fetchTemplates();
       handleClose();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
-      setError(err.message || 'Failed to save email template');
+      const message = err.message || 'Failed to save email template';
+      setError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
@@ -192,10 +198,12 @@ export default function EmailTemplatesPage() {
       if (!res.ok) throw new Error('Failed to delete');
 
       setSuccess('Template deleted successfully!');
+      toast.success('Template deleted successfully!');
       await fetchTemplates();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError('Failed to delete template');
+      toast.error('Failed to delete template.');
     }
   };
 
@@ -213,7 +221,7 @@ export default function EmailTemplatesPage() {
       <main className="flex-1 container mx-auto max-w-6xl px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <Mail className="text-blue-600" size={32} />
+            <Mail className="text-brand-600" size={32} />
             <h1 className="text-3xl font-bold text-gray-800">Email Templates</h1>
           </div>
           <div className="flex gap-3">
@@ -228,7 +236,7 @@ export default function EmailTemplatesPage() {
             </button>
             <button
               onClick={handleNew}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+              className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 flex items-center gap-2"
             >
               <Plus size={18} />
               New Template
@@ -282,22 +290,23 @@ export default function EmailTemplatesPage() {
                   <h2 className="text-2xl font-bold text-gray-800">
                     {editingId ? 'Edit Template' : 'New Template'}
                   </h2>
-                  <button onClick={handleClose} className="p-1 hover:bg-gray-100 rounded">
+                  <button onClick={handleClose} className="p-1 hover:bg-gray-100 rounded" aria-label="Close">
                     <X size={24} />
                   </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="template-name" className="block text-sm font-medium text-gray-700 mb-2">
                       Template Name *
                     </label>
                     <input
+                      id="template-name"
                       type="text"
                       value={formData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       placeholder="e.g., contact-auto-reply"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                       required
                       disabled={editingId !== null}
                     />
@@ -305,23 +314,24 @@ export default function EmailTemplatesPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="template-subject" className="block text-sm font-medium text-gray-700 mb-2">
                       Subject *
                     </label>
                     <input
+                      id="template-subject"
                       type="text"
                       value={formData.subject}
                       onChange={(e) => handleInputChange('subject', e.target.value)}
                       placeholder="e.g., Thank you for contacting us"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <span className="block text-sm font-medium text-gray-700 mb-2">
                       Available Variables
-                    </label>
+                    </span>
                     <div className="flex flex-wrap gap-2">
                       {AVAILABLE_VARIABLES.map((variable) => (
                         <button
@@ -330,7 +340,7 @@ export default function EmailTemplatesPage() {
                           onClick={() => toggleVariable(variable)}
                           className={`px-3 py-1 rounded-full text-sm font-medium transition ${
                             formData.variables.includes(variable)
-                              ? 'bg-blue-600 text-white'
+                              ? 'bg-brand-600 text-white'
                               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
                         >
@@ -342,28 +352,30 @@ export default function EmailTemplatesPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="template-html-body" className="block text-sm font-medium text-gray-700 mb-2">
                       HTML Body *
                     </label>
                     <textarea
+                      id="template-html-body"
                       value={formData.html_body}
                       onChange={(e) => handleInputChange('html_body', e.target.value)}
                       placeholder="HTML email body with {{variable}} placeholders"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent font-mono text-sm"
                       rows={8}
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="template-text-body" className="block text-sm font-medium text-gray-700 mb-2">
                       Text Body *
                     </label>
                     <textarea
+                      id="template-text-body"
                       value={formData.text_body}
                       onChange={(e) => handleInputChange('text_body', e.target.value)}
                       placeholder="Plain text email body with {{variable}} placeholders"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent font-mono text-sm"
                       rows={8}
                       required
                     />
@@ -404,7 +416,7 @@ export default function EmailTemplatesPage() {
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                      className="flex-1 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:bg-gray-400"
                     >
                       {submitting ? 'Saving...' : editingId ? 'Update Template' : 'Create Template'}
                     </button>
@@ -485,7 +497,7 @@ export default function EmailTemplatesPage() {
                           ? JSON.parse(template.variables)
                           : template.variables
                         ).map((v: string) => (
-                          <span key={v} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                          <span key={v} className="px-2 py-1 bg-brand-100 text-brand-800 text-xs rounded">
                             {`{{${v}}}`}
                           </span>
                         ))}
@@ -495,13 +507,15 @@ export default function EmailTemplatesPage() {
                   <div className="flex gap-2 ml-4">
                     <button
                       onClick={() => handleEdit(template)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                      className="p-2 text-brand-600 hover:bg-brand-50 rounded-lg"
+                      aria-label={`Edit template ${template.name}`}
                     >
                       <Edit2 size={18} />
                     </button>
                     <button
                       onClick={() => handleDelete(template.id)}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                      aria-label={`Delete template ${template.name}`}
                     >
                       <Trash2 size={18} />
                     </button>

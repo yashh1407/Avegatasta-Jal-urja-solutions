@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Phone, MessageSquare, Clock, Trash2, RefreshCw, AlertTriangle, ChevronDown, Package, UserPlus, Lock, FileText, Plus, MapPin } from 'lucide-react';
+import { Phone, MessageSquare, Clock, Trash2, RefreshCw, AlertTriangle, ChevronDown, Package, UserPlus, FileText, Plus, MapPin } from 'lucide-react';
 import Link from 'next/link';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -99,7 +99,7 @@ function TriageBadge({ urgency, category, intent }: { urgency: Urgency | null; c
         </span>
       )}
       {category && (
-        <span className="inline-flex items-center text-[10px] font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+        <span className="inline-flex items-center text-[10px] font-semibold text-brand-700 bg-brand-50 border border-brand-100 px-2 py-0.5 rounded-full">
           {category}
         </span>
       )}
@@ -112,7 +112,7 @@ function TriageBadge({ urgency, category, intent }: { urgency: Urgency | null; c
 
 const STATUS_COLORS: Record<string, string> = {
   enquiry_generation: 'bg-slate-100 text-slate-700 border border-slate-200',
-  follow_up: 'bg-blue-50 text-blue-700 border border-blue-200',
+  follow_up: 'bg-brand-50 text-brand-700 border border-brand-200',
   wants_to_meet: 'bg-purple-50 text-purple-700 border border-purple-200',
   meeting_done: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
   quotation_sent: 'bg-orange-50 text-orange-700 border border-orange-200',
@@ -122,7 +122,7 @@ const STATUS_COLORS: Record<string, string> = {
   delivered: 'bg-green-100 text-green-800 border border-green-300',
   spam: 'bg-red-50 text-red-700 border border-red-200',
   closed: 'bg-slate-100 text-slate-500 border border-slate-200',
-  new: 'bg-blue-100 text-blue-700 border border-blue-200',
+  new: 'bg-brand-100 text-brand-700 border border-brand-200',
   in_progress: 'bg-yellow-100 text-yellow-700 border border-yellow-200',
   resolved: 'bg-green-100 text-green-700 border border-green-200',
 };
@@ -165,7 +165,7 @@ function PipelineDropdowns({ status, onChange, size = 'sm' }: { status: string, 
       <select 
         value={d1Value} 
         onChange={(e) => onChange(e.target.value)}
-        className={`${baseClass} bg-slate-50 border border-slate-200 focus:ring-blue-500/20 text-blue-900`}
+        className={`${baseClass} bg-slate-50 border border-slate-200 focus:ring-brand-500/20 text-brand-900`}
       >
         {ENQUIRY_GROUP.map(val => STATUS_LABELS[val] && (
           <option key={val} value={val}>{STATUS_LABELS[val]}</option>
@@ -281,7 +281,7 @@ function EditableInquiryForm({ inquiry, onSave, onDelete, onToast, savedQuotes }
       if (!price) return;
       const agreedPrice = parseAgreedPrice(price);
       if (agreedPrice === null) {
-        alert('Enter a valid agreed price.');
+        onToast('Enter a valid agreed price.', 'error');
         return;
       }
       updates.agreed_price = agreedPrice;
@@ -314,6 +314,33 @@ function EditableInquiryForm({ inquiry, onSave, onDelete, onToast, savedQuotes }
     }
     onSave(buildUpdatePayload());
     setIsEditing(false);
+  };
+
+  const handleConvert = async () => {
+    try {
+      const res = await fetch('/api/admin/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: inquiry.name,
+          phone: inquiry.phone || undefined,
+          gstin: inquiry.gstin || undefined,
+          notes: `Converted from general inquiry #${inquiry.id}`,
+          source_inquiry_id: inquiry.id,
+          source_inquiry_type: 'general',
+        }),
+      });
+      if (res.ok) {
+        setIsConverted(true);
+        onToast('Converted to client.', 'success');
+      } else {
+        const data = await res.json().catch(() => null);
+        onToast(data?.error ? (typeof data.error === 'string' ? data.error : 'Failed to convert to client.') : 'Failed to convert to client.', 'error');
+      }
+    } catch (err) {
+      console.error('Convert to client failed:', err);
+      onToast('Failed to convert to client.', 'error');
+    }
   };
 
   if (!isEditing) {
@@ -406,17 +433,25 @@ function EditableInquiryForm({ inquiry, onSave, onDelete, onToast, savedQuotes }
                 <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-600">
                   <UserPlus size={10} /> Converted to Client
                 </span>
-                <Link href="/admin/clients" className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-blue-600 hover:underline">
+                <Link href={inquiry.client_id ? `/admin/clients/${inquiry.client_id}` : '/admin/clients'} className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-brand-600 hover:underline">
                    View Profile
                 </Link>
               </>
+            )}
+            {!inquiry.client_id && !isConverted && (
+              <button
+                onClick={handleConvert}
+                className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-500 hover:text-emerald-700 transition-colors"
+              >
+                <UserPlus size={10} /> Convert to Client
+              </button>
             )}
             <button
               onClick={() => {
                 setFormData(inquiryToFormData(inquiry));
                 setIsEditing(true);
               }}
-              className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-blue-600 transition-colors"
+              className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-brand-600 transition-colors"
             >
                Edit Details
             </button>
@@ -436,25 +471,25 @@ function EditableInquiryForm({ inquiry, onSave, onDelete, onToast, savedQuotes }
     <form onSubmit={handleSubmit} className="px-5 pb-5 pt-0 border-t border-slate-50 bg-slate-50/40 space-y-4">
       <div className="grid grid-cols-2 gap-4 mt-4">
         <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">Name</label>
-          <input name="name" value={formData.name} onChange={handleChange} required className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20" />
+          <label htmlFor={`inq-${inquiry.id}-name`} className="block text-xs font-semibold text-slate-600 mb-1">Name</label>
+          <input id={`inq-${inquiry.id}-name`} name="name" value={formData.name} onChange={handleChange} required className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">Phone</label>
-          <input name="phone" value={formData.phone} onChange={handleChange} className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20" />
+          <label htmlFor={`inq-${inquiry.id}-phone`} className="block text-xs font-semibold text-slate-600 mb-1">Phone</label>
+          <input id={`inq-${inquiry.id}-phone`} name="phone" value={formData.phone} onChange={handleChange} className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20" />
         </div>
       </div>
       <div>
-        <label className="block text-xs font-semibold text-slate-600 mb-1">Subject</label>
-        <input name="subject" value={formData.subject} onChange={handleChange} className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20" />
+        <label htmlFor={`inq-${inquiry.id}-subject`} className="block text-xs font-semibold text-slate-600 mb-1">Subject</label>
+        <input id={`inq-${inquiry.id}-subject`} name="subject" value={formData.subject} onChange={handleChange} className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20" />
       </div>
       <div>
-        <label className="block text-xs font-semibold text-slate-600 mb-1">Message</label>
-        <textarea name="message" value={formData.message} onChange={handleChange} required rows={4} className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20" />
+        <label htmlFor={`inq-${inquiry.id}-message`} className="block text-xs font-semibold text-slate-600 mb-1">Message</label>
+        <textarea id={`inq-${inquiry.id}-message`} name="message" value={formData.message} onChange={handleChange} required rows={4} className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20" />
       </div>
 
       <div className="bg-white p-4 rounded-xl border border-slate-200">
-        <label className="block text-xs font-semibold text-slate-600 mb-2">Sales Pipeline & Logistics</label>
+        <span className="block text-xs font-semibold text-slate-600 mb-2">Sales Pipeline &amp; Logistics</span>
         <div className="flex flex-wrap gap-4 items-center">
              <PipelineDropdowns 
                status={formData.status} 
@@ -467,7 +502,7 @@ function EditableInquiryForm({ inquiry, onSave, onDelete, onToast, savedQuotes }
                  name="quote_number"
                  value={formData.quote_number || ''}
                  onChange={handleChange}
-                 className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                 className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20 outline-none"
                >
                  <option value="">-- No Quote --</option>
                  {savedQuotes.map((q: any) => (
@@ -486,21 +521,21 @@ function EditableInquiryForm({ inquiry, onSave, onDelete, onToast, savedQuotes }
           {formData.status === 'wants_to_meet' && (
             <>
               <div>
-                <input type="date" name="meeting_date" value={formData.meeting_date} onChange={handleChange} className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20" />
+                <input type="date" name="meeting_date" value={formData.meeting_date} onChange={handleChange} className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20" />
               </div>
               <div>
-                <input type="time" name="meeting_time" value={formData.meeting_time} onChange={handleChange} className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20" />
+                <input type="time" name="meeting_time" value={formData.meeting_time} onChange={handleChange} className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20" />
               </div>
               <div>
-                <select name="meeting_type" value={formData.meeting_type} onChange={handleChange} className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20">
+                <select name="meeting_type" value={formData.meeting_type} onChange={handleChange} className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20">
                   <option value="office">In Office</option>
                   <option value="custom">Custom Location</option>
                 </select>
               </div>
               {formData.meeting_type === 'custom' && (
                 <div className="w-full mt-2">
-                   <label className="block text-xs font-semibold text-slate-600 mb-1">Meeting Location</label>
-                   <input name="meeting_location" value={formData.meeting_location} onChange={handleChange} placeholder="Enter full address..." className="w-full text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20" />
+                   <label htmlFor={`inq-${inquiry.id}-meeting-location`} className="block text-xs font-semibold text-slate-600 mb-1">Meeting Location</label>
+                   <input id={`inq-${inquiry.id}-meeting-location`} name="meeting_location" value={formData.meeting_location} onChange={handleChange} placeholder="Enter full address..." className="w-full text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20" />
                 </div>
               )}
             </>
@@ -509,7 +544,7 @@ function EditableInquiryForm({ inquiry, onSave, onDelete, onToast, savedQuotes }
       </div>
 
       <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
-        <button type="submit" className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors">
+        <button type="submit" className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-bold transition-colors">
            Save Changes
         </button>
         <button type="button" onClick={() => setIsEditing(false)} className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-slate-600 transition-colors">
@@ -547,7 +582,7 @@ function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast, savedQ
       if (!price) return;
       const agreedPrice = parseAgreedPrice(price);
       if (agreedPrice === null) {
-        alert('Enter a valid agreed price.');
+        onToast('Enter a valid agreed price.', 'error');
         return;
       }
       updates.agreed_price = agreedPrice;
@@ -582,13 +617,41 @@ function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast, savedQ
     setIsEditing(false);
   };
 
+  const handleConvert = async () => {
+    try {
+      const res = await fetch('/api/admin/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: inquiry.name,
+          phone: inquiry.phone || undefined,
+          email: inquiry.email || undefined,
+          gstin: inquiry.gstin || undefined,
+          notes: `Converted from product inquiry: ${inquiry.product_name}`,
+          source_inquiry_id: inquiry.id,
+          source_inquiry_type: 'product',
+        }),
+      });
+      if (res.ok) {
+        setIsConverted(true);
+        onToast('Converted to client.', 'success');
+      } else {
+        const data = await res.json().catch(() => null);
+        onToast(data?.error ? (typeof data.error === 'string' ? data.error : 'Failed to convert to client.') : 'Failed to convert to client.', 'error');
+      }
+    } catch (err) {
+      console.error('Convert to client failed:', err);
+      onToast('Failed to convert to client.', 'error');
+    }
+  };
+
   if (!isEditing) {
     return (
       <div className="px-5 pb-5 pt-0 border-t border-slate-50 bg-slate-50/40 space-y-3">
         <p className="text-sm text-slate-700 leading-relaxed pt-4 whitespace-pre-wrap">{inquiry.message}</p>
         {inquiry.email && (
           <p className="text-xs text-slate-500">
-            Email: <a href={`mailto:${inquiry.email}`} className="text-blue-600 hover:underline">{inquiry.email}</a>
+            Email: <a href={`mailto:${inquiry.email}`} className="text-brand-600 hover:underline">{inquiry.email}</a>
           </p>
         )}
         {inquiry.gstin && (
@@ -683,17 +746,25 @@ function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast, savedQ
                 <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-600">
                   <UserPlus size={10} /> Converted to Client
                 </span>
-                <Link href="/admin/clients" className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-blue-600 hover:underline">
+                <Link href={inquiry.client_id ? `/admin/clients/${inquiry.client_id}` : '/admin/clients'} className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-brand-600 hover:underline">
                    View Profile
                 </Link>
               </>
+            )}
+            {!inquiry.client_id && !isConverted && (
+              <button
+                onClick={handleConvert}
+                className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-500 hover:text-emerald-700 transition-colors"
+              >
+                <UserPlus size={10} /> Convert to Client
+              </button>
             )}
             <button
               onClick={() => {
                 setFormData(productInquiryToFormData(inquiry));
                 setIsEditing(true);
               }}
-              className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-blue-600 transition-colors"
+              className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-brand-600 transition-colors"
             >
                Edit Details
             </button>
@@ -713,25 +784,25 @@ function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast, savedQ
     <form onSubmit={handleSubmit} className="px-5 pb-5 pt-0 border-t border-slate-50 bg-slate-50/40 space-y-4">
       <div className="grid grid-cols-2 gap-4 mt-4">
         <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">Name</label>
-          <input name="name" value={formData.name} onChange={handleChange} required className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20" />
+          <label htmlFor={`pinq-${inquiry.id}-name`} className="block text-xs font-semibold text-slate-600 mb-1">Name</label>
+          <input id={`pinq-${inquiry.id}-name`} name="name" value={formData.name} onChange={handleChange} required className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-600 mb-1">Phone</label>
-          <input name="phone" value={formData.phone} onChange={handleChange} required className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20" />
+          <label htmlFor={`pinq-${inquiry.id}-phone`} className="block text-xs font-semibold text-slate-600 mb-1">Phone</label>
+          <input id={`pinq-${inquiry.id}-phone`} name="phone" value={formData.phone} onChange={handleChange} required className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20" />
         </div>
       </div>
       <div>
-        <label className="block text-xs font-semibold text-slate-600 mb-1">Email</label>
-        <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20" />
+        <label htmlFor={`pinq-${inquiry.id}-email`} className="block text-xs font-semibold text-slate-600 mb-1">Email</label>
+        <input id={`pinq-${inquiry.id}-email`} type="email" name="email" value={formData.email} onChange={handleChange} className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20" />
       </div>
       <div>
-        <label className="block text-xs font-semibold text-slate-600 mb-1">Message</label>
-        <textarea name="message" value={formData.message} onChange={handleChange} required rows={4} className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20" />
+        <label htmlFor={`pinq-${inquiry.id}-message`} className="block text-xs font-semibold text-slate-600 mb-1">Message</label>
+        <textarea id={`pinq-${inquiry.id}-message`} name="message" value={formData.message} onChange={handleChange} required rows={4} className="w-full text-sm bg-white border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20" />
       </div>
 
       <div className="bg-white p-4 rounded-xl border border-slate-200">
-        <label className="block text-xs font-semibold text-slate-600 mb-2">Sales Pipeline & Logistics</label>
+        <span className="block text-xs font-semibold text-slate-600 mb-2">Sales Pipeline &amp; Logistics</span>
         <div className="flex flex-wrap gap-4 items-center">
              <PipelineDropdowns 
                status={formData.status} 
@@ -744,7 +815,7 @@ function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast, savedQ
                  name="quote_number"
                  value={formData.quote_number || ''}
                  onChange={handleChange}
-                 className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20 outline-none"
+                 className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20 outline-none"
                >
                  <option value="">-- No Quote --</option>
                  {savedQuotes.map((q: any) => (
@@ -763,21 +834,21 @@ function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast, savedQ
           {formData.status === 'wants_to_meet' && (
             <>
               <div>
-                <input type="date" name="meeting_date" value={formData.meeting_date} onChange={handleChange} className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20" />
+                <input type="date" name="meeting_date" value={formData.meeting_date} onChange={handleChange} className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20" />
               </div>
               <div>
-                <input type="time" name="meeting_time" value={formData.meeting_time} onChange={handleChange} className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20" />
+                <input type="time" name="meeting_time" value={formData.meeting_time} onChange={handleChange} className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20" />
               </div>
               <div>
-                <select name="meeting_type" value={formData.meeting_type} onChange={handleChange} className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20">
+                <select name="meeting_type" value={formData.meeting_type} onChange={handleChange} className="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20">
                   <option value="office">In Office</option>
                   <option value="custom">Custom Location</option>
                 </select>
               </div>
               {formData.meeting_type === 'custom' && (
                 <div className="w-full mt-2">
-                   <label className="block text-xs font-semibold text-slate-600 mb-1">Meeting Location</label>
-                   <input name="meeting_location" value={formData.meeting_location} onChange={handleChange} placeholder="Enter full address..." className="w-full text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500/20" />
+                   <label htmlFor={`pinq-${inquiry.id}-meeting-location`} className="block text-xs font-semibold text-slate-600 mb-1">Meeting Location</label>
+                   <input id={`pinq-${inquiry.id}-meeting-location`} name="meeting_location" value={formData.meeting_location} onChange={handleChange} placeholder="Enter full address..." className="w-full text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-brand-500/20" />
                 </div>
               )}
             </>
@@ -786,7 +857,7 @@ function EditableProductInquiryForm({ inquiry, onSave, onDelete, onToast, savedQ
       </div>
 
       <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-200">
-        <button type="submit" className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors">
+        <button type="submit" className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-bold transition-colors">
            Save Changes
         </button>
         <button type="button" onClick={() => setIsEditing(false)} className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-slate-600 transition-colors">
@@ -1021,10 +1092,11 @@ export default function AdminInquiriesPage() {
       }
     } catch (err) {
       console.error('Failed to fetch inquiries:', err);
+      if (!isBackground) showToast('Failed to load inquiries. Please try again.', 'error');
     } finally {
       if (!isBackground) setLoadingGeneral(false);
     }
-  }, []);
+  }, [showToast]);
 
   const fetchProductInquiries = useCallback(async (isBackground = false) => {
     if (!isBackground) setLoadingProduct(true);
@@ -1036,10 +1108,11 @@ export default function AdminInquiriesPage() {
       }
     } catch (err) {
       console.error('Failed to fetch product inquiries:', err);
+      if (!isBackground) showToast('Failed to load product inquiries. Please try again.', 'error');
     } finally {
       if (!isBackground) setLoadingProduct(false);
     }
-  }, []);
+  }, [showToast]);
 
   // Initial fetch + polling for general inquiries
   useEffect(() => {
@@ -1062,20 +1135,26 @@ export default function AdminInquiriesPage() {
   const handleDelete = async (id: number) => {
     if (!confirm('Delete this inquiry?')) return;
     try {
-      await fetch(`/api/inquiries?id=${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/inquiries?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Request failed');
       setInquiries((prev) => prev.filter((i) => i.id !== id));
+      showToast('Inquiry deleted.', 'success');
     } catch (err) {
       console.error('Delete failed:', err);
+      showToast('Failed to delete inquiry. Please try again.', 'error');
     }
   };
 
   const handleDeleteProduct = async (id: number) => {
     if (!confirm('Delete this product inquiry?')) return;
     try {
-      await fetch(`/api/product-inquiries?id=${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/product-inquiries?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Request failed');
       setProductInquiries((prev) => prev.filter((i) => i.id !== id));
+      showToast('Product inquiry deleted.', 'success');
     } catch (err) {
       console.error('Delete failed:', err);
+      showToast('Failed to delete product inquiry. Please try again.', 'error');
     }
   };
 
@@ -1090,11 +1169,13 @@ export default function AdminInquiriesPage() {
       if (res.ok) {
         setInquiries(prev => prev.map(i => i.id === id ? { ...i, ...updates } as Inquiry : i));
         setExpanded(null); // Optional: close on save
+        showToast('Inquiry updated.', 'success');
       } else {
-        alert('Failed to save changes');
+        showToast('Failed to save changes.', 'error');
       }
     } catch (err) {
       console.error('Update status failed:', err);
+      showToast('Failed to save changes. Please try again.', 'error');
     }
   };
 
@@ -1109,11 +1190,13 @@ export default function AdminInquiriesPage() {
       if (res.ok) {
         setProductInquiries(prev => prev.map(i => i.id === id ? { ...i, ...updates } as ProductInquiry : i));
         setExpandedProduct(null); // Optional: close on save
+        showToast('Product inquiry updated.', 'success');
       } else {
-        alert('Failed to save changes');
+        showToast('Failed to save changes.', 'error');
       }
     } catch (err) {
       console.error('Update product status failed:', err);
+      showToast('Failed to save changes. Please try again.', 'error');
     }
   };
 
@@ -1144,7 +1227,7 @@ export default function AdminInquiriesPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-black text-blue-950">Inquiries</h1>
+            <h1 className="text-2xl font-black text-brand-950">Inquiries</h1>
             <p className="text-sm text-slate-500 font-medium mt-0.5">
               {activeTab === 'general'
                 ? `${inquiries.length} general · AI-triaged by category & urgency`
@@ -1154,14 +1237,14 @@ export default function AdminInquiriesPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsAddLeadOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-sm transition-all"
+              className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-bold shadow-sm transition-all"
             >
               <Plus size={14} />
               Add Lead
             </button>
             <button
               onClick={() => activeTab === 'general' ? fetchInquiries(false) : fetchProductInquiries(false)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all"
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:text-brand-600 hover:border-brand-200 transition-all"
             >
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
               Refresh
@@ -1175,8 +1258,8 @@ export default function AdminInquiriesPage() {
             onClick={() => setActiveTab('general')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
               activeTab === 'general'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-500 hover:text-blue-600'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-slate-500 hover:text-brand-600'
             }`}
           >
             <MessageSquare size={14} />
@@ -1191,8 +1274,8 @@ export default function AdminInquiriesPage() {
             onClick={() => setActiveTab('product')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
               activeTab === 'product'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-500 hover:text-blue-600'
+                ? 'bg-brand-600 text-white shadow-sm'
+                : 'text-slate-500 hover:text-brand-600'
             }`}
           >
             <Package size={14} />
@@ -1215,7 +1298,7 @@ export default function AdminInquiriesPage() {
                 placeholder="Search inquiries…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all w-64"
+                className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all w-64"
               />
               <div className="flex gap-1.5">
                 {(['all', 'critical', 'high', 'medium', 'low'] as const).map((u) => (
@@ -1224,8 +1307,8 @@ export default function AdminInquiriesPage() {
                     onClick={() => setUrgencyFilter(u)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
                       urgencyFilter === u
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'bg-white border border-slate-200 text-slate-600 hover:border-blue-200 hover:text-blue-600'
+                        ? 'bg-brand-600 text-white shadow-sm'
+                        : 'bg-white border border-slate-200 text-slate-600 hover:border-brand-200 hover:text-brand-600'
                     }`}
                   >
                     {u}
@@ -1274,9 +1357,9 @@ export default function AdminInquiriesPage() {
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-1.5 flex-wrap">
-                            <span className="font-black text-sm text-blue-950">{inquiry.name}</span>
+                            <span className="font-black text-sm text-brand-950">{inquiry.name}</span>
                             {inquiry.phone && (
-                              <a href={`tel:${inquiry.phone}`} className="flex items-center gap-1 text-xs text-slate-500 hover:text-blue-600 font-medium transition-colors">
+                              <a href={`tel:${inquiry.phone}`} className="flex items-center gap-1 text-xs text-slate-500 hover:text-brand-600 font-medium transition-colors">
                                 <Phone size={11} /> {inquiry.phone}
                               </a>
                             )}
@@ -1286,7 +1369,7 @@ export default function AdminInquiriesPage() {
                             </span>
                           </div>
                           {inquiry.subject && (
-                            <p className="text-xs font-bold text-blue-700 mb-1.5">{inquiry.subject}</p>
+                            <p className="text-xs font-bold text-brand-700 mb-1.5">{inquiry.subject}</p>
                           )}
                           <p className="text-sm text-slate-600 line-clamp-1 leading-relaxed">{inquiry.message}</p>
                           <div className="mt-2 flex flex-col gap-1">
@@ -1370,12 +1453,12 @@ export default function AdminInquiriesPage() {
                         className="flex items-start gap-4 p-5 cursor-pointer hover:bg-slate-50/50 transition-colors"
                         onClick={() => setExpandedProduct(expandedProduct === inquiry.id ? null : inquiry.id)}
                       >
-                        <div className="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 bg-blue-400" />
+                        <div className="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 bg-brand-400" />
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-1.5 flex-wrap">
-                            <span className="font-black text-sm text-blue-950">{inquiry.name}</span>
-                            <a href={`tel:${inquiry.phone}`} className="flex items-center gap-1 text-xs text-slate-500 hover:text-blue-600 font-medium transition-colors">
+                            <span className="font-black text-sm text-brand-950">{inquiry.name}</span>
+                            <a href={`tel:${inquiry.phone}`} className="flex items-center gap-1 text-xs text-slate-500 hover:text-brand-600 font-medium transition-colors">
                               <Phone size={11} /> {inquiry.phone}
                             </a>
                             {inquiry.gstin && (
@@ -1388,7 +1471,7 @@ export default function AdminInquiriesPage() {
                               {new Date(inquiry.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </span>
                           </div>
-                          <p className="text-xs font-bold text-blue-700 mb-1.5 flex items-center gap-1">
+                          <p className="text-xs font-bold text-brand-700 mb-1.5 flex items-center gap-1">
                             <Package size={11} /> {inquiry.product_name}
                           </p>
                           <p className="text-sm text-slate-600 line-clamp-1 leading-relaxed">{inquiry.message}</p>
@@ -1464,7 +1547,7 @@ export default function AdminInquiriesPage() {
               {/* Header */}
               <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <div>
-                  <h2 className="text-lg font-black text-blue-950">Create New Lead</h2>
+                  <h2 className="text-lg font-black text-brand-950">Create New Lead</h2>
                   <p className="text-xs text-slate-500 font-medium mt-0.5">Field Lead Logging Console</p>
                 </div>
                 <button
@@ -1488,7 +1571,7 @@ export default function AdminInquiriesPage() {
                       onClick={() => setAddLeadData(prev => ({ ...prev, leadType: 'general' }))}
                       className={`py-2 rounded-xl text-xs font-bold transition-all ${
                         addLeadData.leadType === 'general'
-                          ? 'bg-white text-blue-600 shadow-sm'
+                          ? 'bg-white text-brand-600 shadow-sm'
                           : 'text-slate-600 hover:text-slate-950'
                       }`}
                     >
@@ -1499,7 +1582,7 @@ export default function AdminInquiriesPage() {
                       onClick={() => setAddLeadData(prev => ({ ...prev, leadType: 'product' }))}
                       className={`py-2 rounded-xl text-xs font-bold transition-all ${
                         addLeadData.leadType === 'product'
-                          ? 'bg-white text-blue-600 shadow-sm'
+                          ? 'bg-white text-brand-600 shadow-sm'
                           : 'text-slate-600 hover:text-slate-950'
                       }`}
                     >
@@ -1510,14 +1593,14 @@ export default function AdminInquiriesPage() {
 
                 {/* Geolocation Status Card */}
                 <div className={`p-4 rounded-2xl border text-xs flex flex-col gap-2 transition-colors ${
-                  gpsStatus === 'acquiring' ? 'bg-blue-50/50 border-blue-100 text-blue-800' :
+                  gpsStatus === 'acquiring' ? 'bg-brand-50/50 border-brand-100 text-brand-800' :
                   gpsStatus === 'success'   ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800' :
                   gpsStatus === 'error'     ? 'bg-red-50/50 border-red-100 text-red-800' :
                                               'bg-slate-50 border-slate-100 text-slate-600'
                 }`}>
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[10px]">
-                      <MapPin size={12} className={gpsStatus === 'acquiring' ? 'animate-bounce text-blue-500' : gpsStatus === 'success' ? 'text-emerald-500' : gpsStatus === 'error' ? 'text-red-500' : 'text-slate-400'} />
+                      <MapPin size={12} className={gpsStatus === 'acquiring' ? 'animate-bounce text-brand-500' : gpsStatus === 'success' ? 'text-emerald-500' : gpsStatus === 'error' ? 'text-red-500' : 'text-slate-400'} />
                       GPS Tracking Status
                     </span>
                     {gpsStatus === 'error' && (
@@ -1580,7 +1663,7 @@ export default function AdminInquiriesPage() {
                       value={addLeadData.name}
                       onChange={e => setAddLeadData(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="John Doe"
-                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400"
+                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-medium text-brand-950 placeholder:text-slate-400"
                     />
                   </div>
                   <div>
@@ -1591,7 +1674,7 @@ export default function AdminInquiriesPage() {
                       value={addLeadData.phone}
                       onChange={e => setAddLeadData(prev => ({ ...prev, phone: e.target.value }))}
                       placeholder="9876543210"
-                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400 font-mono"
+                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-medium text-brand-950 placeholder:text-slate-400 font-mono"
                     />
                   </div>
                 </div>
@@ -1604,7 +1687,7 @@ export default function AdminInquiriesPage() {
                       value={addLeadData.email}
                       onChange={e => setAddLeadData(prev => ({ ...prev, email: e.target.value }))}
                       placeholder="customer@domain.com"
-                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400"
+                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-medium text-brand-950 placeholder:text-slate-400"
                     />
                   </div>
                   <div>
@@ -1615,7 +1698,7 @@ export default function AdminInquiriesPage() {
                       onChange={e => setAddLeadData(prev => ({ ...prev, gstin: e.target.value.toUpperCase() }))}
                       placeholder="15-digit code"
                       maxLength={15}
-                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400 font-mono"
+                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-medium text-brand-950 placeholder:text-slate-400 font-mono"
                     />
                   </div>
                 </div>
@@ -1629,7 +1712,7 @@ export default function AdminInquiriesPage() {
                       value={addLeadData.subject}
                       onChange={e => setAddLeadData(prev => ({ ...prev, subject: e.target.value }))}
                       placeholder="E.g., Pumping Solutions requirements"
-                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400"
+                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-medium text-brand-950 placeholder:text-slate-400"
                     />
                   </div>
                 )}
@@ -1645,7 +1728,7 @@ export default function AdminInquiriesPage() {
                       value={addLeadData.productName}
                       onChange={e => setAddLeadData(prev => ({ ...prev, productName: e.target.value }))}
                       placeholder="Type or select a product..."
-                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400"
+                      className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-medium text-brand-950 placeholder:text-slate-400"
                     />
                     <datalist id="products-datalist">
                       {productsList.map((prod) => (
@@ -1666,7 +1749,7 @@ export default function AdminInquiriesPage() {
                     onChange={e => setAddLeadData(prev => ({ ...prev, message: e.target.value }))}
                     placeholder="Write brief description of what the customer is looking for..."
                     rows={3}
-                    className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400"
+                    className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-medium text-brand-950 placeholder:text-slate-400"
                   />
                 </div>
 
@@ -1675,7 +1758,7 @@ export default function AdminInquiriesPage() {
                   <button
                     type="submit"
                     disabled={isSavingLead}
-                    className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all disabled:opacity-50 flex items-center gap-2"
+                    className="px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all disabled:opacity-50 flex items-center gap-2"
                   >
                     {isSavingLead && <RefreshCw size={12} className="animate-spin" />}
                     Save Lead

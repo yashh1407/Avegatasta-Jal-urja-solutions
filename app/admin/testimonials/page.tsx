@@ -19,6 +19,7 @@ import {
   Upload,
   Image as ImageIcon,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Footer from '@/components/Footer';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -116,7 +117,7 @@ function TestimonialPreviewCard({ form }: { form: TestimonialFormData }) {
     <div className="bg-white border border-brand-100/70 rounded-3xl px-6 py-7 text-center max-w-sm mx-auto shadow-sm">
       <div className="flex justify-center mb-4">
         {imageUrl ? (
-          <div className="relative w-20 h-20 rounded-2xl p-1 bg-gradient-to-br from-blue-50 to-emerald-50 border border-slate-100 shadow-sm">
+          <div className="relative w-20 h-20 rounded-2xl p-1 bg-gradient-to-br from-brand-50 to-emerald-50 border border-slate-100 shadow-sm">
             <img
               src={imageUrl}
               alt={form.name ? `${form.name} testimonial photo` : 'Customer testimonial photo'}
@@ -124,8 +125,8 @@ function TestimonialPreviewCard({ form }: { form: TestimonialFormData }) {
             />
           </div>
         ) : (
-          <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center">
-            <Quote size={22} className="text-blue-500" />
+          <div className="w-16 h-16 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center">
+            <Quote size={22} className="text-brand-500" />
           </div>
         )}
       </div>
@@ -143,7 +144,7 @@ function TestimonialPreviewCard({ form }: { form: TestimonialFormData }) {
       <blockquote className="text-sm font-medium text-slate-700 leading-relaxed mb-5">
         &ldquo;{form.text || 'Testimonial text will appear here…'}&rdquo;
       </blockquote>
-      <p className="font-black text-blue-950 text-sm">{form.name || 'Customer Name'}</p>
+      <p className="font-black text-brand-950 text-sm">{form.name || 'Customer Name'}</p>
       <p className="text-xs text-slate-400 mt-0.5">
         {[form.role, form.location].filter(Boolean).join(' · ') || 'Role · Location'}
       </p>
@@ -327,21 +328,26 @@ function TestimonialFormModal({
         }),
       });
       if (res.ok) {
+        toast.success(isEdit ? 'Testimonial updated.' : 'Testimonial added.');
         onSaved();
         onClose();
       } else {
         const data = await res.json();
-        setError(data.error || 'Failed to save testimonial.');
+        const message = data.error || 'Failed to save testimonial.';
+        setError(message);
+        toast.error(message);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save testimonial.');
+      const message = err instanceof Error ? err.message : 'Failed to save testimonial.';
+      setError(message);
+      toast.error(message);
     } finally {
       setSaving(false);
     }
   };
 
   const inputClass =
-    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all';
+    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all';
 
   return (
     <AnimatePresence>
@@ -361,7 +367,7 @@ function TestimonialFormModal({
           >
             {/* Header */}
             <div className="flex items-center justify-between gap-4 px-5 sm:px-8 pt-6 sm:pt-7 pb-5 border-b border-slate-100 sticky top-0 bg-white z-10 rounded-t-3xl">
-              <h2 className="text-lg font-black text-blue-950">
+              <h2 className="text-lg font-black text-brand-950">
                 {initial?.id ? 'Edit Testimonial' : 'Add Testimonial'}
               </h2>
               <div className="flex items-center gap-2">
@@ -370,8 +376,8 @@ function TestimonialFormModal({
                   onClick={() => setShowPreview((v) => !v)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
                     showPreview
-                      ? 'bg-blue-600 text-white'
-                      : 'border border-slate-200 text-slate-600 hover:border-blue-200 hover:text-blue-600'
+                      ? 'bg-brand-600 text-white'
+                      : 'border border-slate-200 text-slate-600 hover:border-brand-200 hover:text-brand-600'
                   }`}
                 >
                   <Eye size={13} />
@@ -380,6 +386,7 @@ function TestimonialFormModal({
                 <button
                   onClick={onClose}
                   className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
+                  aria-label="Close"
                 >
                   <X size={18} />
                 </button>
@@ -396,7 +403,7 @@ function TestimonialFormModal({
                     exit={{ opacity: 0, height: 0 }}
                     className="overflow-hidden mb-6"
                   >
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
+                    <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-3">
                       Live Preview
                     </p>
                     <TestimonialPreviewCard form={form} />
@@ -411,10 +418,11 @@ function TestimonialFormModal({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                    <label htmlFor="testimonial-name" className="text-xs font-black uppercase tracking-widest text-slate-500 block mb-1">
                       Name *
                     </label>
                     <input
+                      id="testimonial-name"
                       className={inputClass}
                       value={form.name}
                       onChange={set('name')}
@@ -423,10 +431,11 @@ function TestimonialFormModal({
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                    <label htmlFor="testimonial-role" className="text-xs font-black uppercase tracking-widest text-slate-500 block mb-1">
                       Role
                     </label>
                     <input
+                      id="testimonial-role"
                       className={inputClass}
                       value={form.role}
                       onChange={set('role')}
@@ -437,10 +446,11 @@ function TestimonialFormModal({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                    <label htmlFor="testimonial-location" className="text-xs font-black uppercase tracking-widest text-slate-500 block mb-1">
                       Location
                     </label>
                     <input
+                      id="testimonial-location"
                       className={inputClass}
                       value={form.location}
                       onChange={set('location')}
@@ -448,10 +458,11 @@ function TestimonialFormModal({
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                    <label htmlFor="testimonial-display-order" className="text-xs font-black uppercase tracking-widest text-slate-500 block mb-1">
                       Display Order
                     </label>
                     <input
+                      id="testimonial-display-order"
                       className={inputClass}
                       type="number"
                       value={form.display_order}
@@ -462,17 +473,18 @@ function TestimonialFormModal({
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-2">
+                  <span className="text-xs font-black uppercase tracking-widest text-slate-500 block mb-2">
                     Rating *
-                  </label>
+                  </span>
                   <StarSelector value={form.rating} onChange={(v) => setForm((f) => ({ ...f, rating: v }))} />
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                  <label htmlFor="testimonial-text" className="text-xs font-black uppercase tracking-widest text-slate-500 block mb-1">
                     Testimonial Text *
                   </label>
                   <textarea
+                    id="testimonial-text"
                     className={`${inputClass} resize-none`}
                     rows={4}
                     value={form.text}
@@ -483,9 +495,9 @@ function TestimonialFormModal({
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-2">
-                    Customer Image <span className="text-slate-300 normal-case font-medium">(optional)</span>
-                  </label>
+                  <span className="text-xs font-black uppercase tracking-widest text-slate-500 block mb-2">
+                    Customer Image <span className="text-slate-400 normal-case font-medium">(optional)</span>
+                  </span>
                   <div className="grid grid-cols-1 md:grid-cols-[112px_1fr] gap-4 rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
                     <div className="flex items-center justify-center">
                       {form.image_url ? (
@@ -516,7 +528,7 @@ function TestimonialFormModal({
                         <button
                           type="button"
                           onClick={() => imageInputRef.current?.click()}
-                          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-black uppercase tracking-wider hover:bg-blue-700 transition-all shadow-sm shadow-blue-100"
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-600 text-white text-xs font-black uppercase tracking-wider hover:bg-brand-700 transition-all shadow-sm shadow-brand-100"
                         >
                           <Upload size={15} />
                           Upload Image
@@ -532,19 +544,23 @@ function TestimonialFormModal({
                           </button>
                         )}
                       </div>
-                      <p className="text-xs text-slate-400 font-medium">
+                      <p className="text-xs text-slate-500 font-medium">
                         Upload JPG, PNG, or WebP. Recommended square image, below 5 MB.
                       </p>
-                  <input
-  className={inputClass}
-  value={imageFile ? '' : form.image_url}
-  onChange={(e) => {
-    setImageFile(null);
-    setForm((f) => ({ ...f, image_url: e.target.value }));
-  }}
-  placeholder="Optional image URL or uploaded image path"
-  type="text"
-/>
+                      <label htmlFor="testimonial-image-url" className="sr-only">
+                        Image URL or path
+                      </label>
+                      <input
+                        id="testimonial-image-url"
+                        className={inputClass}
+                        value={imageFile ? '' : form.image_url}
+                        onChange={(e) => {
+                          setImageFile(null);
+                          setForm((f) => ({ ...f, image_url: e.target.value }));
+                        }}
+                        placeholder="Optional image URL or uploaded image path"
+                        type="text"
+                      />
                     </div>
                   </div>
                 </div>
@@ -552,7 +568,7 @@ function TestimonialFormModal({
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
                   <div>
                     <p className="text-sm font-black text-slate-700">Homepage Visibility</p>
-                    <p className="text-xs text-slate-400 font-medium mt-0.5">
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
                       {form.is_active ? 'This testimonial will be shown on the homepage.' : 'This testimonial is saved but hidden from the homepage.'}
                     </p>
                   </div>
@@ -575,7 +591,7 @@ function TestimonialFormModal({
                   <button
                     type="submit"
                     disabled={saving}
-                    className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                    className="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
                   >
                     {saving && <RefreshCw size={14} className="animate-spin" />}
                     {saving ? 'Saving…' : initial?.id ? 'Save Changes' : 'Add Testimonial'}
@@ -616,6 +632,7 @@ export default function AdminTestimonialsPage() {
       setTestimonials(Array.isArray(data) ? data : []);
     } catch {
       setTestimonials([]);
+      toast.error('Failed to load testimonials.');
     } finally {
       setLoading(false);
     }
@@ -625,9 +642,14 @@ export default function AdminTestimonialsPage() {
     if (!confirm(`Delete testimonial from "${name}"? This cannot be undone.`)) return;
     try {
       const res = await fetch(`/api/admin/testimonials/${id}`, { method: 'DELETE' });
-      if (res.ok) fetchTestimonials();
+      if (res.ok) {
+        toast.success(`Deleted testimonial from "${name}".`);
+        fetchTestimonials();
+      } else {
+        toast.error('Failed to delete testimonial.');
+      }
     } catch {
-      // silently ignore
+      toast.error('Failed to delete testimonial.');
     }
   };
 
@@ -643,7 +665,12 @@ export default function AdminTestimonialsPage() {
         setTestimonials((prev) =>
           prev.map((x) => (x.id === t.id ? { ...x, is_active: !x.is_active } : x))
         );
+        toast.success(t.is_active ? 'Testimonial hidden.' : 'Testimonial activated.');
+      } else {
+        toast.error('Failed to update visibility.');
       }
+    } catch {
+      toast.error('Failed to update visibility.');
     } finally {
       setTogglingId(null);
     }
@@ -679,6 +706,7 @@ export default function AdminTestimonialsPage() {
         }),
       ]);
     } catch {
+      toast.error('Failed to reorder testimonials.');
       fetchTestimonials(); // revert on error
     } finally {
       setReorderingId(null);
@@ -718,10 +746,10 @@ export default function AdminTestimonialsPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+              <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-200">
                 <MessageSquare size={20} />
               </div>
-              <h1 className="text-4xl font-black text-blue-950 tracking-tight">Testimonials</h1>
+              <h1 className="text-4xl font-black text-brand-950 tracking-tight">Testimonials</h1>
               <span className="text-xs font-black text-emerald-600 uppercase tracking-wider bg-emerald-50 px-2 py-0.5 rounded-lg">
                 {activeCount} active
               </span>
@@ -734,14 +762,14 @@ export default function AdminTestimonialsPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={fetchTestimonials}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-blue-200 hover:text-blue-600 transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-brand-200 hover:text-brand-600 transition-all"
             >
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
               Refresh
             </button>
             <button
               onClick={openAdd}
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-blue-200"
+              className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-brand-200"
             >
               <Plus size={16} />
               Add Testimonial
@@ -750,6 +778,7 @@ export default function AdminTestimonialsPage() {
               onClick={() => signOut({ callbackUrl: '/admin/login' })}
               className="p-2.5 bg-white border border-red-200 rounded-2xl text-red-500 hover:bg-red-50 transition-all"
               title="Logout"
+              aria-label="Logout"
             >
               <LogOut size={18} />
             </button>
@@ -759,13 +788,14 @@ export default function AdminTestimonialsPage() {
         {/* Table */}
         <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
           <div className="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
-            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            <h2 className="text-xs font-black text-slate-500 uppercase tracking-widest">
               All Testimonials ({testimonials.length})
             </h2>
             <button
               onClick={fetchTestimonials}
-              className="p-2 text-slate-400 hover:text-blue-600 rounded-xl hover:bg-blue-50 transition-all"
+              className="p-2 text-slate-500 hover:text-brand-600 rounded-xl hover:bg-brand-50 transition-all"
               title="Refresh"
+              aria-label="Refresh testimonials"
             >
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             </button>
@@ -775,12 +805,12 @@ export default function AdminTestimonialsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/50">
-                  <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Order</th>
-                  <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Customer</th>
-                  <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rating</th>
-                  <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Preview</th>
-                  <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Active</th>
-                  <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                  <th className="px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Order</th>
+                  <th className="px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Customer</th>
+                  <th className="px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Rating</th>
+                  <th className="px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Preview</th>
+                  <th className="px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Active</th>
+                  <th className="px-5 py-4 text-xs font-black text-slate-500 uppercase tracking-widest text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -793,7 +823,7 @@ export default function AdminTestimonialsPage() {
                         <MessageSquare size={32} />
                       </div>
                       <p className="text-slate-500 font-medium">No testimonials yet.</p>
-                      <button onClick={openAdd} className="mt-4 text-blue-600 text-sm font-black hover:underline">
+                      <button onClick={openAdd} className="mt-4 text-brand-600 text-sm font-black hover:underline">
                         Add the first testimonial →
                       </button>
                     </td>
@@ -809,21 +839,23 @@ export default function AdminTestimonialsPage() {
                       {/* Order controls */}
                       <td className="px-5 py-4 w-24">
                         <div className="flex items-center gap-1">
-                          <span className="text-xs font-black text-slate-400 w-5 text-right">{t.display_order}</span>
+                          <span className="text-xs font-black text-slate-500 w-5 text-right">{t.display_order}</span>
                           <div className="flex flex-col">
                             <button
                               onClick={() => handleReorder(t.id, 'up')}
                               disabled={idx === 0 || reorderingId === t.id}
-                              className="p-0.5 text-slate-300 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              className="p-0.5 text-slate-400 hover:text-brand-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                               title="Move up"
+                              aria-label={`Move ${t.name} up`}
                             >
                               <ChevronUp size={14} />
                             </button>
                             <button
                               onClick={() => handleReorder(t.id, 'down')}
                               disabled={idx === testimonials.length - 1 || reorderingId === t.id}
-                              className="p-0.5 text-slate-300 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                              className="p-0.5 text-slate-400 hover:text-brand-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                               title="Move down"
+                              aria-label={`Move ${t.name} down`}
                             >
                               <ChevronDown size={14} />
                             </button>
@@ -841,14 +873,14 @@ export default function AdminTestimonialsPage() {
                               className="w-11 h-11 rounded-2xl object-cover border border-slate-100 bg-slate-50 shadow-sm"
                             />
                           ) : (
-                            <div className="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-400 shrink-0">
+                            <div className="w-11 h-11 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-400 shrink-0">
                               <Quote size={16} />
                             </div>
                           )}
                           <div>
-                            <p className="font-black text-sm text-blue-950">{t.name}</p>
-                            <p className="text-xs text-slate-400 font-medium mt-0.5">
-                              {[t.role, t.location].filter(Boolean).join(' · ') || <span className="text-slate-200">—</span>}
+                            <p className="font-black text-sm text-brand-950">{t.name}</p>
+                            <p className="text-xs text-slate-500 font-medium mt-0.5">
+                              {[t.role, t.location].filter(Boolean).join(' · ') || <span className="text-slate-400">—</span>}
                             </p>
                           </div>
                         </div>
@@ -879,9 +911,10 @@ export default function AdminTestimonialsPage() {
 
                       {/* Actions */}
                       <td className="px-5 py-4">
-<div className="flex items-center justify-end gap-1 opacity-100">                          <button
+                        <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
+                          <button
                             onClick={() => openEdit(t)}
-                            className="px-3 py-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all text-xs font-black"
+                            className="px-3 py-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all text-xs font-black"
                           >
                             Edit
                           </button>
@@ -889,6 +922,7 @@ export default function AdminTestimonialsPage() {
                             onClick={() => handleDelete(t.id, t.name)}
                             className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                             title="Delete"
+                            aria-label={`Delete testimonial from ${t.name}`}
                           >
                             <Trash2 size={15} />
                           </button>

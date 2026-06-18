@@ -1,6 +1,7 @@
 /**
  * Backend Geocoding & Reverse Geocoding Utility
  */
+import { getSetting } from '@/lib/settings';
 
 export async function resolveAddress(lat: number | string, lng: number | string): Promise<string | null> {
   const latitude = Number(lat);
@@ -10,7 +11,11 @@ export async function resolveAddress(lat: number | string, lng: number | string)
     return null;
   }
 
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  // Prefer the dashboard-managed key (Admin → Site Settings → Integrations),
+  // falling back to the GOOGLE_MAPS_API_KEY env var. Trim so a blank/whitespace
+  // dashboard value doesn't shadow a working env key.
+  const dbKey = (await getSetting('google_maps_api_key'))?.trim();
+  const apiKey = dbKey || process.env.GOOGLE_MAPS_API_KEY;
 
   if (apiKey) {
     try {

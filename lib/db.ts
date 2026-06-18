@@ -598,6 +598,14 @@ export async function initDB() {
       { key: 'social_instagram',value: '',                label: 'Instagram URL',          group: 'contact' },
       { key: 'social_facebook', value: '',                label: 'Facebook URL',           group: 'contact' },
       { key: 'about_why_choose',value: '["Authorized partner for trusted brands like V-Guard, Wilo, and Zero B","Professional installation and technical support","Energy-efficient and cost-effective systems","Customized solutions for residential and commercial projects","Reliable service and maintenance support"]', label: 'About Why Choose Us (JSON)', group: 'general' },
+      // Integrations / tracking — managed from Admin → Site Settings → Integrations.
+      // analytics_enabled defaults to 'false' so trackers stay OFF until explicitly
+      // enabled (e.g. disabled on staging/UAT). gtm_id/meta_pixel_id are seeded with
+      // the production IDs but only load when analytics_enabled is 'true'.
+      { key: 'analytics_enabled',   value: 'false',            label: 'Enable Analytics (GTM & Meta Pixel)', group: 'general' },
+      { key: 'gtm_id',              value: 'GTM-KRLD5J4P',     label: 'Google Tag Manager Container ID',     group: 'general' },
+      { key: 'meta_pixel_id',       value: '1105969235067039', label: 'Meta Pixel ID',                       group: 'general' },
+      { key: 'google_maps_api_key', value: '',                 label: 'Google Maps API Key (server-side)',   group: 'general' },
     ];
     for (const s of siteSettingsSeeds) {
       await connection.query(
@@ -1220,6 +1228,16 @@ export async function initDB() {
         )
       `);
 
+      // Link canvas (GST) invoices to a client. Added dynamically so existing
+      // canvas_invoices tables pick up the column without a fresh CREATE.
+      try {
+        await connection.query(`
+          ALTER TABLE canvas_invoices ADD COLUMN client_id INT DEFAULT NULL
+        `);
+      } catch (e: any) {
+        // Ignore if column already exists
+      }
+
       // Products table
       await connection.query(`
         CREATE TABLE IF NOT EXISTS products (
@@ -1298,6 +1316,7 @@ export async function initDB() {
       `ALTER TABLE product_inquiries ADD INDEX idx_product_inquiries_meeting (status, meeting_date, meeting_time)`,
       `ALTER TABLE inquiries ADD INDEX idx_inquiries_delivered_sales (status, delivered_at, agreed_price)`,
       `ALTER TABLE product_inquiries ADD INDEX idx_product_inquiries_delivered_sales (status, delivered_at, agreed_price)`,
+      `CREATE INDEX idx_canvas_invoices_client ON canvas_invoices(client_id)`,
     ]) {
       try { await connection.query(ddl); } catch (e: any) { if (e.code !== 'ER_DUP_KEYNAME') throw e; }
     }

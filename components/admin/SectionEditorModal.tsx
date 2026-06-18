@@ -223,68 +223,79 @@ export default function SectionEditorModal({
     }));
   };
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   const handleSave = () => {
     try {
       // Validate JSON
       const parsedJson = JSON.parse(formData.data_json);
       onSave({ ...formData, id: section?.id, data_json: parsedJson });
     } catch (e) {
-      alert("Invalid JSON data. Please check your data format.");
+      toast.error('Invalid JSON data. Please check your data format.');
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col my-auto">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div role="dialog" aria-modal="true" aria-labelledby="section-modal-title" className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col my-auto">
         <div className="flex justify-between items-center p-6 border-b border-gray-100">
-          <h2 className="text-xl font-semibold text-[#1B3636]">
+          <h2 id="section-modal-title" className="text-xl font-semibold text-[#1B3636]">
             {section?.id ? 'Edit Section' : 'Add New Section'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl" aria-label="Close">&times;</button>
         </div>
 
         <div className="p-6 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="col-span-1 md:col-span-2 flex justify-between items-center bg-gray-50 p-4 rounded-lg">
-            <span className="font-medium text-gray-700">Section Visibility</span>
+            <label htmlFor="section-is-active" className="font-medium text-gray-700 cursor-pointer">Section Visibility</label>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" name="is_active" checked={formData.is_active} onChange={handleChange} className="sr-only peer" />
+              <input id="section-is-active" type="checkbox" name="is_active" checked={formData.is_active} onChange={handleChange} className="sr-only peer" />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1B3636]"></div>
             </label>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Section Type / Component Name *</label>
-            <input name="section_type" value={formData.section_type} onChange={handleChange} placeholder="e.g., HeroSection" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none" required />
+            <label htmlFor="section-type" className="text-sm font-medium text-gray-700">Section Type / Component Name *</label>
+            <input id="section-type" name="section_type" value={formData.section_type} onChange={handleChange} placeholder="e.g., HeroSection" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none" required />
             <p className="text-xs text-gray-500">The React component name used to render this section.</p>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Section Key / Slug *</label>
-            <input name="section_key" value={formData.section_key} onChange={handleChange} placeholder="e.g., home-hero" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none" required />
+            <label htmlFor="section-key" className="text-sm font-medium text-gray-700">Section Key / Slug *</label>
+            <input id="section-key" name="section_key" value={formData.section_key} onChange={handleChange} placeholder="e.g., home-hero" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none" required />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Admin Category</label>
-            <input name="category" value={formData.category} onChange={handleChange} placeholder="e.g., Homepage" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none" />
+            <label htmlFor="section-category" className="text-sm font-medium text-gray-700">Admin Category</label>
+            <input id="section-category" name="category" value={formData.category} onChange={handleChange} placeholder="e.g., Homepage" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none" />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Main Headline (Title)</label>
-            <input name="title" value={formData.title} onChange={handleChange} placeholder="e.g., Enterprise Water Solutions" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none" />
+            <label htmlFor="section-title" className="text-sm font-medium text-gray-700">Main Headline (Title)</label>
+            <input id="section-title" name="title" value={formData.title} onChange={handleChange} placeholder="e.g., Enterprise Water Solutions" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none" />
           </div>
 
           <div className="col-span-1 md:col-span-2 space-y-2">
-            <label className="text-sm font-medium text-gray-700">Sub-Heading (Subtitle/Badge)</label>
-            <input name="subtitle" value={formData.subtitle} onChange={handleChange} placeholder="Heading text..." className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none" />
+            <label htmlFor="section-subtitle" className="text-sm font-medium text-gray-700">Sub-Heading (Subtitle/Badge)</label>
+            <input id="section-subtitle" name="subtitle" value={formData.subtitle} onChange={handleChange} placeholder="Heading text..." className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none" />
           </div>
 
           <div className="col-span-1 md:col-span-2 space-y-2">
-            <label className="text-sm font-medium text-gray-700">Content / Description</label>
-            <textarea name="content" value={formData.content} onChange={handleChange} rows={4} placeholder="Description text..." className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none" />
+            <label htmlFor="section-content" className="text-sm font-medium text-gray-700">Content / Description</label>
+            <textarea id="section-content" name="content" value={formData.content} onChange={handleChange} rows={4} placeholder="Description text..." className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none" />
           </div>
 
           <div className="col-span-1 md:col-span-2 space-y-2">
-            <label className="text-sm font-medium text-gray-700">Additional Section Data</label>
+            <span className="text-sm font-medium text-gray-700">Additional Section Data</span>
             <DynamicJsonEditor jsonString={formData.data_json} onChange={(val) => setFormData(prev => ({...prev, data_json: val}))} />
           </div>
         </div>

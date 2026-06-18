@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
+import toast from 'react-hot-toast';
 import {
   BarChart2,
   TrendingUp,
@@ -129,8 +130,8 @@ function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white border border-slate-200 rounded-2xl shadow-lg px-4 py-3">
-      <p className="text-xs font-black text-blue-950 mb-1">{label}</p>
-      <p className="text-sm font-black text-blue-600">{payload[0].value} searches</p>
+      <p className="text-xs font-black text-brand-950 mb-1">{label}</p>
+      <p className="text-sm font-black text-brand-600">{payload[0].value} searches</p>
     </div>
   );
 }
@@ -190,13 +191,19 @@ export default function AdminAnalyticsPage() {
     fetch(`/api/admin/analytics/top-searches?days=${days}&limit=15`)
       .then((r) => r.json())
       .then((d) => setTopSearches(Array.isArray(d) ? d : []))
-      .catch(() => setTopSearches([]))
+      .catch(() => {
+        setTopSearches([]);
+        toast.error('Failed to load top searches');
+      })
       .finally(() => setLoadingSearch(false));
 
     fetch(`/api/admin/analytics/top-viewed?days=${days}&limit=15`)
       .then((r) => r.json())
       .then((d) => setTopViewed(Array.isArray(d) ? d : []))
-      .catch(() => setTopViewed([]))
+      .catch(() => {
+        setTopViewed([]);
+        toast.error('Failed to load most-viewed products');
+      })
       .finally(() => setLoadingViewed(false));
   }, [getDays]);
 
@@ -212,6 +219,7 @@ export default function AdminAnalyticsPage() {
       );
     } catch {
       setClients([]);
+      toast.error('Failed to load clients');
     } finally {
       setLoadingClients(false);
     }
@@ -230,6 +238,7 @@ export default function AdminAnalyticsPage() {
         setClientBehavior(data);
       } catch {
         setClientBehavior(null);
+        toast.error('Failed to load client activity');
       } finally {
         setLoadingBehavior(false);
       }
@@ -279,10 +288,10 @@ export default function AdminAnalyticsPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+              <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-200">
                 <BarChart2 size={20} />
               </div>
-              <h1 className="text-4xl font-black text-blue-950 tracking-tight">
+              <h1 className="text-4xl font-black text-brand-950 tracking-tight">
                 Client Behavior Analytics
               </h1>
             </div>
@@ -295,7 +304,7 @@ export default function AdminAnalyticsPage() {
             <button
               onClick={handleExport}
               disabled={exporting || loading}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-blue-200 hover:text-blue-600 transition-all disabled:opacity-60"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-brand-200 hover:text-brand-600 transition-all disabled:opacity-60"
             >
               {exporting ? <RefreshCw size={16} className="animate-spin" /> : <Download size={16} />}
               Export CSV
@@ -303,7 +312,7 @@ export default function AdminAnalyticsPage() {
             <button
               onClick={fetchAll}
               disabled={loading}
-              className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all disabled:opacity-60"
+              className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-brand-600 hover:border-brand-200 transition-all disabled:opacity-60"
               title="Refresh"
             >
               <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
@@ -313,7 +322,7 @@ export default function AdminAnalyticsPage() {
 
         {/* Date Range Selector */}
         <div className="flex flex-wrap items-center gap-3 mb-10">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-1">
+          <span className="text-xs font-black text-slate-500 uppercase tracking-widest mr-1">
             Period:
           </span>
           {(['7', '30', '90'] as DateRange[]).map((r) => (
@@ -322,8 +331,8 @@ export default function AdminAnalyticsPage() {
               onClick={() => handleRangeChange(r)}
               className={`px-4 py-2 rounded-2xl text-sm font-black transition-all ${
                 range === r
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:border-blue-200 hover:text-blue-600'
+                  ? 'bg-brand-600 text-white shadow-lg shadow-brand-200'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:border-brand-200 hover:text-brand-600'
               }`}
             >
               Last {r} days
@@ -333,8 +342,8 @@ export default function AdminAnalyticsPage() {
             onClick={() => setRange('custom')}
             className={`px-4 py-2 rounded-2xl text-sm font-black transition-all ${
               range === 'custom'
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                : 'bg-white border border-slate-200 text-slate-600 hover:border-blue-200 hover:text-blue-600'
+                ? 'bg-brand-600 text-white shadow-lg shadow-brand-200'
+                : 'bg-white border border-slate-200 text-slate-600 hover:border-brand-200 hover:text-brand-600'
             }`}
           >
             Custom
@@ -353,19 +362,19 @@ export default function AdminAnalyticsPage() {
                   type="date"
                   value={customFrom}
                   onChange={(e) => setCustomFrom(e.target.value)}
-                  className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
                 />
                 <span className="text-slate-400 text-sm">–</span>
                 <input
                   type="date"
                   value={customTo}
                   onChange={(e) => setCustomTo(e.target.value)}
-                  className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  className="px-3 py-2 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
                 />
                 <button
                   onClick={handleApplyCustom}
                   disabled={!customFrom || !customTo}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-sm font-black transition-all disabled:opacity-50"
+                  className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-sm font-black transition-all disabled:opacity-50"
                 >
                   Apply
                 </button>
@@ -380,12 +389,12 @@ export default function AdminAnalyticsPage() {
           {/* Top Searched Terms */}
           <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
             <div className="px-8 py-6 border-b border-slate-50 flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+              <div className="w-8 h-8 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600">
                 <Search size={16} />
               </div>
               <div>
-                <h2 className="text-base font-black text-blue-950">Top Searched Terms</h2>
-                <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                <h2 className="text-base font-black text-brand-950">Top Searched Terms</h2>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
                   Most frequent search queries from clients
                 </p>
               </div>
@@ -441,12 +450,12 @@ export default function AdminAnalyticsPage() {
           {/* Most Viewed Products */}
           <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
             <div className="px-8 py-6 border-b border-slate-50 flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+              <div className="w-8 h-8 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600">
                 <Eye size={16} />
               </div>
               <div>
-                <h2 className="text-base font-black text-blue-950">Most Viewed Products</h2>
-                <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                <h2 className="text-base font-black text-brand-950">Most Viewed Products</h2>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
                   Products with the highest client view counts
                 </p>
               </div>
@@ -466,13 +475,13 @@ export default function AdminAnalyticsPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50/50">
-                      <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      <th className="px-8 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">
                         Rank
                       </th>
-                      <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      <th className="px-8 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">
                         Product ID
                       </th>
-                      <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                      <th className="px-8 py-4 text-xs font-black text-slate-500 uppercase tracking-widest text-right">
                         Views
                       </th>
                     </tr>
@@ -482,7 +491,7 @@ export default function AdminAnalyticsPage() {
                       <tr key={row.product_id} className="hover:bg-slate-50/50 transition-colors">
                         <td className="px-8 py-4">
                           {i === 0 ? (
-                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-[10px] font-black">
+                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-brand-600 text-white text-[10px] font-black">
                               1
                             </span>
                           ) : (
@@ -491,8 +500,8 @@ export default function AdminAnalyticsPage() {
                         </td>
                         <td className="px-8 py-4">
                           <div className="flex items-center gap-2">
-                            <Package size={13} className="text-blue-400" />
-                            <span className="text-sm font-black text-blue-950">
+                            <Package size={13} className="text-brand-400" />
+                            <span className="text-sm font-black text-brand-950">
                               #{row.product_id}
                             </span>
                           </div>
@@ -500,11 +509,11 @@ export default function AdminAnalyticsPage() {
                         <td className="px-8 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <div
-                              className="h-2 bg-blue-100 rounded-full overflow-hidden"
+                              className="h-2 bg-brand-100 rounded-full overflow-hidden"
                               style={{ width: '80px' }}
                             >
                               <div
-                                className="h-full bg-blue-600 rounded-full"
+                                className="h-full bg-brand-600 rounded-full"
                                 style={{
                                   width: `${Math.round(
                                     (row.view_count / (topViewed[0]?.view_count || 1)) * 100
@@ -512,7 +521,7 @@ export default function AdminAnalyticsPage() {
                                 }}
                               />
                             </div>
-                            <span className="text-sm font-black text-blue-950 w-8 text-right">
+                            <span className="text-sm font-black text-brand-950 w-8 text-right">
                               {row.view_count}
                             </span>
                           </div>
@@ -530,12 +539,12 @@ export default function AdminAnalyticsPage() {
         <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
           <div className="px-8 py-6 border-b border-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+              <div className="w-8 h-8 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600">
                 <TrendingUp size={16} />
               </div>
               <div>
-                <h2 className="text-base font-black text-blue-950">Per-Client Behavior</h2>
-                <p className="text-[11px] text-slate-400 font-medium mt-0.5">
+                <h2 className="text-base font-black text-brand-950">Per-Client Behavior</h2>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
                   Recent searches and product views for a selected client
                 </p>
               </div>
@@ -545,7 +554,7 @@ export default function AdminAnalyticsPage() {
             <div className="relative">
               <button
                 onClick={() => setClientPickerOpen((o) => !o)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-blue-200 hover:text-blue-600 transition-all min-w-[200px] justify-between"
+                className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-brand-200 hover:text-brand-600 transition-all min-w-[200px] justify-between"
               >
                 <div className="flex items-center gap-2">
                   <User size={14} />
@@ -576,7 +585,7 @@ export default function AdminAnalyticsPage() {
                           placeholder="Search clients…"
                           value={clientSearch}
                           onChange={(e) => setClientSearch(e.target.value)}
-                          className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                          className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
                         />
                         {clientSearch && (
                           <button
@@ -591,7 +600,7 @@ export default function AdminAnalyticsPage() {
                     <div className="max-h-56 overflow-y-auto">
                       {loadingClients ? (
                         <div className="flex items-center justify-center py-8">
-                          <RefreshCw size={18} className="animate-spin text-blue-600" />
+                          <RefreshCw size={18} className="animate-spin text-brand-600" />
                         </div>
                       ) : filteredClients.length === 0 ? (
                         <p className="text-sm text-slate-400 text-center py-8 font-medium">
@@ -602,19 +611,19 @@ export default function AdminAnalyticsPage() {
                           <button
                             key={c.id}
                             onClick={() => handleSelectClient(c)}
-                            className={`w-full text-left px-5 py-3 hover:bg-blue-50 transition-colors flex items-center gap-3 ${
-                              selectedClient?.id === c.id ? 'bg-blue-50' : ''
+                            className={`w-full text-left px-5 py-3 hover:bg-brand-50 transition-colors flex items-center gap-3 ${
+                              selectedClient?.id === c.id ? 'bg-brand-50' : ''
                             }`}
                           >
-                            <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-[10px] font-black flex-shrink-0">
+                            <div className="w-7 h-7 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 text-[10px] font-black flex-shrink-0">
                               {c.name.charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0">
-                              <p className="text-sm font-black text-blue-950 truncate">
+                              <p className="text-sm font-black text-brand-950 truncate">
                                 {c.name}
                               </p>
                               {c.email && (
-                                <p className="text-[11px] text-slate-400 font-medium truncate">
+                                <p className="text-xs text-slate-500 font-medium truncate">
                                   {c.email}
                                 </p>
                               )}
@@ -639,7 +648,7 @@ export default function AdminAnalyticsPage() {
             </div>
           ) : loadingBehavior ? (
             <div className="flex flex-col items-center py-20">
-              <RefreshCw size={32} className="animate-spin text-blue-600 mb-4" />
+              <RefreshCw size={32} className="animate-spin text-brand-600 mb-4" />
               <p className="text-sm text-slate-500 font-medium">Loading activity…</p>
             </div>
           ) : !clientBehavior ? (
@@ -663,10 +672,10 @@ export default function AdminAnalyticsPage() {
                   },
                 ].map((stat) => (
                   <div key={stat.label} className="bg-white px-8 py-5">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                    <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">
                       {stat.label}
                     </p>
-                    <p className="text-2xl font-black text-blue-950">{stat.value}</p>
+                    <p className="text-2xl font-black text-brand-950">{stat.value}</p>
                   </div>
                 ))}
               </div>
@@ -682,13 +691,13 @@ export default function AdminAnalyticsPage() {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-slate-50/50">
-                        <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <th className="px-8 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">
                           Type
                         </th>
-                        <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <th className="px-8 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">
                           Detail
                         </th>
-                        <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <th className="px-8 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">
                           Date &amp; Time
                         </th>
                       </tr>
@@ -705,7 +714,7 @@ export default function AdminAnalyticsPage() {
                                 <Search size={10} /> Search
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] font-black uppercase tracking-widest">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-50 text-brand-700 rounded-full text-[10px] font-black uppercase tracking-widest">
                                 <Eye size={10} /> View
                               </span>
                             )}
@@ -717,7 +726,7 @@ export default function AdminAnalyticsPage() {
                               </span>
                             ) : (
                               <div className="flex items-center gap-1.5">
-                                <Package size={13} className="text-blue-400" />
+                                <Package size={13} className="text-brand-400" />
                                 <span className="text-sm font-medium text-slate-700">
                                   Product #{ev.entity_id}
                                 </span>
@@ -725,7 +734,7 @@ export default function AdminAnalyticsPage() {
                             )}
                           </td>
                           <td className="px-8 py-4">
-                            <span className="text-xs font-medium text-slate-400">
+                            <span className="text-xs font-medium text-slate-500">
                               {fmtDate(ev.created_at)}
                             </span>
                           </td>

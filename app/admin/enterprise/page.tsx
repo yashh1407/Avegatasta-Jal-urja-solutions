@@ -16,6 +16,8 @@ import {
   X,
 } from 'lucide-react';
 import Footer from '@/components/Footer';
+import toast from 'react-hot-toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -39,7 +41,7 @@ interface EnterpriseInquiry {
 // ─── Status config ────────────────────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<PipelineStatus, { label: string; classes: string; dot: string }> = {
-  new:       { label: 'New',       classes: 'bg-blue-50 text-blue-700 border-blue-200',    dot: 'bg-blue-500' },
+  new:       { label: 'New',       classes: 'bg-brand-50 text-brand-700 border-brand-200',    dot: 'bg-brand-500' },
   contacted: { label: 'Contacted', classes: 'bg-yellow-50 text-yellow-700 border-yellow-200', dot: 'bg-yellow-500' },
   quoted:    { label: 'Quoted',    classes: 'bg-purple-50 text-purple-700 border-purple-200', dot: 'bg-purple-500' },
   won:       { label: 'Won',       classes: 'bg-green-50 text-green-700 border-green-200',  dot: 'bg-green-500' },
@@ -73,9 +75,15 @@ function StatusBadge({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: next }),
       });
-      if (res.ok) onUpdate(inquiryId, next);
+      if (res.ok) {
+        onUpdate(inquiryId, next);
+        toast.success(`Marked as ${STATUS_CONFIG[next].label}.`);
+      } else {
+        toast.error('Failed to update status.');
+      }
     } catch (err) {
       console.error('Failed to update status', err);
+      toast.error('Failed to update status. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -133,6 +141,7 @@ export default function AdminEnterprisePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<PipelineStatus | ''>('');
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<EnterpriseInquiry | null>(null);
   const { status } = useSession();
   const router = useRouter();
 
@@ -153,6 +162,7 @@ export default function AdminEnterprisePage() {
     } catch (err) {
       console.error('Error fetching enterprise inquiries:', err);
       setData([]);
+      toast.error('Failed to load enterprise inquiries. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -166,13 +176,21 @@ export default function AdminEnterprisePage() {
     setData((prev) => prev.map((item) => item.id === id ? { ...item, status: newStatus } : item));
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Delete this enterprise inquiry?')) return;
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const { id } = deleteTarget;
+    setDeleteTarget(null);
     try {
       const res = await fetch(`/api/admin/enterprise-inquiries/${id}`, { method: 'DELETE' });
-      if (res.ok) setData((prev) => prev.filter((item) => item.id !== id));
+      if (res.ok) {
+        setData((prev) => prev.filter((item) => item.id !== id));
+        toast.success('Inquiry deleted.');
+      } else {
+        toast.error('Failed to delete inquiry.');
+      }
     } catch (err) {
       console.error('Error deleting inquiry:', err);
+      toast.error('Failed to delete inquiry. Please try again.');
     }
   };
 
@@ -192,10 +210,10 @@ export default function AdminEnterprisePage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+              <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-200">
                 <Building2 size={20} />
               </div>
-              <h1 className="text-4xl font-black text-blue-950 tracking-tight">Enterprise Inquiries</h1>
+              <h1 className="text-4xl font-black text-brand-950 tracking-tight">Enterprise Inquiries</h1>
             </div>
             <p className="text-slate-500 font-medium">Manage B2B project inquiries and track deal pipeline.</p>
           </div>
@@ -206,13 +224,14 @@ export default function AdminEnterprisePage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
                 type="text"
+                aria-label="Search company or name"
                 placeholder="Search company, name…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-60 transition-all"
+                className="pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 w-60 transition-all"
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                <button onClick={() => setSearchQuery('')} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                   <X size={14} />
                 </button>
               )}
@@ -221,9 +240,10 @@ export default function AdminEnterprisePage() {
             {/* Status filter */}
             <div className="relative">
               <select
+                aria-label="Filter by status"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as PipelineStatus | '')}
-                className="appearance-none pl-4 pr-8 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                className="appearance-none pl-4 pr-8 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500/20 cursor-pointer"
               >
                 <option value="">All statuses</option>
                 {PIPELINE_ORDER.map((s) => (
@@ -235,7 +255,7 @@ export default function AdminEnterprisePage() {
 
             <button
               onClick={fetchData}
-              className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:text-blue-600 hover:border-blue-100 transition-all"
+              className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:text-brand-600 hover:border-brand-100 transition-all"
               title="Refresh"
             >
               <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
@@ -312,7 +332,7 @@ export default function AdminEnterprisePage() {
                         {/* Company / Contact */}
                         <td className="px-8 py-5">
                           <div className="flex flex-col gap-1">
-                            <span className="text-sm font-black text-blue-950">{item.company}</span>
+                            <span className="text-sm font-black text-brand-950">{item.company}</span>
                             <span className="text-xs font-bold text-slate-600">{item.name}
                               {item.designation && <span className="font-normal text-slate-400"> · {item.designation}</span>}
                             </span>
@@ -368,9 +388,10 @@ export default function AdminEnterprisePage() {
                         {/* Actions */}
                         <td className="px-8 py-5 text-right" onClick={(e) => e.stopPropagation()}>
                           <button
-                            onClick={() => handleDelete(item.id)}
-                            className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                            onClick={() => setDeleteTarget(item)}
+                            className="p-2.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all opacity-60 group-hover:opacity-100 group-focus-within:opacity-100"
                             title="Delete"
+                            aria-label={`Delete inquiry from ${item.company}`}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -415,6 +436,16 @@ export default function AdminEnterprisePage() {
       </main>
 
       <Footer />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete inquiry?"
+        message={deleteTarget ? `Delete the enterprise inquiry from "${deleteTarget.company}"? This cannot be undone.` : ''}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

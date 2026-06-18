@@ -22,6 +22,7 @@ import {
   Search,
 } from 'lucide-react';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
 import { products as staticProducts } from '@/lib/data';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -100,7 +101,7 @@ function ProductAdminCard({
           className="flex items-center gap-4 cursor-pointer flex-1 min-w-0"
           onClick={() => setExpanded(!expanded)}
         >
-          <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-blue-50/50 shrink-0 border border-slate-100 flex items-center justify-center">
+          <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-brand-50/50 shrink-0 border border-slate-100 flex items-center justify-center">
             {product.image ? (
               <Image
                 src={product.image}
@@ -117,37 +118,37 @@ function ProductAdminCard({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <span className="px-2.5 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[9px] font-black uppercase tracking-wider">
+              <span className="px-2.5 py-0.5 bg-brand-50 text-brand-600 rounded-full text-[9px] font-black uppercase tracking-wider">
                 {product.brand}
               </span>
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <span className="text-xs font-black text-slate-500 uppercase tracking-widest">
                 ID: {product.id}
               </span>
             </div>
-            <h3 className="font-bold text-sm text-blue-950 line-clamp-1 leading-snug">
+            <h3 className="font-bold text-sm text-brand-950 line-clamp-1 leading-snug">
               {product.name}
             </h3>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <span className="text-[10px] text-slate-500 font-semibold">{product.category}</span>
+              <span className="text-xs text-slate-500 font-semibold">{product.category}</span>
               {product.subCategory && (
                 <>
-                  <span className="text-[10px] text-slate-300">/</span>
-                  <span className="text-[10px] text-slate-500 font-medium">{product.subCategory}</span>
+                  <span className="text-xs text-slate-400">/</span>
+                  <span className="text-xs text-slate-500 font-medium">{product.subCategory}</span>
                 </>
               )}
               {product.hsn_code && (
                 <>
-                  <span className="text-[10px] text-slate-300">·</span>
-                  <span className="text-[10px] text-slate-500 font-medium">HSN: {product.hsn_code}</span>
+                  <span className="text-xs text-slate-400">·</span>
+                  <span className="text-xs text-slate-500 font-medium">HSN: {product.hsn_code}</span>
                 </>
               )}
               {product.sac_code && (
                 <>
-                  <span className="text-[10px] text-slate-300">·</span>
-                  <span className="text-[10px] text-slate-500 font-medium">SAC: {product.sac_code}</span>
+                  <span className="text-xs text-slate-400">·</span>
+                  <span className="text-xs text-slate-500 font-medium">SAC: {product.sac_code}</span>
                 </>
               )}
-              <span className="text-[10px] text-slate-300">·</span>
+              <span className="text-xs text-slate-400">·</span>
               <span
                 className={`text-[10px] font-black uppercase tracking-wider ${
                   product.inStock ? 'text-emerald-600' : 'text-red-500'
@@ -163,8 +164,9 @@ function ProductAdminCard({
         <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
           <button
             onClick={onEdit}
-            className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-300"
+            className="flex items-center justify-center w-10 h-10 rounded-xl bg-brand-50 text-brand-600 hover:bg-brand-600 hover:text-white transition-all duration-300"
             title="Edit Product"
+            aria-label={`Edit ${product.name}`}
           >
             <Edit size={16} />
           </button>
@@ -172,12 +174,15 @@ function ProductAdminCard({
             onClick={onDelete}
             className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all duration-300"
             title="Delete Product"
+            aria-label={`Delete ${product.name}`}
           >
             <Trash2 size={16} />
           </button>
           <button
             onClick={() => setExpanded(!expanded)}
             className="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 text-slate-500 hover:bg-slate-100 transition-all duration-300"
+            aria-label={expanded ? `Collapse ${product.name} details` : `Expand ${product.name} details`}
+            aria-expanded={expanded}
           >
             <ChevronDown
               size={16}
@@ -202,13 +207,13 @@ function ProductAdminCard({
                   {product.hsn_code && (
                     <div>
                       <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">HSN Code</h4>
-                      <p className="text-xs font-bold text-blue-950">{product.hsn_code}</p>
+                      <p className="text-xs font-bold text-brand-950">{product.hsn_code}</p>
                     </div>
                   )}
                   {product.sac_code && (
                     <div>
                       <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">SAC Code</h4>
-                      <p className="text-xs font-bold text-blue-950">{product.sac_code}</p>
+                      <p className="text-xs font-bold text-brand-950">{product.sac_code}</p>
                     </div>
                   )}
                 </div>
@@ -233,7 +238,7 @@ function ProductAdminCard({
                   <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                     {product.features.map((feat, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-xs text-slate-600">
-                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 shrink-0" />
+                        <div className="w-1.5 h-1.5 bg-brand-500 rounded-full mt-1.5 shrink-0" />
                         <span className="font-medium">{feat}</span>
                       </li>
                     ))}
@@ -253,7 +258,7 @@ function ProductAdminCard({
                         <div className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-0.5">
                           {key}
                         </div>
-                        <div className="text-xs font-bold text-blue-950">{value}</div>
+                        <div className="text-xs font-bold text-brand-950">{value}</div>
                       </div>
                     ))}
                   </div>
@@ -379,12 +384,13 @@ export default function AdminProductsPage() {
       const data = await res.json();
       if (data.success && data.url) {
         setFormImage(data.url);
+        toast.success('Image uploaded.');
       } else {
-        alert(data.error || 'Failed to upload image.');
+        toast.error(data.error || 'Failed to upload image.');
       }
     } catch (err) {
       console.error(err);
-      alert('An error occurred during file upload.');
+      toast.error('An error occurred during file upload.');
     } finally {
       setUploading(false);
     }
@@ -541,14 +547,19 @@ export default function AdminProductsPage() {
 
       if (res.ok) {
         setModalOpen(false);
+        toast.success(modalMode === 'add' ? 'Product added.' : 'Product updated.');
         fetchProducts();
       } else {
         const data = await res.json();
         setFormError(data.error || 'Failed to save product.');
+        toast.error(
+          typeof data.error === 'string' ? data.error : 'Failed to save product.'
+        );
       }
     } catch (err) {
       console.error(err);
       setFormError('A network error occurred.');
+      toast.error('A network error occurred.');
     } finally {
       setSaving(false);
     }
@@ -563,14 +574,15 @@ export default function AdminProductsPage() {
       });
       if (res.ok) {
         setDeleteId(null);
+        toast.success('Product deleted.');
         fetchProducts();
       } else {
         const data = await res.json();
-        alert(data.error || 'Failed to delete product.');
+        toast.error(data.error || 'Failed to delete product.');
       }
     } catch (err) {
       console.error(err);
-      alert('A network error occurred.');
+      toast.error('A network error occurred.');
     }
   };
 
@@ -602,7 +614,7 @@ export default function AdminProductsPage() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-brand-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -616,10 +628,10 @@ export default function AdminProductsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+              <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-200">
                 <Package size={20} />
               </div>
-              <h1 className="text-3xl font-black text-blue-950 tracking-tight">Products Catalog</h1>
+              <h1 className="text-3xl font-black text-brand-950 tracking-tight">Products Catalog</h1>
             </div>
             <p className="text-slate-500 font-medium text-sm">
               Manage database catalog products, update metadata, specifications, and upload images.
@@ -628,14 +640,15 @@ export default function AdminProductsPage() {
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={fetchProducts}
-              className="flex items-center justify-center w-11 h-11 rounded-2xl bg-white border border-slate-200 hover:border-blue-200 hover:text-blue-600 transition-all duration-300 text-slate-500"
+              className="flex items-center justify-center w-11 h-11 rounded-2xl bg-white border border-slate-200 hover:border-brand-200 hover:text-brand-600 transition-all duration-300 text-slate-500"
               title="Refresh Catalog"
+              aria-label="Refresh catalog"
             >
               <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
             </button>
             <button
               onClick={handleOpenAdd}
-              className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 shadow-lg shadow-blue-200"
+              className="flex items-center gap-2 px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 shadow-lg shadow-brand-200"
             >
               <Plus size={16} />
               Add Product
@@ -644,6 +657,7 @@ export default function AdminProductsPage() {
               onClick={() => signOut({ callbackUrl: '/admin/login' })}
               className="p-3 bg-white border border-red-100 text-red-500 hover:bg-red-50 rounded-2xl transition-all duration-300"
               title="Logout"
+              aria-label="Logout"
             >
               <LogOut size={18} />
             </button>
@@ -656,17 +670,19 @@ export default function AdminProductsPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
               type="text"
+              aria-label="Search products"
               placeholder="Search products by ID, name, or description…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+              className="w-full pl-11 pr-4 py-3 bg-slate-50/50 border border-slate-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
             />
           </div>
           <div className="flex flex-wrap items-center gap-3">
             {/* Brand filter */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Brand</span>
+              <label htmlFor="product-filter-brand" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Brand</label>
               <select
+                id="product-filter-brand"
                 value={brandFilter}
                 onChange={(e) => setBrandFilter(e.target.value)}
                 className="px-3.5 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-600 focus:outline-none"
@@ -682,8 +698,9 @@ export default function AdminProductsPage() {
 
             {/* Category filter */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Category</span>
+              <label htmlFor="product-filter-category" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Category</label>
               <select
+                id="product-filter-category"
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
                 className="px-3.5 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold text-slate-600 focus:outline-none max-w-[200px]"
@@ -710,13 +727,13 @@ export default function AdminProductsPage() {
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm gap-4">
-              <Loader2 size={36} className="text-blue-600 animate-spin" />
+              <Loader2 size={36} className="text-brand-600 animate-spin" />
               <p className="text-slate-400 text-sm font-semibold">Loading product catalog…</p>
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="text-center py-24 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm text-slate-400">
               <Package size={48} className="mx-auto mb-4 text-slate-300" />
-              <h3 className="text-lg font-black text-blue-950 mb-1">No products found</h3>
+              <h3 className="text-lg font-black text-brand-950 mb-1">No products found</h3>
               <p className="text-sm text-slate-400 font-medium">
                 Try adjusting your search query or filters.
               </p>
@@ -753,7 +770,7 @@ export default function AdminProductsPage() {
               {/* Modal Header */}
               <div className="flex items-center justify-between px-8 pt-7 pb-5 border-b border-slate-100 sticky top-0 bg-white z-10">
                 <div>
-                  <h2 className="text-xl font-black text-blue-950">
+                  <h2 className="text-xl font-black text-brand-950">
                     {modalMode === 'add' ? 'Add Product' : 'Edit Product'}
                   </h2>
                   <p className="text-slate-400 text-xs font-semibold mt-0.5">
@@ -783,17 +800,18 @@ export default function AdminProductsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* ID */}
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
+                    <label htmlFor="prod-form-id" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
                       Product ID *
                     </label>
                     <input
+                      id="prod-form-id"
                       required
                       disabled={modalMode === 'edit' || saving}
                       type="text"
                       placeholder="e.g. vg-hp-vhp150"
                       value={formId}
                       onChange={(e) => setFormId(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                     {modalMode === 'add' && (
                       <span className="text-[9px] text-slate-400 font-bold ml-1 block mt-1">
@@ -807,17 +825,18 @@ export default function AdminProductsPage() {
 
                   {/* Name */}
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
+                    <label htmlFor="prod-form-name" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
                       Product Name *
                     </label>
                     <input
+                      id="prod-form-name"
                       required
                       disabled={saving}
                       type="text"
                       placeholder="e.g. V-Guard Heat Pump Water Heater VHP150"
                       value={formName}
                       onChange={(e) => setFormName(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all disabled:opacity-60"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all disabled:opacity-60"
                     />
                     {formError?.name && (
                       <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{formError.name[0]}</p>
@@ -828,23 +847,24 @@ export default function AdminProductsPage() {
                 {/* Brand */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5 ml-1">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                    <label htmlFor="prod-form-brand" className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                       Brand *
                     </label>
                     <button
                       type="button"
                       onClick={() => setBrandMode(brandMode === 'select' ? 'custom' : 'select')}
-                      className="text-[9px] font-black text-blue-600 hover:text-blue-700 uppercase tracking-widest"
+                      className="text-[9px] font-black text-brand-600 hover:text-brand-700 uppercase tracking-widest"
                     >
                       {brandMode === 'select' ? 'Or Enter Custom Brand' : 'Select standard brand'}
                     </button>
                   </div>
                   {brandMode === 'select' ? (
                     <select
+                      id="prod-form-brand"
                       disabled={saving}
                       value={formBrand}
                       onChange={(e) => setFormBrand(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
                     >
                       {BRANDS.map((b) => (
                         <option key={b} value={b}>
@@ -854,13 +874,14 @@ export default function AdminProductsPage() {
                     </select>
                   ) : (
                     <input
+                      id="prod-form-brand"
                       required
                       disabled={saving}
                       type="text"
                       placeholder="e.g. MyBrand Solutions"
                       value={formBrandCustom}
                       onChange={(e) => setFormBrandCustom(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
                     />
                   )}
                   {formError?.brand && (
@@ -872,23 +893,24 @@ export default function AdminProductsPage() {
                   {/* Category */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5 ml-1">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                      <label htmlFor="prod-form-category" className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                         Category *
                       </label>
                       <button
                         type="button"
                         onClick={() => setCategoryMode(categoryMode === 'select' ? 'custom' : 'select')}
-                        className="text-[9px] font-black text-blue-600 hover:text-blue-700 uppercase tracking-widest"
+                        className="text-[9px] font-black text-brand-600 hover:text-brand-700 uppercase tracking-widest"
                       >
                         {categoryMode === 'select' ? 'Custom' : 'Standard'}
                       </button>
                     </div>
                     {categoryMode === 'select' ? (
                       <select
+                        id="prod-form-category"
                         disabled={saving}
                         value={formCategory}
                         onChange={(e) => setFormCategory(e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
                       >
                         {CATEGORIES.map((c) => (
                           <option key={c} value={c}>
@@ -898,13 +920,14 @@ export default function AdminProductsPage() {
                       </select>
                     ) : (
                       <input
+                        id="prod-form-category"
                         required
                         disabled={saving}
                         type="text"
                         placeholder="e.g. Energy Audits"
                         value={formCategoryCustom}
                         onChange={(e) => setFormCategoryCustom(e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
                       />
                     )}
                     {formError?.category && (
@@ -915,7 +938,7 @@ export default function AdminProductsPage() {
                   {/* SubCategory */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5 ml-1">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                      <label htmlFor="prod-form-subcategory" className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                         Subcategory <span className="font-medium normal-case text-slate-400">(optional)</span>
                       </label>
                       <button
@@ -923,17 +946,18 @@ export default function AdminProductsPage() {
                         onClick={() =>
                           setSubCategoryMode(subCategoryMode === 'select' ? 'custom' : 'select')
                         }
-                        className="text-[9px] font-black text-blue-600 hover:text-blue-700 uppercase tracking-widest"
+                        className="text-[9px] font-black text-brand-600 hover:text-brand-700 uppercase tracking-widest"
                       >
                         {subCategoryMode === 'select' ? 'Custom' : 'Standard'}
                       </button>
                     </div>
                     {subCategoryMode === 'select' ? (
                       <select
+                        id="prod-form-subcategory"
                         disabled={saving}
                         value={formSubCategory}
                         onChange={(e) => setFormSubCategory(e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
                       >
                         <option value="">None / Standard category level</option>
                         {SUBCATEGORIES.map((sc) => (
@@ -944,12 +968,13 @@ export default function AdminProductsPage() {
                       </select>
                     ) : (
                       <input
+                        id="prod-form-subcategory"
                         disabled={saving}
                         type="text"
                         placeholder="e.g. Ultrafiltration"
                         value={formSubCategoryCustom}
                         onChange={(e) => setFormSubCategoryCustom(e.target.value)}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
                       />
                     )}
                     {formError?.subCategory && (
@@ -961,46 +986,49 @@ export default function AdminProductsPage() {
                 {/* HSN & SAC Codes */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
+                    <label htmlFor="prod-form-hsn" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
                       HSN Code
                     </label>
                     <input
+                      id="prod-form-hsn"
                       disabled={saving}
                       type="text"
                       placeholder="e.g. 84191920"
                       value={formHsnCode}
                       onChange={(e) => setFormHsnCode(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
+                    <label htmlFor="prod-form-sac" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
                       SAC Code
                     </label>
                     <input
+                      id="prod-form-sac"
                       disabled={saving}
                       type="text"
                       placeholder="e.g. 998719"
                       value={formSacCode}
                       onChange={(e) => setFormSacCode(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
                     />
                   </div>
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
+                  <label htmlFor="prod-form-description" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
                     Description *
                   </label>
                   <textarea
+                    id="prod-form-description"
                     required
                     disabled={saving}
                     rows={4}
                     placeholder="Enter descriptive catalog details for the product…"
                     value={formDescription}
                     onChange={(e) => setFormDescription(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all resize-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all resize-none"
                   />
                   {formError?.description && (
                     <p className="text-red-500 text-[10px] font-bold mt-1 ml-1">{formError.description[0]}</p>
@@ -1009,20 +1037,21 @@ export default function AdminProductsPage() {
 
                 {/* Image upload */}
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
+                  <label htmlFor="prod-form-image" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
                     Image URL *
                   </label>
                   <div className="flex gap-2">
                     <input
+                      id="prod-form-image"
                       required
                       disabled={saving}
                       type="text"
                       placeholder="e.g. /uploads/myimage.jpg or web url"
                       value={formImage}
                       onChange={(e) => setFormImage(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
                     />
-                    <label className="relative shrink-0 flex items-center justify-center bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl px-4 cursor-pointer font-bold text-xs uppercase tracking-wider select-none border border-blue-100 transition-all duration-300">
+                    <label className="relative shrink-0 flex items-center justify-center bg-brand-50 hover:bg-brand-100 text-brand-600 rounded-xl px-4 cursor-pointer font-bold text-xs uppercase tracking-wider select-none border border-brand-100 transition-all duration-300">
                       {uploading ? (
                         <Loader2 size={16} className="animate-spin" />
                       ) : (
@@ -1063,7 +1092,7 @@ export default function AdminProductsPage() {
                     id="formInStock"
                     checked={formInStock}
                     onChange={(e) => setFormInStock(e.target.checked)}
-                    className="w-4.5 h-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-all accent-blue-600"
+                    className="w-4.5 h-4.5 rounded border-slate-300 text-brand-600 focus:ring-brand-500 transition-all accent-brand-600"
                   />
                   <label htmlFor="formInStock" className="text-xs font-bold text-slate-600 cursor-pointer">
                     In Stock (Allow clients to place direct inquiries, else marked as Out of stock)
@@ -1072,7 +1101,7 @@ export default function AdminProductsPage() {
 
                 {/* Highlights / Features (Array) */}
                 <div className="border-t border-slate-100 pt-4">
-                  <h3 className="text-sm font-black text-blue-950 mb-3 ml-1">Highlights / Features</h3>
+                  <h3 className="text-sm font-black text-brand-950 mb-3 ml-1">Highlights / Features</h3>
                   <div className="flex gap-2 mb-3">
                     <input
                       disabled={saving}
@@ -1081,12 +1110,12 @@ export default function AdminProductsPage() {
                       value={featureInput}
                       onChange={(e) => setFeatureInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"
                     />
                     <button
                       type="button"
                       onClick={addFeature}
-                      className="px-4 py-2 bg-blue-50 text-blue-600 border border-blue-100 rounded-xl text-xs font-black hover:bg-blue-100 transition-all"
+                      className="px-4 py-2 bg-brand-50 text-brand-600 border border-brand-100 rounded-xl text-xs font-black hover:bg-brand-100 transition-all"
                     >
                       Add
                     </button>
@@ -1117,7 +1146,7 @@ export default function AdminProductsPage() {
 
                 {/* Technical Specifications (Object) */}
                 <div className="border-t border-slate-100 pt-4">
-                  <h3 className="text-sm font-black text-blue-950 mb-3 ml-1">Technical Specifications</h3>
+                  <h3 className="text-sm font-black text-brand-950 mb-3 ml-1">Technical Specifications</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                     <input
                       disabled={saving}
@@ -1125,7 +1154,7 @@ export default function AdminProductsPage() {
                       placeholder="Spec Parameter (e.g. Flow Rate)"
                       value={specKeyInput}
                       onChange={(e) => setSpecKeyInput(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"
                     />
                     <div className="flex gap-2">
                       <input
@@ -1135,12 +1164,12 @@ export default function AdminProductsPage() {
                         value={specValInput}
                         onChange={(e) => setSpecValInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSpec())}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"
                       />
                       <button
                         type="button"
                         onClick={addSpec}
-                        className="px-4 py-2 bg-blue-50 text-blue-600 border border-blue-100 rounded-xl text-xs font-black hover:bg-blue-100 transition-all shrink-0"
+                        className="px-4 py-2 bg-brand-50 text-brand-600 border border-brand-100 rounded-xl text-xs font-black hover:bg-brand-100 transition-all shrink-0"
                       >
                         Add
                       </button>
@@ -1157,7 +1186,7 @@ export default function AdminProductsPage() {
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">
                               {spec.key}
                             </span>
-                            <span className="font-bold text-blue-950 truncate block">{spec.val}</span>
+                            <span className="font-bold text-brand-950 truncate block">{spec.val}</span>
                           </div>
                           <button
                             type="button"
@@ -1188,7 +1217,7 @@ export default function AdminProductsPage() {
                   <button
                     disabled={saving}
                     type="submit"
-                    className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-xs font-black uppercase tracking-widest text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 bg-brand-600 hover:bg-brand-700 rounded-xl text-xs font-black uppercase tracking-widest text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
                   >
                     {saving && <RefreshCw size={14} className="animate-spin" />}
                     {saving ? 'Saving…' : 'Save Product'}
@@ -1219,9 +1248,9 @@ export default function AdminProductsPage() {
               <div className="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
                 <AlertTriangle size={28} />
               </div>
-              <h3 className="text-lg font-black text-blue-950 mb-2">Delete Product</h3>
+              <h3 className="text-lg font-black text-brand-950 mb-2">Delete Product</h3>
               <p className="text-slate-500 font-medium text-sm mb-6">
-                Are you sure you want to delete <span className="font-bold text-blue-950">ID &apos;{deleteId}&apos;</span>?
+                Are you sure you want to delete <span className="font-bold text-brand-950">ID &apos;{deleteId}&apos;</span>?
                 This action is permanent and cannot be undone.
               </p>
               <div className="flex gap-3">

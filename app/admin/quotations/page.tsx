@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Tag, RefreshCw, LogOut, Save, AlertTriangle, FileDown, Plus, Printer, X, Trash2, ChevronDown, ChevronUp, Settings } from 'lucide-react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import toast from 'react-hot-toast';
 import 'react-quill-new/dist/quill.snow.css';
 
 const ReactQuill = dynamic(() => import('@/components/QuillEditor'), { ssr: false });
@@ -79,7 +80,6 @@ export default function ProposalBuilderPage() {
   const [dbProducts, setDbProducts] = useState<any[]>([]);
   const [savedQuotations, setSavedQuotations] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
@@ -96,8 +96,8 @@ export default function ProposalBuilderPage() {
   };
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+    if (type === 'error') toast.error(message);
+    else toast.success(message);
   };
 
   useEffect(() => {
@@ -124,7 +124,7 @@ export default function ProposalBuilderPage() {
       .then(res => {
         if (res.quotations) setSavedQuotations(res.quotations);
       })
-      .catch(console.error);
+      .catch(() => toast.error('Failed to load saved quotations.'));
   };
 
   const saveQuotation = async () => {
@@ -314,13 +314,6 @@ export default function ProposalBuilderPage() {
         </div>
       )}
 
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed top-4 right-4 z-[9999] px-6 py-3 rounded-lg shadow-2xl font-bold text-white transition-all ${toast.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`}>
-          {toast.message}
-        </div>
-      )}
-
       {/* --- FORM PANEL (LEFT) --- */}
       <div className="w-full lg:w-[380px] bg-white border-r border-slate-200 h-full overflow-y-auto print:hidden shrink-0 flex flex-col shadow-2xl z-10">
         
@@ -332,18 +325,19 @@ export default function ProposalBuilderPage() {
               <p className="text-xs text-slate-500 font-bold mt-1 uppercase tracking-widest">Standard Format</p>
             </div>
             <div className="flex gap-2">
-              <button onClick={saveQuotation} disabled={isSaving} className="w-10 h-10 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200 disabled:opacity-50">
+              <button onClick={saveQuotation} disabled={isSaving} className="w-10 h-10 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200 disabled:opacity-50" title="Save Quotation" aria-label="Save quotation">
                 <Save size={18} />
               </button>
-              <button onClick={handlePrint} className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
+              <button onClick={handlePrint} className="w-10 h-10 bg-brand-600 text-white rounded-xl flex items-center justify-center hover:bg-brand-700 transition-colors shadow-lg shadow-brand-200" title="Print Quotation" aria-label="Print quotation">
                 <Printer size={18} />
               </button>
             </div>
           </div>
           
           <div className="flex gap-2">
-            <select 
-              className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            <select
+              aria-label="Load saved quotation"
+              className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               value={data.quoteNumber}
               onChange={(e) => {
                 if(e.target.value) loadQuotation(e.target.value);
@@ -355,10 +349,11 @@ export default function ProposalBuilderPage() {
               ))}
             </select>
             {savedQuotations.some(q => q.quote_number === data.quoteNumber) && (
-              <button 
+              <button
                 onClick={() => setShowDeleteConfirm(data.quoteNumber)}
                 className="w-10 h-10 bg-red-50 text-red-600 rounded-lg flex items-center justify-center hover:bg-red-100 transition-colors border border-red-200 shrink-0"
                 title="Delete saved quotation"
+                aria-label="Delete saved quotation"
               >
                 <Trash2 size={18} />
               </button>
@@ -379,27 +374,27 @@ export default function ProposalBuilderPage() {
               <div className="p-4 space-y-4 border-t border-slate-200">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Quote #</label>
-                    <input className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 outline-none focus:border-blue-500" value={data.quoteNumber} onChange={e => setData({...data, quoteNumber: e.target.value})} />
+                    <label htmlFor="quote-number" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Quote #</label>
+                    <input id="quote-number" className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 outline-none focus:border-brand-500" value={data.quoteNumber} onChange={e => setData({...data, quoteNumber: e.target.value})} />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Date</label>
-                    <input type="date" className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 outline-none focus:border-blue-500" value={data.date} onChange={e => setData({...data, date: e.target.value})} />
+                    <label htmlFor="quote-date" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Date</label>
+                    <input id="quote-date" type="date" className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 outline-none focus:border-brand-500" value={data.date} onChange={e => setData({...data, date: e.target.value})} />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Company Name</label>
-                  <input className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500" value={data.clientCompany} onChange={e => setData({...data, clientCompany: e.target.value})} placeholder="e.g. Acme Corp" />
+                  <label htmlFor="quote-company" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Company Name</label>
+                  <input id="quote-company" className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-brand-500" value={data.clientCompany} onChange={e => setData({...data, clientCompany: e.target.value})} placeholder="e.g. Acme Corp" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Contact Person</label>
-                    <input className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500" value={data.clientName} onChange={e => setData({...data, clientName: e.target.value})} placeholder="e.g. John Doe" />
+                    <label htmlFor="quote-contact-person" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Contact Person</label>
+                    <input id="quote-contact-person" className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-brand-500" value={data.clientName} onChange={e => setData({...data, clientName: e.target.value})} placeholder="e.g. John Doe" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Phone</label>
-                    <input className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500" value={data.clientPhone} onChange={e => setData({...data, clientPhone: e.target.value})} placeholder="e.g. +91 9876543210" />
+                    <label htmlFor="quote-phone" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Phone</label>
+                    <input id="quote-phone" className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-brand-500" value={data.clientPhone} onChange={e => setData({...data, clientPhone: e.target.value})} placeholder="e.g. +91 9876543210" />
                   </div>
                 </div>
               </div>
@@ -425,9 +420,10 @@ export default function ProposalBuilderPage() {
                         
                         <div className="flex justify-between items-start">
                           <div className="flex-1 relative">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Product Name</label>
-                            <input 
-                              className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm font-bold text-slate-800 outline-none focus:border-blue-500"
+                            <label htmlFor={`quote-item-name-${item.id}`} className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Product Name</label>
+                            <input
+                              id={`quote-item-name-${item.id}`}
+                              className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm font-bold text-slate-800 outline-none focus:border-brand-500"
                               value={item.name}
                               onFocus={() => setActiveDropdown(idx)}
                               onBlur={() => setTimeout(() => setActiveDropdown(null), 200)}
@@ -447,7 +443,7 @@ export default function ProposalBuilderPage() {
                                   dbProducts.filter(p => p.name.toLowerCase().includes(item.name.toLowerCase())).map(p => (
                                     <div 
                                       key={p.product_id}
-                                      className="p-2 border-b border-slate-50 hover:bg-blue-50 cursor-pointer transition-colors"
+                                      className="p-2 border-b border-slate-50 hover:bg-brand-50 cursor-pointer transition-colors"
                                       onClick={() => {
                                         const newItems = [...data.items];
                                         newItems[idx].name = p.name;
@@ -478,6 +474,7 @@ export default function ProposalBuilderPage() {
                               setData({...data, items: newItems});
                             }}
                             className="text-slate-400 hover:text-red-500 transition-colors ml-3 mt-5"
+                            aria-label={`Remove item ${idx + 1}`}
                           >
                             <Trash2 size={16} />
                           </button>
@@ -485,27 +482,27 @@ export default function ProposalBuilderPage() {
 
                         <div className="flex gap-2">
                           <div className="flex-1">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Qty</label>
-                            <input type="number" className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm text-center font-bold text-slate-800 outline-none focus:border-blue-500" value={item.qty} onChange={(e) => { const newItems = [...data.items]; newItems[idx].qty = Number(e.target.value); setData({...data, items: newItems}); }} />
+                            <label htmlFor={`quote-item-qty-${item.id}`} className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Qty</label>
+                            <input id={`quote-item-qty-${item.id}`} type="number" className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm text-center font-bold text-slate-800 outline-none focus:border-brand-500" value={item.qty} onChange={(e) => { const newItems = [...data.items]; newItems[idx].qty = Number(e.target.value); setData({...data, items: newItems}); }} />
                           </div>
                           <div className="flex-1">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">MRP (Opt)</label>
-                            <input type="number" className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm text-right text-slate-600 outline-none focus:border-blue-500" value={item.mrp || ''} onChange={(e) => { const newItems = [...data.items]; newItems[idx].mrp = Number(e.target.value); setData({...data, items: newItems}); }} placeholder="0" />
+                            <label htmlFor={`quote-item-mrp-${item.id}`} className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">MRP (Opt)</label>
+                            <input id={`quote-item-mrp-${item.id}`} type="number" className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm text-right text-slate-600 outline-none focus:border-brand-500" value={item.mrp || ''} onChange={(e) => { const newItems = [...data.items]; newItems[idx].mrp = Number(e.target.value); setData({...data, items: newItems}); }} placeholder="0" />
                           </div>
                           <div className="flex-[1.5]">
-                            <label className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1 block">Selling Price</label>
-                            <input type="number" className="w-full bg-emerald-50 border border-emerald-300 rounded px-2 py-1.5 text-sm font-bold text-right text-emerald-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" value={item.price || ''} onChange={(e) => { const newItems = [...data.items]; newItems[idx].price = Number(e.target.value); setData({...data, items: newItems}); }} placeholder="0" />
+                            <label htmlFor={`quote-item-price-${item.id}`} className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1 block">Selling Price</label>
+                            <input id={`quote-item-price-${item.id}`} type="number" className="w-full bg-emerald-50 border border-emerald-300 rounded px-2 py-1.5 text-sm font-bold text-right text-emerald-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" value={item.price || ''} onChange={(e) => { const newItems = [...data.items]; newItems[idx].price = Number(e.target.value); setData({...data, items: newItems}); }} placeholder="0" />
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">HSN Code</label>
-                            <input type="text" className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-blue-500" value={item.hsn_code || ''} onChange={(e) => { const newItems = [...data.items]; newItems[idx].hsn_code = e.target.value; setData({...data, items: newItems}); }} placeholder="e.g. 84191920" />
+                            <label htmlFor={`quote-item-hsn-${item.id}`} className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">HSN Code</label>
+                            <input id={`quote-item-hsn-${item.id}`} type="text" className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-brand-500" value={item.hsn_code || ''} onChange={(e) => { const newItems = [...data.items]; newItems[idx].hsn_code = e.target.value; setData({...data, items: newItems}); }} placeholder="e.g. 84191920" />
                           </div>
                           <div>
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">SAC Code</label>
-                            <input type="text" className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-blue-500" value={item.sac_code || ''} onChange={(e) => { const newItems = [...data.items]; newItems[idx].sac_code = e.target.value; setData({...data, items: newItems}); }} placeholder="e.g. 998719" />
+                            <label htmlFor={`quote-item-sac-${item.id}`} className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">SAC Code</label>
+                            <input id={`quote-item-sac-${item.id}`} type="text" className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-brand-500" value={item.sac_code || ''} onChange={(e) => { const newItems = [...data.items]; newItems[idx].sac_code = e.target.value; setData({...data, items: newItems}); }} placeholder="e.g. 998719" />
                           </div>
                         </div>
 
@@ -522,8 +519,8 @@ export default function ProposalBuilderPage() {
                             )}
                           </div>
                           {item.description && (item.description.includes('<img') || item.description.length > 200) ? (
-                            <div className="flex items-center gap-3 bg-blue-50 border border-blue-100 px-4 py-3 rounded-xl text-sm font-medium text-blue-700 shadow-sm">
-                              <FileDown size={16} className="text-blue-500 shrink-0" />
+                            <div className="flex items-center gap-3 bg-brand-50 border border-brand-100 px-4 py-3 rounded-xl text-sm font-medium text-brand-700 shadow-sm">
+                              <FileDown size={16} className="text-brand-500 shrink-0" />
                               <span className="truncate">
                                 {item.description?.match(/^<!-- FILENAME: (.*?) -->\n/)?.[1] || 'Document specifications attached'}
                               </span>
@@ -548,19 +545,19 @@ export default function ProposalBuilderPage() {
                 
                 <button 
                   onClick={() => setData({...data, items: [...data.items, { id: Math.random().toString(36).substring(7), name: '', qty: 1, mrp: 0, price: 0, description: '' }]})}
-                  className="w-full py-3 border-2 border-dashed border-blue-200 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center gap-2 font-bold text-sm hover:bg-blue-100 hover:border-blue-300 transition-colors"
+                  className="w-full py-3 border-2 border-dashed border-brand-200 bg-brand-50 text-brand-600 rounded-lg flex items-center justify-center gap-2 font-bold text-sm hover:bg-brand-100 hover:border-brand-300 transition-colors"
                 >
                   <Plus size={16} /> Add Product
                 </button>
 
                 <div className="pt-4 mt-4 border-t border-slate-200 grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Overall Discount (%)</label>
-                    <input type="number" className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm text-right text-slate-600 outline-none focus:border-blue-500" value={data.discount || ''} onChange={e => setData({...data, discount: Number(e.target.value)})} placeholder="0" />
+                    <label htmlFor="quote-discount" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Overall Discount (%)</label>
+                    <input id="quote-discount" type="number" className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm text-right text-slate-600 outline-none focus:border-brand-500" value={data.discount || ''} onChange={e => setData({...data, discount: Number(e.target.value)})} placeholder="0" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">GST Rate (%)</label>
-                    <input type="number" className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm font-bold text-right text-slate-600 outline-none focus:border-blue-500" value={data.taxRate || ''} onChange={e => setData({...data, taxRate: Number(e.target.value)})} placeholder="0" />
+                    <label htmlFor="quote-tax-rate" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">GST Rate (%)</label>
+                    <input id="quote-tax-rate" type="number" className="w-full bg-white border border-slate-300 rounded px-2 py-1.5 text-sm font-bold text-right text-slate-600 outline-none focus:border-brand-500" value={data.taxRate || ''} onChange={e => setData({...data, taxRate: Number(e.target.value)})} placeholder="0" />
                   </div>
                 </div>
               </div>
@@ -577,9 +574,10 @@ export default function ProposalBuilderPage() {
               <div className="p-4 space-y-3 border-t border-slate-200">
                 {Object.entries(data.bankDetails).map(([key, value]) => (
                   <div key={key} className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{key.replace(/([A-Z])/g, ' $1').trim()}</label>
-                    <input 
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500"
+                    <label htmlFor={`quote-bank-${key}`} className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{key.replace(/([A-Z])/g, ' $1').trim()}</label>
+                    <input
+                      id={`quote-bank-${key}`}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-brand-500"
                       value={value}
                       onChange={(e) => setData({ ...data, bankDetails: { ...data.bankDetails, [key]: e.target.value } })}
                     />
@@ -599,8 +597,9 @@ export default function ProposalBuilderPage() {
               <div className="p-4 space-y-3 border-t border-slate-200">
                 {data.terms.map((term, idx) => (
                   <div key={idx} className="flex gap-2">
-                    <input 
-                      className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-500"
+                    <input
+                      aria-label={`Term ${idx + 1}`}
+                      className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 outline-none focus:border-brand-500"
                       value={term}
                       onChange={(e) => {
                         const newTerms = [...data.terms];
@@ -608,13 +607,14 @@ export default function ProposalBuilderPage() {
                         setData({ ...data, terms: newTerms });
                       }}
                     />
-                    <button 
+                    <button
                       onClick={() => {
                         const newTerms = [...data.terms];
                         newTerms.splice(idx, 1);
                         setData({ ...data, terms: newTerms });
                       }}
                       className="text-slate-400 hover:text-red-500 transition-colors px-2"
+                      aria-label={`Remove term ${idx + 1}`}
                     >
                       <Trash2 size={16} />
                     </button>
@@ -622,7 +622,7 @@ export default function ProposalBuilderPage() {
                 ))}
                 <button 
                   onClick={() => setData({ ...data, terms: [...data.terms, 'New Condition...'] })}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                  className="text-xs font-bold text-brand-600 hover:text-brand-800 flex items-center gap-1"
                 >
                   <Plus size={14} /> Add Term
                 </button>
@@ -695,7 +695,7 @@ export default function ProposalBuilderPage() {
 
           {/* QUOTATION FOR */}
           <section className="mb-8">
-            <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">Quotation For:</h3>
+            <h3 className="text-[10px] font-black text-brand-600 uppercase tracking-widest mb-2">Quotation For:</h3>
             <div className="text-slate-800">
               {data.clientCompany && <div className="font-black text-lg">{data.clientCompany}</div>}
               {data.clientName && <div className="font-bold text-slate-600">{data.clientName}</div>}
@@ -706,7 +706,7 @@ export default function ProposalBuilderPage() {
           {/* PRODUCT SPECIFICATIONS */}
           {data.items.some(i => i.description) && (
             <section className="mb-8">
-              <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4">Technical Specifications & Features</h3>
+              <h3 className="text-[10px] font-black text-brand-600 uppercase tracking-widest mb-4">Technical Specifications & Features</h3>
               <div className="space-y-6">
                 {data.items.filter(i => i.description).map((item, idx) => (
                   <div key={`desc-${item.id}`} className="bg-slate-50 border border-slate-200 rounded-xl p-5">
@@ -723,7 +723,7 @@ export default function ProposalBuilderPage() {
 
           {/* ITEMS TABLE */}
           <section className="mb-8 min-h-[200px]">
-            <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4">Commercial Details</h3>
+            <h3 className="text-[10px] font-black text-brand-600 uppercase tracking-widest mb-4">Commercial Details</h3>
             <table className="w-full text-left border-collapse table-fixed break-words">
               <thead>
                 <tr className="border-b-2 border-slate-800 text-slate-800">
@@ -801,7 +801,7 @@ export default function ProposalBuilderPage() {
                       )}
                       <tr className="border-t-2 border-slate-800">
                         <td className="py-2 text-base font-black text-slate-800 uppercase tracking-widest mt-1 block">Total</td>
-                        <td className="py-2 text-xl text-right font-black text-blue-600 mt-1">₹{finalTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        <td className="py-2 text-xl text-right font-black text-brand-600 mt-1">₹{finalTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
                       </tr>
                     </tbody>
                   </table>

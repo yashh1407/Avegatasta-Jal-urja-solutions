@@ -61,7 +61,7 @@ export default function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all relative shadow-sm"
+        className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-brand-600 hover:border-brand-200 transition-all relative shadow-sm"
       >
         <Bell size={20} />
         {notifications.length > 0 && (
@@ -84,7 +84,7 @@ export default function NotificationBell() {
             className="absolute right-0 mt-3 w-80 bg-white border border-slate-100 rounded-[2rem] shadow-xl overflow-hidden z-50"
           >
             <div className="p-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
-              <h3 className="font-black text-blue-950">Notifications</h3>
+              <h3 className="font-black text-brand-950">Notifications</h3>
               <span className="text-[10px] font-bold bg-white px-2 py-1 rounded-full text-slate-500 border border-slate-100">
                 {notifications.length} upcoming
               </span>
@@ -106,11 +106,11 @@ export default function NotificationBell() {
                     className="p-3 bg-white border border-slate-100 rounded-2xl hover:bg-slate-50 hover:border-slate-200 transition-all cursor-pointer group"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 mt-0.5 text-blue-600 group-hover:scale-110 transition-transform">
+                      <div className="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center shrink-0 mt-0.5 text-brand-600 group-hover:scale-110 transition-transform">
                         <Calendar size={14} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-black text-blue-950 truncate">
+                        <p className="text-sm font-black text-brand-950 truncate">
                           Meeting with {notif.name}
                         </p>
                         <p className="text-xs text-slate-500 font-medium truncate mt-0.5">
@@ -118,8 +118,8 @@ export default function NotificationBell() {
                         </p>
                         <div className="flex flex-col gap-1.5 mt-2">
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[11px] font-black text-white bg-blue-600 px-2.5 py-1 rounded-lg shadow-sm">{formatMeetingDate(notif.meeting_date)}</span>
-                            {notif.meeting_time && <span className="text-[11px] font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded-lg">{notif.meeting_time}</span>}
+                            <span className="text-[11px] font-black text-white bg-brand-600 px-2.5 py-1 rounded-lg shadow-sm">{formatMeetingDate(notif.meeting_date)}</span>
+                            {notif.meeting_time && <span className="text-[11px] font-bold text-brand-700 bg-brand-100 px-2 py-1 rounded-lg">{notif.meeting_time}</span>}
                           </div>
                           <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 bg-slate-50 w-fit px-2 py-1 rounded-md max-w-full">
                             <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>

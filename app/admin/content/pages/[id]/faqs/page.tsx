@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 export default function FAQManager() {
   const params = useParams();
@@ -21,8 +22,10 @@ export default function FAQManager() {
     try {
       const res = await fetch(`/api/admin/content/pages/${pageId}/faqs`);
       if (res.ok) setFaqs(await res.json());
+      else toast.error('Failed to load FAQs.');
     } catch (e) {
       console.error(e);
+      toast.error('Failed to load FAQs.');
     } finally {
       setLoading(false);
     }
@@ -36,17 +39,19 @@ export default function FAQManager() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(faqData)
         });
+        toast.success('FAQ updated.');
       } else {
         await fetch(`/api/admin/content/pages/${pageId}/faqs`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(faqData)
         });
+        toast.success('FAQ added.');
       }
       setEditingFaq(null);
       fetchFaqs();
     } catch (e: any) {
-      alert(e.message);
+      toast.error(e.message || 'Failed to save FAQ.');
     }
   };
 
@@ -54,9 +59,10 @@ export default function FAQManager() {
     if (!confirm('Are you sure you want to delete this FAQ?')) return;
     try {
       await fetch(`/api/admin/content/pages/${pageId}/faqs/${id}`, { method: 'DELETE' });
+      toast.success('FAQ deleted.');
       fetchFaqs();
     } catch (e: any) {
-      alert(e.message);
+      toast.error(e.message || 'Failed to delete FAQ.');
     }
   };
 
@@ -81,6 +87,7 @@ export default function FAQManager() {
       });
     } catch (e) {
       console.error(e);
+      toast.error('Failed to reorder FAQs.');
     }
   };
 
@@ -91,9 +98,10 @@ export default function FAQManager() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...faq, is_active: !faq.is_active })
       });
+      toast.success(faq.is_active ? 'FAQ hidden.' : 'FAQ activated.');
       fetchFaqs();
     } catch (e: any) {
-      alert(e.message);
+      toast.error(e.message || 'Failed to update FAQ.');
     }
   };
 
@@ -126,9 +134,9 @@ export default function FAQManager() {
         ) : (
           faqs.map((faq, idx) => (
             <div key={faq.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex gap-4 transition-all hover:shadow-md">
-              <div className="flex flex-col gap-1 text-gray-300 pt-1">
-                <button onClick={() => moveFaq(idx, 'up')} disabled={idx === 0} className="hover:text-gray-600 disabled:opacity-30">▲</button>
-                <button onClick={() => moveFaq(idx, 'down')} disabled={idx === faqs.length - 1} className="hover:text-gray-600 disabled:opacity-30">▼</button>
+              <div className="flex flex-col gap-1 text-gray-400 pt-1">
+                <button onClick={() => moveFaq(idx, 'up')} disabled={idx === 0} className="hover:text-gray-600 disabled:opacity-30" aria-label="Move FAQ up">▲</button>
+                <button onClick={() => moveFaq(idx, 'down')} disabled={idx === faqs.length - 1} className="hover:text-gray-600 disabled:opacity-30" aria-label="Move FAQ down">▼</button>
               </div>
               
               <div className="flex-1 min-w-0">
@@ -138,12 +146,12 @@ export default function FAQManager() {
 
               <div className="flex items-center gap-3 shrink-0">
                 <label className="relative inline-flex items-center cursor-pointer mr-2">
-                  <input type="checkbox" checked={faq.is_active} onChange={() => toggleFaq(faq)} className="sr-only peer" />
+                  <input type="checkbox" checked={faq.is_active} onChange={() => toggleFaq(faq)} className="sr-only peer" aria-label={`Toggle visibility of FAQ: ${faq.question}`} />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1B3636]"></div>
                 </label>
 
                 <button onClick={() => setEditingFaq(faq)} className="bg-[#1B3636] hover:bg-[#122626] text-white text-xs font-medium px-4 py-1.5 rounded transition-colors">Edit</button>
-                <button onClick={() => deleteFaq(faq.id)} className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 text-xs font-medium px-4 py-1.5 rounded transition-colors">Del</button>
+                <button onClick={() => deleteFaq(faq.id)} className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 text-xs font-medium px-4 py-1.5 rounded transition-colors" aria-label="Delete FAQ">Del</button>
               </div>
             </div>
           ))
@@ -169,42 +177,55 @@ function FaqModal({ faq, onSave, onClose }: { faq: any; onSave: (data: any) => v
     is_active: faq.is_active !== false
   });
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div role="dialog" aria-modal="true" aria-labelledby="faq-modal-title" className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden">
         <div className="flex justify-between items-center p-6 border-b border-gray-100">
-          <h2 className="text-xl font-semibold text-[#1B3636]">{faq.id ? 'Edit FAQ' : 'Add New FAQ'}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+          <h2 id="faq-modal-title" className="text-xl font-semibold text-[#1B3636]">{faq.id ? 'Edit FAQ' : 'Add New FAQ'}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl" aria-label="Close">&times;</button>
         </div>
 
         <div className="p-6 space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Question *</label>
-            <input 
-              value={formData.question} 
-              onChange={e => setFormData({ ...formData, question: e.target.value })} 
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none" 
-              required 
+            <label htmlFor="faq-question" className="text-sm font-medium text-gray-700">Question *</label>
+            <input
+              id="faq-question"
+              value={formData.question}
+              onChange={e => setFormData({ ...formData, question: e.target.value })}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none"
+              required
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Answer *</label>
-            <textarea 
-              value={formData.answer} 
-              onChange={e => setFormData({ ...formData, answer: e.target.value })} 
-              rows={4} 
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none" 
-              required 
+            <label htmlFor="faq-answer" className="text-sm font-medium text-gray-700">Answer *</label>
+            <textarea
+              id="faq-answer"
+              value={formData.answer}
+              onChange={e => setFormData({ ...formData, answer: e.target.value })}
+              rows={4}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#1B3636]/20 outline-none"
+              required
             />
           </div>
 
           <div className="flex items-center gap-3 pt-2">
             <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" checked={formData.is_active} onChange={e => setFormData({ ...formData, is_active: e.target.checked })} className="sr-only peer" />
+              <input id="faq-active" type="checkbox" checked={formData.is_active} onChange={e => setFormData({ ...formData, is_active: e.target.checked })} className="sr-only peer" />
               <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1B3636]"></div>
             </label>
-            <span className="text-sm font-medium text-gray-700">Active (Visible on frontend)</span>
+            <label htmlFor="faq-active" className="text-sm font-medium text-gray-700 cursor-pointer">Active (Visible on frontend)</label>
           </div>
         </div>
 

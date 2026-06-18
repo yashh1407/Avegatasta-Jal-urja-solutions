@@ -43,9 +43,11 @@ export async function PATCH(request: Request) {
     await initDB();
     for (const { key, value } of updates) {
       if (!key) continue;
+      // Upsert so values persist even for keys not present in the seed set
+      // (an UPDATE-only write silently affects 0 rows for an unseeded key).
       await pool.query(
-        'UPDATE site_settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE `key` = ?',
-        [value ?? null, key]
+        'INSERT INTO site_settings (`key`, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = VALUES(value), updated_at = CURRENT_TIMESTAMP',
+        [key, value ?? null]
       );
     }
     clearCache('site-settings:');

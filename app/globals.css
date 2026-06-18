@@ -312,4 +312,21 @@ body.site-motion [data-motion-root] main :where(a, button):active {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+
+  /* PageTransition (framer-motion) bakes opacity:0 into the SSR HTML for the
+     enter fade. With reduced motion the JS fade-in never runs, so without this
+     the entire app (public + /admin, all wrapped by .motion-page-shell) would
+     stay invisible. Force the shell and the scroll-reveal sections visible. */
+  .motion-page-shell {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  body.site-motion [data-motion-root] main > section:not(:first-child),
+  body.site-motion [data-motion-root] main > section:not(:first-child) :where(h2, h3, p, li, dt, dd, form),
+  body.site-motion [data-motion-root] main > section:not(:first-child) :where(img, picture, video) {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    filter: none !important;
+  }
 }

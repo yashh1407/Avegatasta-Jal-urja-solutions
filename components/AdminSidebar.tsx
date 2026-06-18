@@ -27,6 +27,7 @@ import {
   Receipt,
   MapPin,
   Clock,
+  Building2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -100,6 +101,20 @@ const ADMIN_SECTIONS = [
     icon: Truck,
     category: 'management',
     module: 'vendors'
+  },
+  {
+    label: 'Enterprise Leads',
+    href: '/admin/enterprise',
+    icon: Building2,
+    category: 'management',
+    module: 'enterprise'
+  },
+  {
+    label: 'Team Members',
+    href: '/admin/team-members',
+    icon: UserCheck,
+    category: 'management',
+    module: 'team-members'
   },
   {
     label: 'Sales',
@@ -317,7 +332,7 @@ export default function AdminSidebar() {
       {/* Header */}
       <div className="p-6 border-b border-slate-800 flex-shrink-0">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center">
             <LayoutDashboard size={20} />
           </div>
           <div>
@@ -339,6 +354,7 @@ export default function AdminSidebar() {
                     expandedCategory === category ? null : category
                   )
                 }
+                aria-expanded={expandedCategory === category}
                 className="w-full flex items-center justify-between px-3 py-2 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-300 transition-colors"
               >
                 {CATEGORIES[category as keyof typeof CATEGORIES]}
@@ -360,11 +376,11 @@ export default function AdminSidebar() {
                       const active = isActive(section.href);
 
                       return (
-                        <Link key={section.href} href={section.href}>
+                        <Link key={section.href} href={section.href} aria-current={active ? 'page' : undefined}>
                           <div
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                               active
-                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                                ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/30'
                                 : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                             }`}
                           >
@@ -373,7 +389,7 @@ export default function AdminSidebar() {
                               {section.label}
                             </span>
                             {section.href === '/admin/messages' && unreadCount > 0 && (
-                              <span className="bg-blue-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                              <span className="bg-brand-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
                                 {unreadCount > 99 ? '99+' : unreadCount}
                               </span>
                             )}

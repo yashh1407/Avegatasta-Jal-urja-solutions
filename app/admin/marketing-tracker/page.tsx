@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { MapPin, User, Calendar, Search, RefreshCw, ChevronDown, MessageSquare, Package, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import toast from 'react-hot-toast';
 
 interface GeoLead {
   id: number;
@@ -61,6 +62,7 @@ export default function MarketingTrackerPage() {
       setGeoLeads(combined);
     } catch (err) {
       console.error('Failed to fetch geo leads:', err);
+      toast.error('Failed to load location data. Please try again.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -120,8 +122,8 @@ export default function MarketingTrackerPage() {
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl font-black text-blue-950 flex items-center gap-2">
-              <MapPin className="text-blue-600" size={24} />
+            <h1 className="text-2xl font-black text-brand-950 flex items-center gap-2">
+              <MapPin className="text-brand-600" size={24} />
               Marketing Location Tracker
             </h1>
             <p className="text-sm text-slate-500 font-medium mt-0.5">
@@ -130,7 +132,7 @@ export default function MarketingTrackerPage() {
           </div>
           <button
             onClick={() => fetchGeoLeads(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:text-brand-600 hover:border-brand-200 transition-all shadow-sm"
           >
             <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
             Refresh data
@@ -143,28 +145,30 @@ export default function MarketingTrackerPage() {
             
             {/* Search Box */}
             <div className="relative flex flex-col justify-center">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1 ml-1">Search</span>
+              <label htmlFor="mt-search" className="text-[10px] font-black uppercase text-slate-500 tracking-wider mb-1 ml-1">Search</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                 <input
+                  id="mt-search"
                   type="text"
                   placeholder="Search leads..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-blue-950 placeholder:text-slate-400"
+                  className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-medium text-brand-950 placeholder:text-slate-400"
                 />
               </div>
             </div>
 
             {/* Sales Agent Filter */}
             <div className="relative flex flex-col justify-center">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1 ml-1">Sales Agent</span>
+              <label htmlFor="mt-agent" className="text-[10px] font-black uppercase text-slate-500 tracking-wider mb-1 ml-1">Sales Agent</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                 <select
+                  id="mt-agent"
                   value={agentFilter}
                   onChange={e => setAgentFilter(e.target.value)}
-                  className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-bold text-slate-700 outline-none appearance-none"
+                  className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-bold text-slate-700 outline-none appearance-none"
                 >
                   <option value="all">All Sales Agents</option>
                   {agentsList.map(name => (
@@ -177,28 +181,30 @@ export default function MarketingTrackerPage() {
 
             {/* Start Date */}
             <div className="flex flex-col justify-center">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1 ml-1">From Date</span>
+              <label htmlFor="mt-from" className="text-[10px] font-black uppercase text-slate-500 tracking-wider mb-1 ml-1">From Date</label>
               <div className="relative w-full">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
                 <input
+                  id="mt-from"
                   type="date"
                   value={startDate}
                   onChange={e => setStartDate(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-slate-700"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-medium text-slate-700"
                 />
               </div>
             </div>
 
             {/* End Date */}
             <div className="flex flex-col justify-center">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-1 ml-1">To Date</span>
+              <label htmlFor="mt-to" className="text-[10px] font-black uppercase text-slate-500 tracking-wider mb-1 ml-1">To Date</label>
               <div className="relative w-full">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
                 <input
+                  id="mt-to"
                   type="date"
                   value={endDate}
                   onChange={e => setEndDate(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-slate-700"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-medium text-slate-700"
                 />
               </div>
             </div>
@@ -210,7 +216,7 @@ export default function MarketingTrackerPage() {
         {loading ? (
           <div className="bg-white border border-slate-200 rounded-3xl h-[500px] flex items-center justify-center">
             <div className="flex flex-col items-center gap-3">
-              <RefreshCw className="animate-spin text-blue-600" size={32} />
+              <RefreshCw className="animate-spin text-brand-600" size={32} />
               <p className="text-sm font-bold text-slate-500">Loading tracking coordinates...</p>
             </div>
           </div>
@@ -239,7 +245,7 @@ export default function MarketingTrackerPage() {
                   ) : (
                     filteredLeads.map(lead => (
                       <tr key={`${lead.type}-${lead.id}`} className="hover:bg-slate-50/40 transition-colors">
-                        <td className="py-4 px-6 font-bold text-blue-950">
+                        <td className="py-4 px-6 font-bold text-brand-950">
                           <div>{lead.name}</div>
                           {lead.phone && (
                             <div className="text-xs text-slate-400 font-normal font-mono mt-0.5">{lead.phone}</div>
@@ -247,7 +253,7 @@ export default function MarketingTrackerPage() {
                         </td>
                         <td className="py-4 px-6">
                           <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${
-                            lead.type === 'General' ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700'
+                            lead.type === 'General' ? 'bg-brand-50 text-brand-700' : 'bg-emerald-50 text-emerald-700'
                           }`}>
                             {lead.type === 'General' ? <MessageSquare size={10} /> : <Package size={10} />}
                             {lead.type}
@@ -255,7 +261,7 @@ export default function MarketingTrackerPage() {
                         </td>
                         <td className="py-4 px-6 text-xs font-semibold text-slate-600">
                           {lead.type === 'General' ? (
-                            <span className="text-blue-700">{lead.subject || 'N/A'}</span>
+                            <span className="text-brand-700">{lead.subject || 'N/A'}</span>
                           ) : (
                             <span className="text-teal-700">{lead.product_name || 'N/A'}</span>
                           )}
@@ -286,7 +292,7 @@ export default function MarketingTrackerPage() {
                             href={`https://www.google.com/maps/search/?api=1&query=${lead.latitude},${lead.longitude}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors shadow-sm"
+                            className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-brand-50 hover:text-brand-600 hover:border-brand-200 transition-colors shadow-sm"
                           >
                             <ExternalLink size={10} />
                             View Map

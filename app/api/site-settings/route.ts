@@ -4,6 +4,10 @@ import { getCached } from '@/lib/cache';
 
 const SITE_SETTINGS_TTL_MS = 5 * 60 * 1000;
 
+// Keys that live in site_settings but must never be exposed to the public/client
+// (they are consumed server-side only — e.g. the Google Maps server API key).
+const SENSITIVE_KEYS = new Set(['google_maps_api_key']);
+
 export async function GET(request: NextRequest) {
   const group = request.nextUrl.searchParams.get('group');
 
@@ -25,7 +29,13 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    return NextResponse.json(map, {
+    // Strip server-only keys before returning to the client.
+    const publicMap: Record<string, string | null> = {};
+    for (const key in map) {
+      if (!SENSITIVE_KEYS.has(key)) publicMap[key] = map[key];
+    }
+
+    return NextResponse.json(publicMap, {
       headers: {
         'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
       },

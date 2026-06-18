@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -105,7 +106,7 @@ function AmcStatusBadge({ status, endDate }: { status: string; endDate: string }
 
   if (isRenewed) {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest">
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-50 text-brand-600 text-[10px] font-black uppercase tracking-widest">
         <RotateCcw size={10} />
         Renewed
       </span>
@@ -180,15 +181,20 @@ function RenewModal({
     if (!amc || !planId || !startDate || !endDate) return;
     setSaving(true);
     try {
-      // 1. Mark old AMC as renewed
-      await fetch(`/api/admin/clients/${amc.client_id}/amc/${amc.id}`, {
+      // 1. Mark old AMC as renewed — only proceed to create the new record if
+      //    this succeeds, otherwise we'd leave two 'active' AMCs for the product.
+      const renewRes = await fetch(`/api/admin/clients/${amc.client_id}/amc/${amc.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'renewed' }),
       });
+      if (!renewRes.ok) {
+        toast.error('Could not mark the existing AMC as renewed. Please try again.');
+        return;
+      }
 
       // 2. Create new AMC record
-      await fetch(`/api/admin/clients/${amc.client_id}/amc`, {
+      const createRes = await fetch(`/api/admin/clients/${amc.client_id}/amc`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -200,15 +206,23 @@ function RenewModal({
         }),
       });
 
+      if (!createRes.ok) {
+        toast.error('AMC marked renewed, but creating the new contract failed. Please review.');
+        return;
+      }
+
+      toast.success('AMC renewed.');
       onRenewed();
       onClose();
+    } catch {
+      toast.error('Network error while renewing AMC.');
     } finally {
       setSaving(false);
     }
   };
 
   const inputClass =
-    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all';
+    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all';
 
   return (
     <AnimatePresence>
@@ -228,20 +242,21 @@ function RenewModal({
           >
             <div className="flex items-center justify-between px-8 pt-7 pb-5 border-b border-slate-100">
               <div>
-                <h2 className="text-lg font-black text-blue-950">Renew AMC</h2>
+                <h2 className="text-lg font-black text-brand-950">Renew AMC</h2>
                 <p className="text-xs text-slate-500 font-medium mt-0.5">{amc.client_name} · {amc.product_name}</p>
               </div>
-              <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all">
+              <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all" aria-label="Close renew dialog">
                 <X size={18} />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                <label htmlFor="amc-renew-plan" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
                   Select Plan *
                 </label>
                 <select
+                  id="amc-renew-plan"
                   className={inputClass}
                   value={planId}
                   onChange={(e) => setPlanId(e.target.value)}
@@ -256,10 +271,11 @@ function RenewModal({
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                <label htmlFor="amc-renew-start" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
                   Start Date *
                 </label>
                 <input
+                  id="amc-renew-start"
                   className={inputClass}
                   type="date"
                   value={startDate}
@@ -269,9 +285,9 @@ function RenewModal({
               </div>
 
               {endDate && (
-                <div className="bg-blue-50 rounded-2xl px-5 py-3 flex items-center justify-between">
-                  <span className="text-xs text-blue-600 font-black">New end date</span>
-                  <span className="text-sm font-black text-blue-950">{fmt(endDate)}</span>
+                <div className="bg-brand-50 rounded-2xl px-5 py-3 flex items-center justify-between">
+                  <span className="text-xs text-brand-600 font-black">New end date</span>
+                  <span className="text-sm font-black text-brand-950">{fmt(endDate)}</span>
                 </div>
               )}
 
@@ -289,7 +305,7 @@ function RenewModal({
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {saving && <RefreshCw size={14} className="animate-spin" />}
                   {saving ? 'Renewing…' : 'Renew AMC'}
@@ -325,7 +341,7 @@ function StatCard({
       </div>
       <div>
         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-        <p className="text-2xl font-black text-blue-950">{value}</p>
+        <p className="text-2xl font-black text-brand-950">{value}</p>
         {sub && <p className="text-xs text-slate-400 font-medium mt-0.5">{sub}</p>}
       </div>
     </div>
@@ -376,6 +392,8 @@ export default function AmcDashboardPage() {
       setExpiring(Array.isArray(expData) ? expData : []);
       setAllAmcs(Array.isArray(allData) ? allData : []);
       setPlans(Array.isArray(plansData) ? plansData : []);
+    } catch {
+      toast.error('Failed to load AMC data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -411,10 +429,10 @@ export default function AmcDashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+              <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-200">
                 <ShieldCheck size={20} />
               </div>
-              <h1 className="text-4xl font-black text-blue-950 tracking-tight">AMC Management</h1>
+              <h1 className="text-4xl font-black text-brand-950 tracking-tight">AMC Management</h1>
             </div>
             <p className="text-slate-500 font-medium">Monitor and manage Annual Maintenance Contracts across all clients.</p>
           </div>
@@ -423,14 +441,15 @@ export default function AmcDashboardPage() {
             <button
               onClick={fetchAll}
               disabled={loading}
-              className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all"
+              className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-brand-600 hover:border-brand-200 transition-all"
               title="Refresh"
+              aria-label="Refresh AMC data"
             >
               <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
             </button>
             <Link
               href="/admin/amc-plans"
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:border-blue-200 rounded-2xl text-sm font-black text-slate-600 hover:text-blue-600 transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:border-brand-200 rounded-2xl text-sm font-black text-slate-600 hover:text-brand-600 transition-all"
             >
               <Settings size={16} />
               Manage Plans
@@ -460,11 +479,11 @@ export default function AmcDashboardPage() {
             color="bg-red-50"
           />
           <StatCard
-            icon={<IndianRupee size={22} className="text-blue-600" />}
+            icon={<IndianRupee size={22} className="text-brand-600" />}
             label="Total AMC Revenue"
             value={loading ? '…' : `₹${(dashboard?.revenue.total ?? 0).toLocaleString('en-IN')}`}
             sub={`₹${(dashboard?.revenue.active ?? 0).toLocaleString('en-IN')} from active`}
-            color="bg-blue-50"
+            color="bg-brand-50"
           />
         </div>
 
@@ -479,8 +498,8 @@ export default function AmcDashboardPage() {
               onClick={() => setTab(key)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all ${
                 tab === key
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-500 hover:text-blue-600 hover:bg-slate-50'
+                  ? 'bg-brand-600 text-white shadow-sm'
+                  : 'text-slate-500 hover:text-brand-600 hover:bg-slate-50'
               }`}
             >
               {icon}
@@ -500,10 +519,11 @@ export default function AmcDashboardPage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
             <input
               type="text"
+              aria-label="Search AMCs"
               placeholder={tab === 'expiring' ? 'Search client or product…' : 'Search client, product, plan…'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-64 transition-all"
+              className="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 w-64 transition-all"
             />
           </div>
           {tab === 'expiring' && (
@@ -515,8 +535,8 @@ export default function AmcDashboardPage() {
                   onClick={() => { setExpiryDays(d); }}
                   className={`px-3 py-2 rounded-xl text-xs font-black transition-all ${
                     expiryDays === d
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white border border-slate-200 text-slate-600 hover:border-blue-200 hover:text-blue-600'
+                      ? 'bg-brand-600 text-white'
+                      : 'bg-white border border-slate-200 text-slate-600 hover:border-brand-200 hover:text-brand-600'
                   }`}
                 >
                   {d}d
@@ -562,7 +582,7 @@ export default function AmcDashboardPage() {
                   {loading ? (
                     <tr>
                       <td colSpan={6} className="px-8 py-16 text-center">
-                        <RefreshCw className="animate-spin text-blue-500 mx-auto mb-3" size={28} />
+                        <RefreshCw className="animate-spin text-brand-500 mx-auto mb-3" size={28} />
                         <p className="text-slate-400 font-medium text-sm">Loading…</p>
                       </td>
                     </tr>
@@ -590,7 +610,7 @@ export default function AmcDashboardPage() {
                             <div className="flex flex-col gap-1">
                               <Link
                                 href={`/admin/clients/${amc.client_id}`}
-                                className="font-black text-sm text-blue-950 hover:text-blue-600 transition-colors"
+                                className="font-black text-sm text-brand-950 hover:text-brand-600 transition-colors"
                               >
                                 {amc.client_name}
                               </Link>
@@ -609,13 +629,13 @@ export default function AmcDashboardPage() {
                                 <span className="text-xs font-bold text-slate-700">{amc.product_name}</span>
                               </div>
                               {amc.serial_number && (
-                                <span className="text-[10px] text-slate-400 font-medium pl-4">S/N: {amc.serial_number}</span>
+                                <span className="text-xs text-slate-500 font-medium pl-4">S/N: {amc.serial_number}</span>
                               )}
                             </div>
                           </td>
                           <td className="px-6 py-5">
                             <span className="text-xs font-bold text-slate-700">{amc.plan_name}</span>
-                            <p className="text-[10px] text-slate-400 font-medium mt-0.5">₹{amc.price.toLocaleString('en-IN')}</p>
+                            <p className="text-xs text-slate-500 font-medium mt-0.5">₹{amc.price.toLocaleString('en-IN')}</p>
                           </td>
                           <td className="px-6 py-5">
                             <div className="flex items-center gap-1.5">
@@ -632,7 +652,7 @@ export default function AmcDashboardPage() {
                           <td className="px-6 py-5 text-right">
                             <button
                               onClick={() => openRenew(amc)}
-                              className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black transition-all shadow-sm shadow-blue-200 ml-auto"
+                              className="flex items-center gap-1.5 px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-black transition-all shadow-sm shadow-brand-200 ml-auto"
                             >
                               <RotateCcw size={12} />
                               Renew
@@ -653,7 +673,7 @@ export default function AmcDashboardPage() {
           <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
             <div className="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
               <div className="flex items-center gap-2">
-                <TrendingUp size={14} className="text-blue-500" />
+                <TrendingUp size={14} className="text-brand-500" />
                 <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                   All Client AMCs ({filteredAllAmcs.length})
                 </h2>
@@ -676,7 +696,7 @@ export default function AmcDashboardPage() {
                   {loading ? (
                     <tr>
                       <td colSpan={6} className="px-8 py-16 text-center">
-                        <RefreshCw className="animate-spin text-blue-500 mx-auto mb-3" size={28} />
+                        <RefreshCw className="animate-spin text-brand-500 mx-auto mb-3" size={28} />
                         <p className="text-slate-400 font-medium text-sm">Loading…</p>
                       </td>
                     </tr>
@@ -689,7 +709,7 @@ export default function AmcDashboardPage() {
                         <p className="text-slate-500 font-medium">No AMC records found.</p>
                         <p className="text-slate-400 text-sm mt-1">
                           Assign AMCs to clients from their{' '}
-                          <Link href="/admin/clients" className="text-blue-600 font-black hover:underline">
+                          <Link href="/admin/clients" className="text-brand-600 font-black hover:underline">
                             profile page
                           </Link>
                           .
@@ -707,14 +727,14 @@ export default function AmcDashboardPage() {
                         <td className="px-6 py-4">
                           <Link
                             href={`/admin/clients/${amc.client_id}`}
-                            className="font-black text-sm text-blue-950 hover:text-blue-600 transition-colors block"
+                            className="font-black text-sm text-brand-950 hover:text-brand-600 transition-colors block"
                           >
                             {amc.client_name}
                           </Link>
                           {amc.client_phone && (
                             <div className="flex items-center gap-1 mt-0.5">
                               <Phone size={10} className="text-slate-400" />
-                              <span className="text-[10px] text-slate-400 font-medium">{amc.client_phone}</span>
+                              <span className="text-xs text-slate-500 font-medium">{amc.client_phone}</span>
                             </div>
                           )}
                         </td>
@@ -724,14 +744,14 @@ export default function AmcDashboardPage() {
                             <span className="text-xs font-bold text-slate-700">{amc.product_name}</span>
                           </div>
                           {amc.serial_number && (
-                            <span className="text-[10px] text-slate-400 font-medium block mt-0.5 pl-4">
+                            <span className="text-xs text-slate-500 font-medium block mt-0.5 pl-4">
                               S/N: {amc.serial_number}
                             </span>
                           )}
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-xs font-bold text-slate-700">{amc.plan_name}</span>
-                          <p className="text-[10px] text-slate-400 font-medium mt-0.5">₹{amc.price.toLocaleString('en-IN')}</p>
+                          <p className="text-xs text-slate-500 font-medium mt-0.5">₹{amc.price.toLocaleString('en-IN')}</p>
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-xs text-slate-500 font-medium">
@@ -742,17 +762,17 @@ export default function AmcDashboardPage() {
                           <AmcStatusBadge status={amc.status} endDate={amc.end_date} />
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                             <button
                               onClick={() => openRenew(amc)}
-                              className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black transition-all"
+                              className="flex items-center gap-1.5 px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-black transition-all"
                             >
                               <RotateCcw size={11} />
                               Renew
                             </button>
                             <Link
                               href={`/admin/clients/${amc.client_id}`}
-                              className="px-3 py-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl text-xs font-black transition-all"
+                              className="px-3 py-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl text-xs font-black transition-all"
                             >
                               View Client
                             </Link>

@@ -7,8 +7,10 @@ export async function GET(request: Request) {
   if (error) return error;
 
   const { searchParams } = new URL(request.url);
-  const limit = Math.min(Number(searchParams.get('limit') ?? 20), 100);
-  const days = Number(searchParams.get('days') ?? 30);
+  const limitRaw = Number(searchParams.get('limit') ?? 20);
+  const daysRaw = Number(searchParams.get('days') ?? 30);
+  const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(Math.trunc(limitRaw), 1), 100) : 20;
+  const days = Number.isFinite(daysRaw) ? Math.min(Math.max(Math.trunc(daysRaw), 1), 365) : 30;
 
   try {
     await initDB();

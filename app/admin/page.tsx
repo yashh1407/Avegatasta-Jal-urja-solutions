@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import AdminLoginForm from '@/components/AdminLoginForm';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import {
   Search,
   RefreshCw,
@@ -30,6 +31,7 @@ export default function AdminPage() {
   const [siteSettings, setSiteSettings] = useState<Record<string, string>>({});
   const [notifications, setNotifications] = useState<any[]>([]);
   const [dismissedNotifications, setDismissedNotifications] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
   const [stats, setStats] = useState({
     messages: 0,
     testimonials: 0,
@@ -87,6 +89,7 @@ export default function AdminPage() {
       });
     } catch (error) {
       console.warn('Error fetching admin data:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to load dashboard data');
       setData([]);
       setTestimonials([]);
       setSiteSettings({});
@@ -96,18 +99,25 @@ export default function AdminPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this message?')) return;
-    
+  const confirmDelete = async () => {
+    const id = deleteTarget;
+    setDeleteTarget(null);
+    if (id === null) return;
+
     try {
       const response = await fetch(`/api/contact?id=${id}`, {
         method: 'DELETE'
       });
       if (response.ok) {
+        toast.success('Message deleted successfully');
         fetchData();
+      } else {
+        const data = await response.json().catch(() => null);
+        toast.error(data?.error || 'Failed to delete message');
       }
     } catch (error) {
       console.error('Error deleting message:', error);
+      toast.error('Failed to delete message');
     }
   };
 
@@ -129,7 +139,6 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Toaster position="top-right" />
       <main className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-24 py-8">
         
         {/* Notifications Banner */}
@@ -139,9 +148,9 @@ export default function AdminPage() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, marginBottom: 0, height: 0 }}
-              className="relative mb-8 bg-white border border-blue-100 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden group"
+              className="relative mb-8 bg-white border border-brand-100 rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col md:flex-row md:items-center justify-between gap-6 overflow-hidden group"
             >
-              <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+              <div className="absolute top-0 left-0 w-1 h-full bg-brand-500"></div>
               
               <button 
                 onClick={() => setDismissedNotifications(true)}
@@ -152,11 +161,11 @@ export default function AdminPage() {
               </button>
 
               <div className="flex items-center gap-5 relative z-0">
-                <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center shrink-0 border border-blue-100 shadow-inner">
-                  <BellRing className="text-blue-600" size={24} />
+                <div className="w-14 h-14 bg-brand-50 rounded-2xl flex items-center justify-center shrink-0 border border-brand-100 shadow-inner">
+                  <BellRing className="text-brand-600" size={24} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-blue-950">
+                  <h2 className="text-xl font-black text-brand-950">
                     You have {notifications.length} upcoming {notifications.length === 1 ? 'meeting' : 'meetings'}
                   </h2>
                   <p className="text-slate-500 text-sm font-medium mt-1">
@@ -167,23 +176,23 @@ export default function AdminPage() {
               
               <div className="flex flex-col gap-2 min-w-[280px] w-full md:w-auto relative z-0 pr-6 md:pr-10">
                 {notifications.slice(0, 2).map((notif, idx) => (
-                  <div key={idx} className="bg-slate-50 rounded-xl px-4 py-3 flex justify-between items-start gap-4 border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-colors">
+                  <div key={idx} className="bg-slate-50 rounded-xl px-4 py-3 flex justify-between items-start gap-4 border border-slate-100 hover:border-brand-200 hover:bg-brand-50/50 transition-colors">
                     <div className="flex flex-col flex-1 min-w-0">
-                      <span className="font-bold text-sm text-blue-950 truncate">{notif.name}</span>
+                      <span className="font-bold text-sm text-brand-950 truncate">{notif.name}</span>
                       <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mt-0.5 truncate">{notif.topic || 'General Inquiry'}</span>
-                      <span className="text-[10px] font-bold text-slate-500 mt-1 flex items-center gap-1 truncate">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"></span>
+                      <span className="text-xs font-bold text-slate-500 mt-1 flex items-center gap-1 truncate">
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-400 shrink-0"></span>
                         {notif.meeting_type === 'office' ? 'Office Visit' : notif.meeting_location || 'Custom Location'}
                       </span>
                     </div>
                     <div className="text-right flex flex-col items-end shrink-0 gap-1.5">
-                      <span className="block text-[13px] font-black text-white bg-blue-600 px-3 py-1.5 rounded-xl shadow-md shadow-blue-600/20">{new Date(notif.meeting_date).toLocaleDateString()}</span>
-                      {notif.meeting_time && <span className="block text-xs text-blue-700 font-bold bg-blue-100 px-2.5 py-1 rounded-lg">{notif.meeting_time}</span>}
+                      <span className="block text-[13px] font-black text-white bg-brand-600 px-3 py-1.5 rounded-xl shadow-md shadow-brand-600/20">{new Date(notif.meeting_date).toLocaleDateString()}</span>
+                      {notif.meeting_time && <span className="block text-xs text-brand-700 font-bold bg-brand-100 px-2.5 py-1 rounded-lg">{notif.meeting_time}</span>}
                     </div>
                   </div>
                 ))}
                 {notifications.length > 2 && (
-                  <button onClick={() => router.push('/admin/inquiries')} className="text-xs text-blue-600 font-bold hover:text-blue-700 text-right mt-1 underline decoration-blue-200 underline-offset-4">
+                  <button onClick={() => router.push('/admin/inquiries')} className="text-xs text-brand-600 font-bold hover:text-brand-700 text-right mt-1 underline decoration-brand-200 underline-offset-4">
                     View {notifications.length - 2} more...
                   </button>
                 )}
@@ -195,10 +204,10 @@ export default function AdminPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+              <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-200">
                 <MessageSquare size={20} />
               </div>
-              <h1 className="text-4xl font-black text-blue-950 tracking-tight">Messages Dashboard</h1>
+              <h1 className="text-4xl font-black text-brand-950 tracking-tight">Messages Dashboard</h1>
             </div>
             <p className="text-slate-500 font-medium">Manage all inquiries received via the contact form.</p>
           </div>
@@ -211,12 +220,12 @@ export default function AdminPage() {
                 placeholder="Search messages..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 pr-6 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-full md:w-64 transition-all"
+                className="pl-12 pr-6 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 w-full md:w-64 transition-all"
               />
             </div>
             <button 
               onClick={fetchData}
-              className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:text-blue-600 hover:border-blue-100 transition-all"
+              className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:text-brand-600 hover:border-brand-100 transition-all"
               title="Refresh Data"
             >
               <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
@@ -240,27 +249,27 @@ export default function AdminPage() {
           <div className="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">Messages</span>
-              <MessageSquare size={18} className="text-blue-600" />
+              <MessageSquare size={18} className="text-brand-600" />
             </div>
-            <p className="text-3xl font-black text-blue-950">{stats.messages}</p>
+            <p className="text-3xl font-black text-brand-950">{stats.messages}</p>
             <p className="text-xs text-slate-500 mt-1">Records from contact_messages table.</p>
           </div>
 
           <div className="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">Testimonials</span>
-              <Quote size={18} className="text-blue-600" />
+              <Quote size={18} className="text-brand-600" />
             </div>
-            <p className="text-3xl font-black text-blue-950">{stats.testimonials}</p>
+            <p className="text-3xl font-black text-brand-950">{stats.testimonials}</p>
             <p className="text-xs text-slate-500 mt-1">Active testimonial records available in database.</p>
           </div>
 
           <div className="bg-white rounded-3xl border border-slate-100 p-5 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">Site Settings</span>
-              <Settings size={18} className="text-blue-600" />
+              <Settings size={18} className="text-brand-600" />
             </div>
-            <p className="text-3xl font-black text-blue-950">{stats.settings}</p>
+            <p className="text-3xl font-black text-brand-950">{stats.settings}</p>
             <p className="text-xs text-slate-500 mt-1">Settings loaded from the site_settings table.</p>
           </div>
         </div>
@@ -272,7 +281,7 @@ export default function AdminPage() {
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">Testimonials</p>
-                <h3 className="text-lg font-black text-blue-950 mt-1">Database-loaded website content</h3>
+                <h3 className="text-lg font-black text-brand-950 mt-1">Database-loaded website content</h3>
               </div>
               <a href="/admin/testimonials" className="inline-flex items-center gap-1 text-sm font-black text-brand-600">
                 Manage
@@ -287,7 +296,7 @@ export default function AdminPage() {
                   <div key={item.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="font-black text-blue-950 text-sm">{item.name}</p>
+                        <p className="font-black text-brand-950 text-sm">{item.name}</p>
                         <p className="text-xs text-slate-500">{item.role || 'Customer'}{item.location ? ` • ${item.location}` : ''}</p>
                       </div>
                       <div className="text-xs font-black text-amber-500">{item.rating || 5}/5</div>
@@ -303,7 +312,7 @@ export default function AdminPage() {
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
               <div>
                 <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">Site Settings</p>
-                <h3 className="text-lg font-black text-blue-950 mt-1">Live values used on website</h3>
+                <h3 className="text-lg font-black text-brand-950 mt-1">Live values used on website</h3>
               </div>
               <a href="/admin/site-settings" className="inline-flex items-center gap-1 text-sm font-black text-brand-600">
                 Manage
@@ -316,8 +325,8 @@ export default function AdminPage() {
               ) : (
                 Object.entries(siteSettings).slice(0, 8).map(([key, value]) => (
                   <div key={key} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{key.replace(/_/g, ' ')}</p>
-                    <p className="text-sm font-bold text-blue-950 mt-2 break-words">{value || '—'}</p>
+                    <p className="text-xs font-black uppercase tracking-widest text-slate-500">{key.replace(/_/g, ' ')}</p>
+                    <p className="text-sm font-bold text-brand-950 mt-2 break-words">{value || '—'}</p>
                   </div>
                 ))
               )}
@@ -327,7 +336,7 @@ export default function AdminPage() {
 
         <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
-            <h2 className="text-xl font-black text-blue-950 uppercase tracking-widest text-xs">
+            <h2 className="text-xl font-black text-brand-950 uppercase tracking-widest text-xs">
               Recent Messages ({filteredData.length} shown of {stats.messages})
             </h2>
           </div>
@@ -336,17 +345,17 @@ export default function AdminPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/50">
-                  <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Customer Details</th>
-                  <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Message Info</th>
-                  <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
-                  <th className="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                  <th className="px-8 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Customer Details</th>
+                  <th className="px-8 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Message Info</th>
+                  <th className="px-8 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Date</th>
+                  <th className="px-8 py-4 text-xs font-black text-slate-500 uppercase tracking-widest text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {loading ? (
                   <tr>
                     <td colSpan={4} className="px-8 py-20 text-center">
-                      <RefreshCw className="animate-spin text-blue-600 mx-auto mb-4" size={32} />
+                      <RefreshCw className="animate-spin text-brand-600 mx-auto mb-4" size={32} />
                       <p className="text-slate-500 font-medium">Loading messages...</p>
                     </td>
                   </tr>
@@ -357,7 +366,7 @@ export default function AdminPage() {
                         <Search size={32} />
                       </div>
                       <p className="text-slate-500 font-medium">No messages found.</p>
-                      <p className="text-xs text-slate-400 mt-2">If the website is loading but this table is empty, it usually means there are no contact form submissions yet.</p>
+                      <p className="text-xs text-slate-500 mt-2">If the website is loading but this table is empty, it usually means there are no contact form submissions yet.</p>
                     </td>
                   </tr>
                 ) : (
@@ -366,8 +375,8 @@ export default function AdminPage() {
                       <td className="px-8 py-6">
                         <div className="flex flex-col gap-2">
                           <div className="flex items-center gap-2">
-                            <User size={14} className="text-blue-600" />
-                            <span className="text-sm font-bold text-blue-950">{item.name}</span>
+                            <User size={14} className="text-brand-600" />
+                            <span className="text-sm font-bold text-brand-950">{item.name}</span>
                           </div>
                           {item.phone && (
                             <div className="flex items-center gap-2">
@@ -377,13 +386,13 @@ export default function AdminPage() {
                           )}
                           {item.email && (
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email:</span>
+                              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Email:</span>
                               <span className="text-xs text-slate-500 font-medium">{item.email}</span>
                             </div>
                           )}
                           {item.gstin && (
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">GSTIN:</span>
+                              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">GSTIN:</span>
                               <span className="text-xs text-slate-600 font-mono font-bold bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">{item.gstin}</span>
                             </div>
                           )}
@@ -392,9 +401,9 @@ export default function AdminPage() {
                       <td className="px-8 py-6">
                         <div className="flex flex-col gap-2">
                           <div className="flex items-center gap-2">
-                            <MessageSquare size={14} className="text-blue-400" />
-                            <span className="text-xs font-black uppercase tracking-widest text-slate-400">Subject:</span>
-                            <span className="text-xs font-bold text-blue-950">{item.subject || 'No Subject'}</span>
+                            <MessageSquare size={14} className="text-brand-400" />
+                            <span className="text-xs font-black uppercase tracking-widest text-slate-500">Subject:</span>
+                            <span className="text-xs font-bold text-brand-950">{item.subject || 'No Subject'}</span>
                           </div>
                           <div className="text-xs text-slate-500 font-medium bg-slate-100 p-3 rounded-xl border border-slate-200 max-w-md">
                             {item.message}
@@ -402,16 +411,17 @@ export default function AdminPage() {
                         </div>
                       </td>
                       <td className="px-8 py-6">
-                        <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
                           <Calendar size={14} />
                           {new Date(item.created_at).toLocaleDateString()}
                         </div>
                       </td>
                       <td className="px-8 py-6 text-right">
-                        <button 
-                          onClick={() => handleDelete(item.id)}
-                          className="p-3 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                        <button
+                          onClick={() => setDeleteTarget(item.id)}
+                          className="p-3 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all opacity-60 group-hover:opacity-100 group-focus-within:opacity-100"
                           title="Delete Message"
+                          aria-label={`Delete message from ${item.name || 'customer'}`}
                         >
                           <Trash2 size={20} />
                         </button>
@@ -424,6 +434,16 @@ export default function AdminPage() {
           </div>
         </div>
       </main>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete this message?"
+        message="This action is permanent and cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

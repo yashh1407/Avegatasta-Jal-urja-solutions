@@ -44,7 +44,7 @@ export default function AdminLoginForm() {
       {/* Left Column: Branding (Hidden on mobile) */}
       <div className="hidden md:flex md:w-5/12 lg:w-1/2 bg-gradient-to-br from-white via-[#F0F9FF] to-[#E0F2FE]/60 text-slate-900 pt-6 pb-12 px-12 lg:pt-10 lg:pb-20 lg:px-20 flex-col justify-between relative overflow-hidden border-r border-slate-100">
         {/* Decorative background glow */}
-        <div className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] bg-blue-400/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-[-20%] right-[-20%] w-[80%] h-[80%] bg-brand-400/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-teal-400/5 rounded-full blur-[100px] pointer-events-none" />
 
         {/* Center: Main Heading & Checklist */}
@@ -52,7 +52,7 @@ export default function AdminLoginForm() {
           <div className="space-y-4">
             <h1 className="text-4xl lg:text-5xl font-black tracking-tight leading-tight text-slate-900">
               Welcome to the <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-teal-500">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-teal-500">
                 Staff Portal
               </span>
             </h1>
@@ -70,7 +70,7 @@ export default function AdminLoginForm() {
               { title: 'Staff Access Control', desc: 'Securely manage credentials and module permissions' }
             ].map((item, idx) => (
               <div key={idx} className="flex gap-4 items-start">
-                <div className="w-6 h-6 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 flex-shrink-0 mt-0.5 shadow-sm">
+                <div className="w-6 h-6 rounded-full bg-brand-50 border border-brand-200 flex items-center justify-center text-brand-600 flex-shrink-0 mt-0.5 shadow-sm">
                   <Check size={12} className="stroke-[3]" />
                 </div>
                 <div>
@@ -91,7 +91,7 @@ export default function AdminLoginForm() {
       {/* Right Column: Sign In Card */}
       <div className="flex-1 flex items-center justify-center bg-slate-50/50 p-6 sm:p-12 relative overflow-hidden">
         {/* Background blobs for subtle depth on light background */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-100/30 rounded-full blur-[80px] -z-10 pointer-events-none" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-brand-100/30 rounded-full blur-[80px] -z-10 pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-100/20 rounded-full blur-[80px] -z-10 pointer-events-none" />
 
         <div className="w-full max-w-md space-y-6">
@@ -99,7 +99,7 @@ export default function AdminLoginForm() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="bg-white rounded-[2.5rem] p-8 sm:p-10 shadow-2xl shadow-blue-900/5 border border-slate-100/80"
+            className="bg-white rounded-[2.5rem] p-8 sm:p-10 shadow-2xl shadow-brand-900/5 border border-slate-100/80"
           >
             <div className="flex flex-col items-center mb-8">
               <div className="mb-6 flex h-14 w-full items-center justify-center">
@@ -131,7 +131,7 @@ export default function AdminLoginForm() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold text-slate-800 text-sm"
+                    className="w-full pl-12 pr-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-semibold text-slate-800 text-sm"
                     placeholder="e.g. name@example.com"
                     required
                   />
@@ -146,7 +146,7 @@ export default function AdminLoginForm() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-12 pr-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-semibold text-slate-800 text-sm"
+                    className="w-full pl-12 pr-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-semibold text-slate-800 text-sm"
                     placeholder="••••••••"
                     required
                   />
@@ -156,7 +156,7 @@ export default function AdminLoginForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full bg-brand-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-brand-700 transition-all shadow-lg shadow-brand-200 flex items-center justify-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? 'Authenticating...' : 'Sign in to Dashboard'}
                 {!loading && <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />}

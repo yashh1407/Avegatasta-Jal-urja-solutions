@@ -25,10 +25,14 @@ export async function GET() {
   try {
     await initDB();
     const [rows] = await pool.query('SELECT * FROM products ORDER BY created_at DESC');
+    const safeParse = (v: unknown, fallback: unknown) => {
+      if (typeof v !== 'string') return v ?? fallback;
+      try { return JSON.parse(v); } catch { return fallback; }
+    };
     const products = (rows as any[]).map((row) => ({
       ...row,
-      features: typeof row.features === 'string' ? JSON.parse(row.features) : (row.features || []),
-      specs: typeof row.specs === 'string' ? JSON.parse(row.specs) : (row.specs || {}),
+      features: safeParse(row.features, []),
+      specs: safeParse(row.specs, {}),
       inStock: Boolean(row.inStock),
     }));
     return NextResponse.json(products);

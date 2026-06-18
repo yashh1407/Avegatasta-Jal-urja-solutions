@@ -4,13 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
+import toast from 'react-hot-toast';
 import {
   Mail,
-  RefreshCw,
   LogOut,
   Save,
-  AlertCircle,
-  Check,
   Send,
 } from 'lucide-react';
 import Footer from '@/components/Footer';
@@ -42,8 +40,6 @@ export default function SMTPSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [passwordChanged, setPasswordChanged] = useState(false);
 
   useEffect(() => {
@@ -69,7 +65,7 @@ export default function SMTPSettingsPage() {
       }
     } catch (err) {
       console.error('Failed to fetch SMTP settings:', err);
-      setError('Failed to load SMTP settings');
+      toast.error('Failed to load SMTP settings');
     } finally {
       setLoading(false);
     }
@@ -77,7 +73,6 @@ export default function SMTPSettingsPage() {
 
   const handleInputChange = (field: keyof SMTPSettings, value: any) => {
     setSettings((prev) => ({ ...prev, [field]: value }));
-    setError(null);
   };
 
   const handlePasswordChange = (value: string) => {
@@ -88,7 +83,6 @@ export default function SMTPSettingsPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setError(null);
 
     try {
       const payload: any = { ...settings };
@@ -111,10 +105,9 @@ export default function SMTPSettingsPage() {
       setSettings(updated);
       setPassword('');
       setPasswordChanged(false);
-      setSuccess('SMTP settings saved successfully!');
-      setTimeout(() => setSuccess(null), 3000);
+      toast.success('SMTP settings saved successfully!');
     } catch (err: any) {
-      setError(err.message || 'Failed to save SMTP settings');
+      toast.error(err.message || 'Failed to save SMTP settings');
     } finally {
       setSaving(false);
     }
@@ -122,7 +115,6 @@ export default function SMTPSettingsPage() {
 
   const handleTestConnection = async () => {
     setTesting(true);
-    setError(null);
 
     try {
       const res = await fetch('/api/admin/email-settings/test', {
@@ -136,10 +128,9 @@ export default function SMTPSettingsPage() {
         throw new Error(data.error || 'Failed to test connection');
       }
 
-      setSuccess('SMTP connection test successful!');
-      setTimeout(() => setSuccess(null), 3000);
+      toast.success('SMTP connection test successful!');
     } catch (err: any) {
-      setError(err.message || 'Failed to test SMTP connection');
+      toast.error(err.message || 'Failed to test SMTP connection');
     } finally {
       setTesting(false);
     }
@@ -159,7 +150,7 @@ export default function SMTPSettingsPage() {
       <main className="flex-1 container mx-auto max-w-3xl px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <Mail className="text-blue-600" size={32} />
+            <Mail className="text-brand-600" size={32} />
             <h1 className="text-3xl font-bold text-gray-800">SMTP Settings</h1>
           </div>
           <button
@@ -171,28 +162,6 @@ export default function SMTPSettingsPage() {
           </button>
         </div>
 
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3"
-          >
-            <AlertCircle className="text-red-600" />
-            <span className="text-red-800">{error}</span>
-          </motion.div>
-        )}
-
-        {success && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3"
-          >
-            <Check className="text-green-600" />
-            <span className="text-green-800">{success}</span>
-          </motion.div>
-        )}
-
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -200,7 +169,7 @@ export default function SMTPSettingsPage() {
         >
           <form onSubmit={handleSave} className="space-y-6">
             {/* Enable/Disable Toggle */}
-            <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-center gap-3 p-4 bg-brand-50 rounded-lg border border-brand-200">
               <input
                 type="checkbox"
                 id="enabled"
@@ -215,15 +184,16 @@ export default function SMTPSettingsPage() {
 
             {/* SMTP Host */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="smtp-host" className="block text-sm font-medium text-gray-700 mb-2">
                 SMTP Host *
               </label>
               <input
+                id="smtp-host"
                 type="text"
                 value={settings.host}
                 onChange={(e) => handleInputChange('host', e.target.value)}
                 placeholder="e.g., smtp.gmail.com"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 required
               />
             </div>
@@ -231,15 +201,16 @@ export default function SMTPSettingsPage() {
             {/* SMTP Port */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="smtp-port" className="block text-sm font-medium text-gray-700 mb-2">
                   Port *
                 </label>
                 <input
+                  id="smtp-port"
                   type="number"
                   value={settings.port}
                   onChange={(e) => handleInputChange('port', parseInt(e.target.value))}
                   placeholder="587"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">587 (TLS) or 465 (SSL)</p>
@@ -247,60 +218,64 @@ export default function SMTPSettingsPage() {
 
               {/* From Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="smtp-from-name" className="block text-sm font-medium text-gray-700 mb-2">
                   From Name
                 </label>
                 <input
+                  id="smtp-from-name"
                   type="text"
                   value={settings.from_name}
                   onChange={(e) => handleInputChange('from_name', e.target.value)}
                   placeholder="Avegatasta"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 />
               </div>
             </div>
 
             {/* From Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="smtp-from-email" className="block text-sm font-medium text-gray-700 mb-2">
                 From Email *
               </label>
               <input
+                id="smtp-from-email"
                 type="email"
                 value={settings.from_email}
                 onChange={(e) => handleInputChange('from_email', e.target.value)}
                 placeholder="noreply@avegatasta.com"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 required
               />
             </div>
 
             {/* Username */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="smtp-username" className="block text-sm font-medium text-gray-700 mb-2">
                 Username / Email *
               </label>
               <input
+                id="smtp-username"
                 type="text"
                 value={settings.username}
                 onChange={(e) => handleInputChange('username', e.target.value)}
                 placeholder="Your SMTP username or email"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                 required
               />
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="smtp-password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password {!passwordChanged && '(not changed)'}
               </label>
               <input
+                id="smtp-password"
                 type="password"
                 value={password}
                 onChange={(e) => handlePasswordChange(e.target.value)}
                 placeholder={passwordChanged ? 'Enter new password' : 'Password will not be displayed for security'}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">
                 {!passwordChanged
@@ -323,7 +298,7 @@ export default function SMTPSettingsPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:bg-gray-400 flex items-center justify-center gap-2"
               >
                 <Save size={18} />
                 {saving ? 'Saving...' : 'Save Settings'}

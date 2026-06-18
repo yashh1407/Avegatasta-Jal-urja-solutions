@@ -13,6 +13,8 @@ import {
   X,
   Globe,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -106,13 +108,24 @@ function BrandModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
-      if (res.ok) { onSaved(); onClose(); }
-      else { const d = await res.json(); setErr(d.error?.name?.[0] ?? 'Failed to save'); }
+      if (res.ok) {
+        toast.success(isEdit ? 'Brand updated.' : 'Brand added.');
+        onSaved();
+        onClose();
+      } else {
+        const d = await res.json();
+        const message = d.error?.name?.[0] ?? 'Failed to save brand.';
+        setErr(message);
+        toast.error(message);
+      }
+    } catch {
+      setErr('Failed to save brand.');
+      toast.error('Failed to save brand.');
     } finally { setSaving(false); }
   };
 
   const inputClass =
-    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all';
+    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all';
 
   return (
     <AnimatePresence>
@@ -129,38 +142,39 @@ function BrandModal({
             className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-[90vh]"
           >
             <div className="flex items-center justify-between px-8 pt-7 pb-5 border-b border-slate-100">
-              <h2 className="text-lg font-black text-blue-950">
+              <h2 className="text-lg font-black text-brand-950">
                 {initial?.id ? 'Edit Brand' : 'Add Brand'}
               </h2>
-              <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 transition-all">
+              <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 transition-all" aria-label="Close">
                 <X size={18} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
               {err && <p className="text-sm text-red-600 font-medium">{err}</p>}
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Brand Name *</label>
-                <input className={inputClass} value={form.name} onChange={set('name')} required placeholder="e.g. V-Guard" />
+                <label htmlFor="brand-name" className="text-xs font-black uppercase tracking-widest text-slate-500 block mb-1">Brand Name *</label>
+                <input id="brand-name" className={inputClass} value={form.name} onChange={set('name')} required placeholder="e.g. V-Guard" />
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Logo URL</label>
-                <input className={inputClass} value={form.logo_url} onChange={set('logo_url')} placeholder="https://..." />
+                <label htmlFor="brand-logo-url" className="text-xs font-black uppercase tracking-widest text-slate-500 block mb-1">Logo URL</label>
+                <input id="brand-logo-url" className={inputClass} value={form.logo_url} onChange={set('logo_url')} placeholder="https://..." />
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Description</label>
+                <label htmlFor="brand-description" className="text-xs font-black uppercase tracking-widest text-slate-500 block mb-1">Description</label>
                 <textarea
+                  id="brand-description"
                   className={`${inputClass} resize-none`} rows={3}
                   value={form.description} onChange={set('description')}
                   placeholder="Short description of the brand…"
                 />
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Website</label>
-                <input className={inputClass} value={form.website} onChange={set('website')} placeholder="https://brand.com" />
+                <label htmlFor="brand-website" className="text-xs font-black uppercase tracking-widest text-slate-500 block mb-1">Website</label>
+                <input id="brand-website" className={inputClass} value={form.website} onChange={set('website')} placeholder="https://brand.com" />
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Status</label>
-                <select className={inputClass} value={form.status} onChange={set('status')}>
+                <label htmlFor="brand-status" className="text-xs font-black uppercase tracking-widest text-slate-500 block mb-1">Status</label>
+                <select id="brand-status" className={inputClass} value={form.status} onChange={set('status')}>
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
@@ -171,7 +185,7 @@ function BrandModal({
                   Cancel
                 </button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+                  className="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                   {saving && <RefreshCw size={14} className="animate-spin" />}
                   {saving ? 'Saving…' : initial?.id ? 'Save Changes' : 'Add Brand'}
                 </button>
@@ -209,14 +223,23 @@ export default function BrandsPage() {
       const res = await fetch(`/api/admin/brands?${p}`);
       const data = await res.json();
       setBrands(Array.isArray(data) ? data : []);
-    } catch { setBrands([]); }
+    } catch { setBrands([]); toast.error('Failed to load brands.'); }
     finally { setLoading(false); }
   }, [statusFilter]);
 
   const handleDelete = async (id: number, name: string) => {
     if (!confirm(`Delete brand "${name}"? This cannot be undone.`)) return;
-    await fetch(`/api/admin/brands/${id}`, { method: 'DELETE' });
-    fetchBrands();
+    try {
+      const res = await fetch(`/api/admin/brands/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast.success(`Deleted brand "${name}".`);
+        fetchBrands();
+      } else {
+        toast.error('Failed to delete brand.');
+      }
+    } catch {
+      toast.error('Failed to delete brand.');
+    }
   };
 
   const openAdd = () => { setModalInitial(null); setModalOpen(true); };
@@ -243,12 +266,12 @@ export default function BrandsPage() {
             <div className="w-10 h-10 bg-violet-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-violet-200">
               <Tag size={20} />
             </div>
-            <h1 className="text-4xl font-black text-blue-950 tracking-tight">Brands</h1>
+            <h1 className="text-4xl font-black text-brand-950 tracking-tight">Brands</h1>
           </div>
           <p className="text-slate-500 font-medium">Manage product brands and associate them with your catalogue.</p>
         </div>
         <button onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-blue-200">
+          className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-brand-200">
           <Plus size={16} /> Add Brand
         </button>
       </div>
@@ -257,14 +280,14 @@ export default function BrandsPage() {
       <div className="flex flex-wrap gap-3 mb-6 items-end">
         <select
           value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+          className="px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
         >
           <option value="">All Status</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
         <button onClick={fetchBrands}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-sm font-black transition-all">
+          className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-sm font-black transition-all">
           <Search size={14} /> Refresh
         </button>
         {statusFilter && (
@@ -278,10 +301,10 @@ export default function BrandsPage() {
       {/* Table */}
       <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
         <div className="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
-          <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          <h2 className="text-xs font-black text-slate-500 uppercase tracking-widest">
             Brands ({brands.length})
           </h2>
-          <button onClick={fetchBrands} className="p-2 text-slate-400 hover:text-blue-600 rounded-xl hover:bg-blue-50 transition-all">
+          <button onClick={fetchBrands} className="p-2 text-slate-500 hover:text-brand-600 rounded-xl hover:bg-brand-50 transition-all" aria-label="Refresh brands">
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
         </div>
@@ -290,11 +313,11 @@ export default function BrandsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50">
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Brand</th>
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</th>
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Website</th>
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Brand</th>
+                <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Description</th>
+                <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Website</th>
+                <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -307,7 +330,7 @@ export default function BrandsPage() {
                       <Tag size={32} />
                     </div>
                     <p className="text-slate-500 font-medium">No brands found.</p>
-                    <button onClick={openAdd} className="mt-4 text-blue-600 text-sm font-black hover:underline">
+                    <button onClick={openAdd} className="mt-4 text-brand-600 text-sm font-black hover:underline">
                       Add the first brand →
                     </button>
                   </td>
@@ -319,37 +342,37 @@ export default function BrandsPage() {
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
                         <BrandLogo name={b.name} url={b.logo_url} />
-                        <span className="font-black text-sm text-blue-950">{b.name}</span>
+                        <span className="font-black text-sm text-brand-950">{b.name}</span>
                       </div>
                     </td>
                     <td className="px-6 py-5">
                       <span className="text-xs text-slate-500 font-medium line-clamp-2 max-w-xs">
-                        {b.description ?? <span className="text-slate-300">—</span>}
+                        {b.description ?? <span className="text-slate-400">—</span>}
                       </span>
                     </td>
                     <td className="px-6 py-5">
                       {b.website ? (
                         <a href={b.website} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 text-xs text-blue-600 hover:underline font-medium">
+                          className="flex items-center gap-1.5 text-xs text-brand-600 hover:underline font-medium">
                           <Globe size={11} /> Visit
                         </a>
-                      ) : <span className="text-xs text-slate-300">—</span>}
+                      ) : <span className="text-xs text-slate-400">—</span>}
                     </td>
                     <td className="px-6 py-5">
-                      <span className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-black ${
-                        b.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'
-                      }`}>
+                      <StatusBadge variant={b.status === 'active' ? 'success' : 'neutral'}>
                         {b.status}
-                      </span>
+                      </StatusBadge>
                     </td>
                     <td className="px-6 py-5">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                         <button onClick={() => openEdit(b)}
-                          className="px-3 py-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all text-xs font-black">
+                          className="px-3 py-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all text-xs font-black">
                           Edit
                         </button>
                         <button onClick={() => handleDelete(b.id, b.name)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                          title="Delete"
+                          aria-label={`Delete brand ${b.name}`}>
                           <Trash2 size={16} />
                         </button>
                       </div>

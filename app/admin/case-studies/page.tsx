@@ -5,8 +5,10 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'motion/react';
-import { BookOpen, RefreshCw, LogOut, Plus, Trash2, MapPin, Eye, Edit2 } from 'lucide-react';
+import { BookOpen, RefreshCw, LogOut, Plus, Trash2, MapPin, Eye } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Footer from '@/components/Footer';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -42,16 +44,17 @@ function SkeletonRow() {
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: CaseStudy['status'] }) {
-  const map = {
-    published: 'bg-emerald-50 text-emerald-700',
-    draft: 'bg-amber-50 text-amber-700',
-    archived: 'bg-slate-100 text-slate-500',
-  };
+const STATUS_VARIANT: Record<CaseStudy['status'], 'success' | 'warning' | 'neutral'> = {
+  published: 'success',
+  draft: 'warning',
+  archived: 'neutral',
+};
+
+function CaseStudyStatusBadge({ status }: { status: CaseStudy['status'] }) {
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black ${map[status]}`}>
+    <StatusBadge variant={STATUS_VARIANT[status]}>
       {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
+    </StatusBadge>
   );
 }
 
@@ -79,6 +82,7 @@ export default function AdminCaseStudiesPage() {
       setCaseStudies(Array.isArray(data) ? data : []);
     } catch {
       setCaseStudies([]);
+      toast.error('Failed to load case studies.');
     } finally {
       setLoading(false);
     }
@@ -88,23 +92,33 @@ export default function AdminCaseStudiesPage() {
     if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
     try {
       const res = await fetch(`/api/admin/case-studies/${id}`, { method: 'DELETE' });
-      if (res.ok) fetchCaseStudies();
+      if (res.ok) {
+        toast.success(`Deleted "${title}".`);
+        fetchCaseStudies();
+      } else {
+        toast.error('Failed to delete case study.');
+      }
     } catch {
-      // silently ignore
+      toast.error('Failed to delete case study.');
     }
   };
 
   const togglePublish = async (cs: CaseStudy) => {
     const newStatus = cs.status === 'published' ? 'draft' : 'published';
     try {
-      await fetch(`/api/admin/case-studies/${cs.id}`, {
+      const res = await fetch(`/api/admin/case-studies/${cs.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });
-      fetchCaseStudies();
+      if (res.ok) {
+        toast.success(newStatus === 'published' ? 'Case study published.' : 'Case study unpublished.');
+        fetchCaseStudies();
+      } else {
+        toast.error('Failed to update status.');
+      }
     } catch {
-      // silently ignore
+      toast.error('Failed to update status.');
     }
   };
 
@@ -129,10 +143,10 @@ export default function AdminCaseStudiesPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+              <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-200">
                 <BookOpen size={20} />
               </div>
-              <h1 className="text-4xl font-black text-blue-950 tracking-tight">Case Studies</h1>
+              <h1 className="text-4xl font-black text-brand-950 tracking-tight">Case Studies</h1>
             </div>
             <p className="text-slate-500 font-medium">Manage project case studies and site installations.</p>
           </div>
@@ -140,14 +154,14 @@ export default function AdminCaseStudiesPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={fetchCaseStudies}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-blue-200 hover:text-blue-600 transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-brand-200 hover:text-brand-600 transition-all"
             >
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
               Refresh
             </button>
             <Link
               href="/admin/case-studies/new"
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-blue-200"
+              className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-brand-200"
             >
               <Plus size={16} />
               New Case Study
@@ -156,6 +170,7 @@ export default function AdminCaseStudiesPage() {
               onClick={() => signOut({ callbackUrl: '/admin/login' })}
               className="p-2.5 bg-white border border-red-200 rounded-2xl text-red-500 hover:bg-red-50 transition-all"
               title="Logout"
+              aria-label="Logout"
             >
               <LogOut size={18} />
             </button>
@@ -168,7 +183,7 @@ export default function AdminCaseStudiesPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-black text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+              className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-black text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
             >
               <option value="">All Statuses</option>
               <option value="draft">Draft</option>
@@ -179,7 +194,7 @@ export default function AdminCaseStudiesPage() {
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-black text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
+                className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-black text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
               >
                 <option value="">All Categories</option>
                 {categories.map((c) => (
@@ -193,15 +208,16 @@ export default function AdminCaseStudiesPage() {
         {/* Table */}
         <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
           <div className="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
-            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            <h2 className="text-xs font-black text-slate-500 uppercase tracking-widest">
               {statusFilter || categoryFilter
                 ? `Filtered (${filtered.length} of ${caseStudies.length})`
                 : `All Case Studies (${caseStudies.length})`}
             </h2>
             <button
               onClick={fetchCaseStudies}
-              className="p-2 text-slate-400 hover:text-blue-600 rounded-xl hover:bg-blue-50 transition-all"
+              className="p-2 text-slate-500 hover:text-brand-600 rounded-xl hover:bg-brand-50 transition-all"
               title="Refresh"
+              aria-label="Refresh case studies"
             >
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             </button>
@@ -211,14 +227,14 @@ export default function AdminCaseStudiesPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/50">
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Title</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Category</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Client</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Location</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">GPS</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Created</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                  <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Title</th>
+                  <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Category</th>
+                  <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Client</th>
+                  <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Location</th>
+                  <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Status</th>
+                  <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">GPS</th>
+                  <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Created</th>
+                  <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -236,7 +252,7 @@ export default function AdminCaseStudiesPage() {
                       {!statusFilter && !categoryFilter && (
                         <Link
                           href="/admin/case-studies/new"
-                          className="mt-4 inline-block text-blue-600 text-sm font-black hover:underline"
+                          className="mt-4 inline-block text-brand-600 text-sm font-black hover:underline"
                         >
                           Create the first case study →
                         </Link>
@@ -252,23 +268,23 @@ export default function AdminCaseStudiesPage() {
                       className="hover:bg-slate-50/50 transition-colors group"
                     >
                       <td className="px-6 py-5 max-w-[220px]">
-                        <span className="font-black text-sm text-blue-950 block truncate">{cs.title}</span>
+                        <span className="font-black text-sm text-brand-950 block truncate">{cs.title}</span>
                         {cs.summary && (
-                          <p className="text-xs text-slate-400 font-medium mt-0.5 truncate">{cs.summary}</p>
+                          <p className="text-xs text-slate-500 font-medium mt-0.5 truncate">{cs.summary}</p>
                         )}
                       </td>
                       <td className="px-6 py-5">
                         {cs.category ? (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-black">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-brand-50 text-brand-700 text-xs font-black">
                             {cs.category}
                           </span>
                         ) : (
-                          <span className="text-xs text-slate-300">—</span>
+                          <span className="text-xs text-slate-400">—</span>
                         )}
                       </td>
                       <td className="px-6 py-5">
                         <span className="text-sm text-slate-600 font-medium">
-                          {cs.client_name || <span className="text-slate-300">—</span>}
+                          {cs.client_name || <span className="text-slate-400">—</span>}
                         </span>
                       </td>
                       <td className="px-6 py-5">
@@ -278,39 +294,40 @@ export default function AdminCaseStudiesPage() {
                             <span className="text-xs text-slate-500 font-medium">{cs.location_name}</span>
                           </div>
                         ) : (
-                          <span className="text-xs text-slate-300">—</span>
+                          <span className="text-xs text-slate-400">—</span>
                         )}
                       </td>
                       <td className="px-6 py-5">
-                        <StatusBadge status={cs.status} />
+                        <CaseStudyStatusBadge status={cs.status} />
                       </td>
                       <td className="px-6 py-5">
                         {cs.latitude != null && cs.longitude != null ? (
-                          <div className="flex items-center gap-1.5" title={`${cs.latitude.toFixed(4)}°N, ${cs.longitude.toFixed(4)}°E`}>
+                          <div className="flex items-center gap-1.5" title={`${Number(cs.latitude).toFixed(4)}°N, ${Number(cs.longitude).toFixed(4)}°E`}>
                             <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                             <span className="text-xs text-emerald-700 font-black">GPS</span>
                           </div>
                         ) : (
-                          <span className="text-xs text-slate-300">—</span>
+                          <span className="text-xs text-slate-400">—</span>
                         )}
                       </td>
                       <td className="px-6 py-5">
-                        <span className="text-xs text-slate-400 font-medium whitespace-nowrap">{fmt(cs.created_at)}</span>
+                        <span className="text-xs text-slate-500 font-medium whitespace-nowrap">{fmt(cs.created_at)}</span>
                       </td>
                       <td className="px-6 py-5">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                           <a
                             href={`/case-studies/${cs.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
                             title="Preview"
+                            aria-label={`Preview ${cs.title}`}
                           >
                             <Eye size={15} />
                           </a>
                           <Link
                             href={`/admin/case-studies/${cs.id}/edit`}
-                            className="px-3 py-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all text-xs font-black"
+                            className="px-3 py-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all text-xs font-black"
                           >
                             Edit
                           </Link>
@@ -324,6 +341,7 @@ export default function AdminCaseStudiesPage() {
                             onClick={() => handleDelete(cs.id, cs.title)}
                             className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                             title="Delete"
+                            aria-label={`Delete ${cs.title}`}
                           >
                             <Trash2 size={15} />
                           </button>

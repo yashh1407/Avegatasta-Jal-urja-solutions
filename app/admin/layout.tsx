@@ -7,6 +7,7 @@ import NotificationBell from '@/components/NotificationBell';
 import { AnimatePresence, motion } from 'motion/react';
 import { usePathname } from 'next/navigation';
 import { SessionProvider, useSession } from 'next-auth/react';
+import { Toaster } from 'react-hot-toast';
 
 export default function AdminLayout({
   children,
@@ -29,7 +30,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -41,6 +42,9 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div data-admin-shell className="flex h-screen bg-slate-50 overflow-hidden relative print:block print:h-auto print:overflow-visible">
+      {/* Global toast container — mounted once so every admin page's toasts render */}
+      <Toaster position="top-right" toastOptions={{ duration: 3500 }} />
+
       {/* Sidebar - Desktop */}
       <div className="hidden lg:flex w-80 fixed left-0 top-0 h-screen z-40 flex-col print:hidden">
         <AdminSidebar />
@@ -54,7 +58,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="lg:hidden fixed top-6 left-6 z-50 p-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-blue-600 hover:border-blue-200 transition-all print:hidden"
+        className="lg:hidden fixed top-6 left-6 z-50 p-2 bg-white border border-slate-200 rounded-xl text-slate-600 hover:text-brand-600 hover:border-brand-200 transition-all print:hidden"
         aria-label="Toggle menu"
       >
         {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}

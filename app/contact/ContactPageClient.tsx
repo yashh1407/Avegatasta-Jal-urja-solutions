@@ -141,7 +141,7 @@ export default function ContactPageClient() {
               transition={{ duration: 0.6 }}
             >
               <span className="inline-block px-4 py-1.5 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-400 text-xs font-black uppercase tracking-[0.2em] mb-6">
-                Contact Us â€“ Avegatasta Solution
+                Contact Us – Avegatasta Solution
               </span>
               <h1 className="text-5xl md:text-7xl font-black text-white leading-[1.05] tracking-tight mb-8">
                 Get in Touch with <br />
@@ -367,7 +367,7 @@ export default function ContactPageClient() {
                       className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-700 disabled:opacity-60 transition-all shadow-xl shadow-blue-100 flex items-center justify-center gap-3"
                     >
                       {submitState === 'loading' ? (
-                        <><Loader2 size={18} className="animate-spin" /> Sendingâ€¦</>
+                        <><Loader2 size={18} className="animate-spin" /> Sending…</>
                       ) : (
                         <>Send Message <Send size={18} /></>
                       )}

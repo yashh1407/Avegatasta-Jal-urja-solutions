@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -119,6 +121,7 @@ function PlanFormModal({
         }),
       });
       if (res.ok) {
+        toast.success(initial ? 'Plan updated.' : 'Plan created.');
         onSaved();
         onClose();
       } else {
@@ -129,15 +132,20 @@ function PlanFormModal({
             flat[k] = Array.isArray(v) ? v[0] : String(v);
           }
           setErrors(flat);
+          toast.error('Please fix the highlighted fields.');
+        } else {
+          toast.error(typeof data.error === 'string' ? data.error : 'Failed to save plan.');
         }
       }
+    } catch {
+      toast.error('Network error while saving plan.');
     } finally {
       setSaving(false);
     }
   };
 
   const inputClass =
-    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all';
+    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all';
 
   return (
     <AnimatePresence>
@@ -156,12 +164,13 @@ function PlanFormModal({
             className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between px-8 pt-7 pb-5 border-b border-slate-100">
-              <h2 className="text-lg font-black text-blue-950">
+              <h2 className="text-lg font-black text-brand-950">
                 {initial ? 'Edit Plan' : 'New AMC Plan'}
               </h2>
               <button
                 onClick={onClose}
                 className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
+                aria-label="Close"
               >
                 <X size={18} />
               </button>
@@ -169,10 +178,11 @@ function PlanFormModal({
 
             <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                <label htmlFor="amc-plan-name" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
                   Plan Name *
                 </label>
                 <input
+                  id="amc-plan-name"
                   className={inputClass}
                   value={form.name}
                   onChange={set('name')}
@@ -184,10 +194,11 @@ function PlanFormModal({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                  <label htmlFor="amc-plan-duration" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
                     Duration (months) *
                   </label>
                   <input
+                    id="amc-plan-duration"
                     className={inputClass}
                     type="number"
                     min={1}
@@ -201,10 +212,11 @@ function PlanFormModal({
                   )}
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                  <label htmlFor="amc-plan-price" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
                     Price (₹) *
                   </label>
                   <input
+                    id="amc-plan-price"
                     className={inputClass}
                     type="number"
                     min={0}
@@ -219,10 +231,11 @@ function PlanFormModal({
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                <label htmlFor="amc-plan-interval" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
                   Service Interval (days) *
                 </label>
                 <input
+                  id="amc-plan-interval"
                   className={inputClass}
                   type="number"
                   min={1}
@@ -238,10 +251,11 @@ function PlanFormModal({
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
+                <label htmlFor="amc-plan-coverage" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">
                   Coverage Description
                 </label>
                 <textarea
+                  id="amc-plan-coverage"
                   className={`${inputClass} resize-none`}
                   rows={3}
                   value={form.coverage_description}
@@ -261,7 +275,7 @@ function PlanFormModal({
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {saving && <RefreshCw size={14} className="animate-spin" />}
                   {saving ? 'Saving…' : initial ? 'Save Changes' : 'Create Plan'}
@@ -287,6 +301,8 @@ export default function AmcPlansPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<AmcPlan | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AmcPlan | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/admin/login');
@@ -301,23 +317,30 @@ export default function AmcPlansPage() {
       setPlans(Array.isArray(data) ? data : []);
     } catch {
       setPlans([]);
+      toast.error('Failed to load AMC plans.');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const handleDelete = async (plan: AmcPlan) => {
-    if (!confirm(`Delete plan "${plan.name}"? This cannot be undone.`)) return;
+  const handleDeleteConfirmed = async () => {
+    const plan = deleteTarget;
+    if (!plan) return;
+    setDeleting(true);
     try {
       const res = await fetch(`/api/admin/amc-plans/${plan.id}`, { method: 'DELETE' });
       if (res.ok) {
+        toast.success(`Plan "${plan.name}" deleted.`);
         fetchPlans();
       } else {
         const data = await res.json();
-        alert(data.error || 'Failed to delete plan.');
+        toast.error(data.error || 'Failed to delete plan.');
       }
     } catch {
-      alert('Failed to delete plan.');
+      toast.error('Failed to delete plan.');
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
     }
   };
 
@@ -344,7 +367,7 @@ export default function AmcPlansPage() {
         {/* Back */}
         <Link
           href="/admin/amc"
-          className="inline-flex items-center gap-2 text-sm font-black text-slate-500 hover:text-blue-600 mb-8 transition-colors group"
+          className="inline-flex items-center gap-2 text-sm font-black text-slate-500 hover:text-brand-600 mb-8 transition-colors group"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
           AMC Dashboard
@@ -354,10 +377,10 @@ export default function AmcPlansPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+              <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-200">
                 <ShieldCheck size={20} />
               </div>
-              <h1 className="text-4xl font-black text-blue-950 tracking-tight">AMC Plans</h1>
+              <h1 className="text-4xl font-black text-brand-950 tracking-tight">AMC Plans</h1>
             </div>
             <p className="text-slate-500 font-medium">Define plan types that can be assigned to client products.</p>
           </div>
@@ -367,22 +390,24 @@ export default function AmcPlansPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
                 type="text"
+                aria-label="Search plans"
                 placeholder="Search plans…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-52 transition-all"
+                className="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 w-52 transition-all"
               />
             </div>
             <button
               onClick={fetchPlans}
-              className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all"
+              className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-brand-600 hover:border-brand-200 transition-all"
               title="Refresh"
+              aria-label="Refresh plans"
             >
               <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
             </button>
             <button
               onClick={openAdd}
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-blue-200"
+              className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-brand-200"
             >
               <Plus size={16} />
               New Plan
@@ -393,8 +418,8 @@ export default function AmcPlansPage() {
         {/* Summary chips */}
         <div className="flex flex-wrap gap-3 mb-6">
           <div className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-100 rounded-2xl shadow-sm">
-            <ShieldCheck size={14} className="text-blue-500" />
-            <span className="text-sm font-black text-blue-950">{plans.length}</span>
+            <ShieldCheck size={14} className="text-brand-500" />
+            <span className="text-sm font-black text-brand-950">{plans.length}</span>
             <span className="text-xs text-slate-500 font-medium">Total Plans</span>
           </div>
         </div>
@@ -429,7 +454,7 @@ export default function AmcPlansPage() {
                         <ShieldCheck size={32} />
                       </div>
                       <p className="text-slate-500 font-medium">No AMC plans found.</p>
-                      <button onClick={openAdd} className="mt-4 text-blue-600 text-sm font-black hover:underline">
+                      <button onClick={openAdd} className="mt-4 text-brand-600 text-sm font-black hover:underline">
                         Create the first plan →
                       </button>
                     </td>
@@ -444,10 +469,10 @@ export default function AmcPlansPage() {
                     >
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
-                            <ShieldCheck size={15} className="text-blue-500" />
+                          <div className="w-9 h-9 bg-brand-50 rounded-xl flex items-center justify-center shrink-0">
+                            <ShieldCheck size={15} className="text-brand-500" />
                           </div>
-                          <span className="font-black text-sm text-blue-950">{plan.name}</span>
+                          <span className="font-black text-sm text-brand-950">{plan.name}</span>
                         </div>
                       </td>
                       <td className="px-6 py-5">
@@ -459,7 +484,7 @@ export default function AmcPlansPage() {
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-1.5">
                           <DollarSign size={13} className="text-emerald-500" />
-                          <span className="text-sm font-black text-blue-950">
+                          <span className="text-sm font-black text-brand-950">
                             ₹{plan.price.toLocaleString('en-IN')}
                           </span>
                         </div>
@@ -483,17 +508,19 @@ export default function AmcPlansPage() {
                         )}
                       </td>
                       <td className="px-6 py-5">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                           <button
                             onClick={() => openEdit(plan)}
-                            className="px-3 py-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all text-xs font-black"
+                            className="px-3 py-2 text-slate-500 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all text-xs font-black"
+                            aria-label={`Edit ${plan.name}`}
                           >
                             Edit
                           </button>
                           <button
-                            onClick={() => handleDelete(plan)}
+                            onClick={() => setDeleteTarget(plan)}
                             className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                             title="Delete Plan"
+                            aria-label={`Delete ${plan.name}`}
                           >
                             <Trash2 size={15} />
                           </button>
@@ -515,6 +542,16 @@ export default function AmcPlansPage() {
         initial={editTarget}
         onClose={() => setModalOpen(false)}
         onSaved={fetchPlans}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete plan"
+        message={deleteTarget ? `Delete plan "${deleteTarget.name}"? This cannot be undone.` : undefined}
+        confirmLabel={deleting ? 'Deleting…' : 'Delete'}
+        destructive
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => { if (!deleting) setDeleteTarget(null); }}
       />
     </div>
   );

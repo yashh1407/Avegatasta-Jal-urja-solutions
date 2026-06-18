@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { Users, RefreshCw, LogOut, Plus, X, Phone, Mail, UserCheck, UserX } from 'lucide-react';
 import Footer from '@/components/Footer';
+import toast from 'react-hot-toast';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -89,19 +90,26 @@ function MemberFormModal({
         body: JSON.stringify(form),
       });
       if (res.ok) {
+        toast.success(isEdit ? 'Member updated.' : 'Member added.');
         onSaved();
         onClose();
       } else {
         const data = await res.json();
-        setError(data.error || 'Failed to save member.');
+        const msg = data.error || 'Failed to save member.';
+        setError(msg);
+        toast.error(msg);
       }
+    } catch {
+      const msg = 'Failed to save member. Please try again.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
   };
 
   const inputClass =
-    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all';
+    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all';
 
   return (
     <AnimatePresence>
@@ -120,11 +128,12 @@ function MemberFormModal({
             className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between px-8 pt-7 pb-5 border-b border-slate-100">
-              <h2 className="text-lg font-black text-blue-950">
+              <h2 className="text-lg font-black text-brand-950">
                 {initial?.id ? 'Edit Member' : 'Add Team Member'}
               </h2>
               <button
                 onClick={onClose}
+                aria-label="Close dialog"
                 className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
               >
                 <X size={18} />
@@ -137,13 +146,13 @@ function MemberFormModal({
               )}
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Full Name *</label>
-                <input className={inputClass} value={form.name} onChange={set('name')} required placeholder="e.g. Anita Sharma" />
+                <label htmlFor="member-name" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Full Name *</label>
+                <input id="member-name" className={inputClass} value={form.name} onChange={set('name')} required placeholder="e.g. Anita Sharma" />
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Role</label>
-                <select className={inputClass} value={form.role} onChange={set('role')}>
+                <label htmlFor="member-role" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Role</label>
+                <select id="member-role" className={inputClass} value={form.role} onChange={set('role')}>
                   <option value="sales_person">Sales Person</option>
                   <option value="manager">Manager</option>
                 </select>
@@ -151,12 +160,12 @@ function MemberFormModal({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Phone</label>
-                  <input className={inputClass} value={form.phone} onChange={set('phone')} placeholder="+91 98765 43210" />
+                  <label htmlFor="member-phone" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Phone</label>
+                  <input id="member-phone" className={inputClass} value={form.phone} onChange={set('phone')} placeholder="+91 98765 43210" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Email</label>
-                  <input className={inputClass} type="email" value={form.email} onChange={set('email')} placeholder="team@example.com" />
+                  <label htmlFor="member-email" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Email</label>
+                  <input id="member-email" className={inputClass} type="email" value={form.email} onChange={set('email')} placeholder="team@example.com" />
                 </div>
               </div>
 
@@ -171,7 +180,7 @@ function MemberFormModal({
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {saving && <RefreshCw size={14} className="animate-spin" />}
                   {saving ? 'Saving…' : initial?.id ? 'Save Changes' : 'Add Member'}
@@ -210,6 +219,7 @@ export default function AdminSalesTeamPage() {
       setMembers(Array.isArray(data) ? data : []);
     } catch {
       setMembers([]);
+      toast.error('Failed to load team members. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -228,7 +238,12 @@ export default function AdminSalesTeamPage() {
         setMembers((prev) =>
           prev.map((m) => (m.id === member.id ? { ...m, status: newStatus } : m))
         );
+        toast.success(newStatus === 'active' ? 'Member activated.' : 'Member deactivated.');
+      } else {
+        toast.error('Failed to update member status.');
       }
+    } catch {
+      toast.error('Failed to update member status. Please try again.');
     } finally {
       setTogglingId(null);
     }
@@ -258,15 +273,15 @@ export default function AdminSalesTeamPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+              <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-200">
                 <Users size={20} />
               </div>
-              <h1 className="text-4xl font-black text-blue-950 tracking-tight">Sales Team</h1>
+              <h1 className="text-4xl font-black text-brand-950 tracking-tight">Sales Team</h1>
             </div>
             <p className="text-slate-500 font-medium">
               Manage sales personnel and managers.
               {!loading && (
-                <span className="ml-2 text-blue-600 font-black">{activeCount} active</span>
+                <span className="ml-2 text-brand-600 font-black">{activeCount} active</span>
               )}
             </p>
           </div>
@@ -274,14 +289,14 @@ export default function AdminSalesTeamPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={fetchMembers}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-blue-200 hover:text-blue-600 transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-black text-slate-600 hover:border-brand-200 hover:text-brand-600 transition-all"
             >
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
               Refresh
             </button>
             <button
               onClick={openAdd}
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-blue-200"
+              className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-brand-200"
             >
               <Plus size={16} />
               Add Member
@@ -304,7 +319,7 @@ export default function AdminSalesTeamPage() {
             </h2>
             <button
               onClick={fetchMembers}
-              className="p-2 text-slate-400 hover:text-blue-600 rounded-xl hover:bg-blue-50 transition-all"
+              className="p-2 text-slate-400 hover:text-brand-600 rounded-xl hover:bg-brand-50 transition-all"
               title="Refresh"
             >
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
@@ -333,7 +348,7 @@ export default function AdminSalesTeamPage() {
                         <Users size={32} />
                       </div>
                       <p className="text-slate-500 font-medium">No team members yet.</p>
-                      <button onClick={openAdd} className="mt-4 text-blue-600 text-sm font-black hover:underline">
+                      <button onClick={openAdd} className="mt-4 text-brand-600 text-sm font-black hover:underline">
                         Add the first member →
                       </button>
                     </td>
@@ -347,13 +362,13 @@ export default function AdminSalesTeamPage() {
                       className={`transition-colors group ${member.status === 'inactive' ? 'opacity-60' : 'hover:bg-slate-50/50'}`}
                     >
                       <td className="px-6 py-5">
-                        <span className="font-black text-sm text-blue-950">{member.name}</span>
+                        <span className="font-black text-sm text-brand-950">{member.name}</span>
                       </td>
                       <td className="px-6 py-5">
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-black ${
                           member.role === 'manager'
                             ? 'bg-purple-50 text-purple-700'
-                            : 'bg-blue-50 text-blue-700'
+                            : 'bg-brand-50 text-brand-700'
                         }`}>
                           {member.role === 'manager' ? 'Manager' : 'Sales Person'}
                         </span>
@@ -389,10 +404,11 @@ export default function AdminSalesTeamPage() {
                         </span>
                       </td>
                       <td className="px-6 py-5">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                           <button
                             onClick={() => openEdit(member)}
-                            className="px-3 py-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all text-xs font-black"
+                            className="px-3 py-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all text-xs font-black"
+                            aria-label={`Edit ${member.name}`}
                           >
                             Edit
                           </button>
@@ -405,6 +421,7 @@ export default function AdminSalesTeamPage() {
                                 : 'text-slate-400 hover:text-green-600 hover:bg-green-50'
                             }`}
                             title={member.status === 'active' ? 'Deactivate' : 'Activate'}
+                            aria-label={`${member.status === 'active' ? 'Deactivate' : 'Activate'} ${member.name}`}
                           >
                             {togglingId === member.id ? (
                               <RefreshCw size={13} className="animate-spin" />

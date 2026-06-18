@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
+import toast from 'react-hot-toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import {
   UserCheck,
   Search,
@@ -55,7 +57,7 @@ const ROLES: MemberRole[] = ['Sales', 'Support', 'Technical', 'Management', 'Oth
 
 const ROLE_COLORS: Record<MemberRole, string> = {
   Sales: 'bg-green-100 text-green-700',
-  Support: 'bg-blue-100 text-blue-700',
+  Support: 'bg-brand-100 text-brand-700',
   Technical: 'bg-purple-100 text-purple-700',
   Management: 'bg-orange-100 text-orange-700',
   Other: 'bg-slate-100 text-slate-600',
@@ -67,7 +69,7 @@ function Avatar({ name, url }: { name: string; url: string | null }) {
   if (url) return <img src={url} alt={name} className="w-9 h-9 rounded-xl object-cover" />;
   const initials = name.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
   return (
-    <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-black">
+    <div className="w-9 h-9 rounded-xl bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-black">
       {initials}
     </div>
   );
@@ -123,13 +125,23 @@ function MemberModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
-      if (res.ok) { onSaved(); onClose(); }
-      else { const d = await res.json(); setErr(d.error?.name?.[0] ?? 'Failed to save'); }
+      if (res.ok) {
+        toast.success(isEdit ? 'Member updated successfully' : 'Member added successfully');
+        onSaved(); onClose();
+      } else {
+        const d = await res.json();
+        const msg = d.error?.name?.[0] ?? 'Failed to save member';
+        setErr(msg);
+        toast.error(msg);
+      }
+    } catch {
+      setErr('Failed to save member');
+      toast.error('Failed to save member');
     } finally { setSaving(false); }
   };
 
   const inputClass =
-    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all';
+    'w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all';
 
   return (
     <AnimatePresence>
@@ -146,7 +158,7 @@ function MemberModal({
             className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-y-auto max-h-[90vh]"
           >
             <div className="flex items-center justify-between px-8 pt-7 pb-5 border-b border-slate-100">
-              <h2 className="text-lg font-black text-blue-950">
+              <h2 className="text-lg font-black text-brand-950">
                 {initial?.id ? 'Edit Member' : 'Add Team Member'}
               </h2>
               <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 transition-all">
@@ -156,19 +168,19 @@ function MemberModal({
             <form onSubmit={handleSubmit} className="px-8 py-6 space-y-4">
               {err && <p className="text-sm text-red-600 font-medium">{err}</p>}
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Full Name *</label>
-                <input className={inputClass} value={form.name} onChange={set('name')} required placeholder="e.g. Rahul Sharma" />
+                <label htmlFor="member-name" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Full Name *</label>
+                <input id="member-name" className={inputClass} value={form.name} onChange={set('name')} required placeholder="e.g. Rahul Sharma" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Role *</label>
-                  <select className={inputClass} value={form.role} onChange={set('role')}>
+                  <label htmlFor="member-role" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Role *</label>
+                  <select id="member-role" className={inputClass} value={form.role} onChange={set('role')}>
                     {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Status</label>
-                  <select className={inputClass} value={form.status} onChange={set('status')}>
+                  <label htmlFor="member-status" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Status</label>
+                  <select id="member-status" className={inputClass} value={form.status} onChange={set('status')}>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
@@ -176,17 +188,17 @@ function MemberModal({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Email</label>
-                  <input className={inputClass} type="email" value={form.email} onChange={set('email')} placeholder="email@example.com" />
+                  <label htmlFor="member-email" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Email</label>
+                  <input id="member-email" className={inputClass} type="email" value={form.email} onChange={set('email')} placeholder="email@example.com" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Phone</label>
-                  <input className={inputClass} value={form.phone} onChange={set('phone')} placeholder="+91 98765 43210" />
+                  <label htmlFor="member-phone" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Phone</label>
+                  <input id="member-phone" className={inputClass} value={form.phone} onChange={set('phone')} placeholder="+91 98765 43210" />
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Joined Date</label>
-                <input className={inputClass} type="date" value={form.joined_date} onChange={set('joined_date')} />
+                <label htmlFor="member-joined" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Joined Date</label>
+                <input id="member-joined" className={inputClass} type="date" value={form.joined_date} onChange={set('joined_date')} />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={onClose}
@@ -194,7 +206,7 @@ function MemberModal({
                   Cancel
                 </button>
                 <button type="submit" disabled={saving}
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+                  className="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-xl text-sm font-black text-white transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                   {saving && <RefreshCw size={14} className="animate-spin" />}
                   {saving ? 'Saving…' : initial?.id ? 'Save Changes' : 'Add Member'}
                 </button>
@@ -220,6 +232,7 @@ export default function TeamMembersPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalInitial, setModalInitial] = useState<(MemberForm & { id?: number }) | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/admin/login');
@@ -236,14 +249,32 @@ export default function TeamMembersPage() {
       const res = await fetch(`/api/admin/team-members?${p}`);
       const data = await res.json();
       setMembers(Array.isArray(data) ? data : []);
-    } catch { setMembers([]); }
+    } catch {
+      setMembers([]);
+      toast.error('Failed to load team members');
+    }
     finally { setLoading(false); }
   }, [search, roleFilter, statusFilter]);
 
-  const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
-    await fetch(`/api/admin/team-members/${id}`, { method: 'DELETE' });
-    fetchMembers();
+  const handleDelete = (id: number, name: string) => {
+    setDeleteTarget({ id, name });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const { id, name } = deleteTarget;
+    setDeleteTarget(null);
+    try {
+      const res = await fetch(`/api/admin/team-members/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast.success(`"${name}" deleted successfully`);
+        fetchMembers();
+      } else {
+        toast.error('Failed to delete member');
+      }
+    } catch {
+      toast.error('Failed to delete member');
+    }
   };
 
   const openAdd = () => { setModalInitial(null); setModalOpen(true); };
@@ -271,12 +302,12 @@ export default function TeamMembersPage() {
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
               <UserCheck size={20} />
             </div>
-            <h1 className="text-4xl font-black text-blue-950 tracking-tight">Team Members</h1>
+            <h1 className="text-4xl font-black text-brand-950 tracking-tight">Team Members</h1>
           </div>
           <p className="text-slate-500 font-medium">Manage your team — roles, contact details and status.</p>
         </div>
         <button onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-blue-200">
+          className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 rounded-2xl text-sm font-black text-white transition-all shadow-lg shadow-brand-200">
           <Plus size={16} /> Add Member
         </button>
       </div>
@@ -286,29 +317,31 @@ export default function TeamMembersPage() {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input
-            type="text" placeholder="Search members…" value={search}
+            type="text" aria-label="Search team members" placeholder="Search members…" value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && fetchMembers()}
-            className="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-56 transition-all"
+            className="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 w-56 transition-all"
           />
         </div>
         <select
+          aria-label="Filter by role"
           value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+          className="px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
         >
           <option value="">All Roles</option>
           {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
         <select
+          aria-label="Filter by status"
           value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+          className="px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
         >
           <option value="">All Status</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
         <button onClick={fetchMembers}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-sm font-black transition-all">
+          className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-sm font-black transition-all">
           <Search size={14} /> Search
         </button>
         {(search || roleFilter || statusFilter) && (
@@ -322,10 +355,10 @@ export default function TeamMembersPage() {
       {/* Table */}
       <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
         <div className="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
-          <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          <h2 className="text-xs font-black text-slate-500 uppercase tracking-widest">
             Team ({members.length})
           </h2>
-          <button onClick={fetchMembers} className="p-2 text-slate-400 hover:text-blue-600 rounded-xl hover:bg-blue-50 transition-all">
+          <button onClick={fetchMembers} className="p-2 text-slate-400 hover:text-brand-600 rounded-xl hover:bg-brand-50 transition-all">
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
         </div>
@@ -334,12 +367,12 @@ export default function TeamMembersPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50">
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Member</th>
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Role</th>
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Contact</th>
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Joined</th>
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Member</th>
+                <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Role</th>
+                <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Contact</th>
+                <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Joined</th>
+                <th className="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -352,7 +385,7 @@ export default function TeamMembersPage() {
                       <UserCheck size={32} />
                     </div>
                     <p className="text-slate-500 font-medium">No team members found.</p>
-                    <button onClick={openAdd} className="mt-4 text-blue-600 text-sm font-black hover:underline">
+                    <button onClick={openAdd} className="mt-4 text-brand-600 text-sm font-black hover:underline">
                       Add the first member →
                     </button>
                   </td>
@@ -364,7 +397,7 @@ export default function TeamMembersPage() {
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
                         <Avatar name={m.name} url={m.avatar_url} />
-                        <span className="font-black text-sm text-blue-950">{m.name}</span>
+                        <span className="font-black text-sm text-brand-950">{m.name}</span>
                       </div>
                     </td>
                     <td className="px-6 py-5">
@@ -397,19 +430,21 @@ export default function TeamMembersPage() {
                     </td>
                     <td className="px-6 py-5">
                       {m.joined_date ? (
-                        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
                           <Calendar size={12} />
                           {new Date(m.joined_date).toLocaleDateString('en-IN')}
                         </div>
                       ) : <span className="text-xs text-slate-300">—</span>}
                     </td>
                     <td className="px-6 py-5">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                         <button onClick={() => openEdit(m)}
-                          className="px-3 py-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all text-xs font-black">
+                          aria-label={`Edit ${m.name}`}
+                          className="px-3 py-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-xl transition-all text-xs font-black">
                           Edit
                         </button>
                         <button onClick={() => handleDelete(m.id, m.name)}
+                          aria-label={`Delete ${m.name}`}
                           className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
                           <Trash2 size={16} />
                         </button>
@@ -428,6 +463,16 @@ export default function TeamMembersPage() {
         initial={modalInitial}
         onClose={() => setModalOpen(false)}
         onSaved={fetchMembers}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={`Delete "${deleteTarget?.name ?? ''}"?`}
+        message="This action cannot be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
     </div>
   );

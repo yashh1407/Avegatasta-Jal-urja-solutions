@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import {
   Calendar,
   Clock,
@@ -186,13 +186,12 @@ export default function AttendanceLogsPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto flex flex-col gap-6 text-slate-800">
-      <Toaster position="top-center" />
 
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Clock className="text-blue-600" size={24} />
+            <Clock className="text-brand-600" size={24} />
             Sales Team Attendance Logs
           </h1>
           <p className="text-xs text-slate-500 font-semibold mt-1">
@@ -202,7 +201,7 @@ export default function AttendanceLogsPage() {
 
         <button
           onClick={exportToCSV}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-wider text-[11px] px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-1.5 self-start md:self-auto"
+          className="bg-brand-600 hover:bg-brand-700 text-white font-bold uppercase tracking-wider text-[11px] px-4 py-2.5 rounded-xl shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-1.5 self-start md:self-auto"
         >
           <Download size={14} />
           Export to CSV
@@ -212,11 +211,11 @@ export default function AttendanceLogsPage() {
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white p-4.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="bg-blue-50 p-3 rounded-xl text-blue-600">
+          <div className="bg-brand-50 p-3 rounded-xl text-brand-600">
             <Users size={20} />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-black text-slate-400 block tracking-wider">Total Shift Logs</span>
+            <span className="text-xs uppercase font-black text-slate-500 block tracking-wider">Total Shift Logs</span>
             <span className="text-lg font-black text-slate-900 mt-0.5">{records.length}</span>
           </div>
         </div>
@@ -226,7 +225,7 @@ export default function AttendanceLogsPage() {
             <CheckCircle2 size={20} />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-black text-slate-400 block tracking-wider">Active Shifts</span>
+            <span className="text-xs uppercase font-black text-slate-500 block tracking-wider">Active Shifts</span>
             <span className="text-lg font-black text-slate-900 mt-0.5">
               {records.filter(r => r.status === 'checked_in').length}
             </span>
@@ -238,7 +237,7 @@ export default function AttendanceLogsPage() {
             <MapPin size={20} />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-black text-slate-400 block tracking-wider">Total Marketing Visits</span>
+            <span className="text-xs uppercase font-black text-slate-500 block tracking-wider">Total Marketing Visits</span>
             <span className="text-lg font-black text-slate-900 mt-0.5">
               {records.reduce((acc, r) => acc + (r.visits?.length || 0), 0)}
             </span>
@@ -250,7 +249,7 @@ export default function AttendanceLogsPage() {
             <Clock size={20} />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-black text-slate-400 block tracking-wider">Hours Worked</span>
+            <span className="text-xs uppercase font-black text-slate-500 block tracking-wider">Hours Worked</span>
             <span className="text-lg font-black text-slate-900 mt-0.5">
               {formatDuration(records.reduce((acc, r) => acc + (r.work_duration_minutes || 0), 0))}
             </span>
@@ -271,19 +270,21 @@ export default function AttendanceLogsPage() {
             <Search className="absolute left-3.5 top-3.5 text-slate-400" size={16} />
             <input
               type="text"
+              aria-label="Search attendance logs by agent name or email"
               placeholder="Search agent name, email..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-slate-800 placeholder:text-slate-400"
+              className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-medium text-slate-800 placeholder:text-slate-400"
             />
           </div>
 
           {/* User Filter */}
           <div>
             <select
+              aria-label="Filter by employee"
               value={selectedUser}
               onChange={e => setSelectedUser(e.target.value)}
-              className="w-full py-2.5 px-3.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-slate-700"
+              className="w-full py-2.5 px-3.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-medium text-slate-700"
             >
               <option value="">Select Employee (All)</option>
               {users.map(u => (
@@ -297,9 +298,10 @@ export default function AttendanceLogsPage() {
           {/* Status Filter */}
           <div>
             <select
+              aria-label="Filter by shift status"
               value={selectedStatus}
               onChange={e => setSelectedStatus(e.target.value)}
-              className="w-full py-2.5 px-3.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-slate-700"
+              className="w-full py-2.5 px-3.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-medium text-slate-700"
             >
               <option value="">Status (All)</option>
               <option value="checked_in">Active / Checked In</option>
@@ -309,23 +311,25 @@ export default function AttendanceLogsPage() {
 
           {/* Start Date */}
           <div className="flex items-center gap-2">
-            <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">From</label>
+            <label htmlFor="attendance-start-date" className="text-[10px] font-black uppercase text-slate-500 tracking-wider">From</label>
             <input
+              id="attendance-start-date"
               type="date"
               value={startDate}
               onChange={e => setStartDate(e.target.value)}
-              className="w-full py-2.5 px-3.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-slate-700"
+              className="w-full py-2.5 px-3.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-medium text-slate-700"
             />
           </div>
 
           {/* End Date */}
           <div className="flex items-center gap-2">
-            <label className="text-[10px] font-black uppercase text-slate-400 tracking-wider">To</label>
+            <label htmlFor="attendance-end-date" className="text-[10px] font-black uppercase text-slate-500 tracking-wider">To</label>
             <input
+              id="attendance-end-date"
               type="date"
               value={endDate}
               onChange={e => setEndDate(e.target.value)}
-              className="w-full py-2.5 px-3.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all font-medium text-slate-700"
+              className="w-full py-2.5 px-3.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-medium text-slate-700"
             />
           </div>
         </div>
@@ -359,7 +363,7 @@ export default function AttendanceLogsPage() {
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-20 flex flex-col items-center justify-center gap-3">
-            <Loader2 className="animate-spin text-blue-600" size={30} />
+            <Loader2 className="animate-spin text-brand-600" size={30} />
             <span className="text-xs text-slate-500 font-black uppercase tracking-wider">Fetching attendance logs...</span>
           </div>
         ) : filteredRecords.length === 0 ? (
@@ -370,7 +374,7 @@ export default function AttendanceLogsPage() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-xs">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-400 uppercase font-black tracking-wider text-[10px]">
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-black tracking-wider text-[10px]">
                   <th className="py-4.5 px-5">Agent</th>
                   <th className="py-4.5 px-5">Date</th>
                   <th className="py-4.5 px-5">Check-In</th>
@@ -387,7 +391,7 @@ export default function AttendanceLogsPage() {
                     {/* Agent */}
                     <td className="py-4 px-5">
                       <div className="font-bold text-slate-900">{record.agent_name}</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">{record.agent_email}</div>
+                      <div className="text-xs text-slate-500 mt-0.5">{record.agent_email}</div>
                     </td>
 
                     {/* Date */}
@@ -403,10 +407,10 @@ export default function AttendanceLogsPage() {
                           href={`https://www.google.com/maps/search/?api=1&query=${record.check_in_latitude},${record.check_in_longitude}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-600 hover:text-blue-600 mt-1 hover:underline max-w-[180px]"
+                          className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-600 hover:text-brand-600 mt-1 hover:underline max-w-[180px]"
                           title={record.check_in_address}
                         >
-                          <MapPin size={9} className="text-blue-500 shrink-0" />
+                          <MapPin size={9} className="text-brand-500 shrink-0" />
                           <span className="truncate">{record.check_in_address}</span>
                           <span className="text-[9px] text-slate-400 font-bold shrink-0">({record.check_in_method})</span>
                         </a>
@@ -415,7 +419,7 @@ export default function AttendanceLogsPage() {
                           href={`https://www.google.com/maps/search/?api=1&query=${record.check_in_latitude},${record.check_in_longitude}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-0.5 text-[9px] font-black text-blue-600 hover:text-blue-800 uppercase tracking-wide mt-1 hover:underline"
+                          className="inline-flex items-center gap-0.5 text-[9px] font-black text-brand-600 hover:text-brand-800 uppercase tracking-wide mt-1 hover:underline"
                         >
                           <MapPin size={9} />
                           {Number(record.check_in_latitude).toFixed(4)}, {Number(record.check_in_longitude).toFixed(4)}
@@ -432,10 +436,10 @@ export default function AttendanceLogsPage() {
                           href={`https://www.google.com/maps/search/?api=1&query=${record.check_out_latitude},${record.check_out_longitude}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-600 hover:text-blue-600 mt-1 hover:underline max-w-[180px]"
+                          className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-600 hover:text-brand-600 mt-1 hover:underline max-w-[180px]"
                           title={record.check_out_address}
                         >
-                          <MapPin size={9} className="text-blue-500 shrink-0" />
+                          <MapPin size={9} className="text-brand-500 shrink-0" />
                           <span className="truncate">{record.check_out_address}</span>
                           <span className="text-[9px] text-slate-400 font-bold shrink-0">({record.check_out_method})</span>
                         </a>
@@ -444,7 +448,7 @@ export default function AttendanceLogsPage() {
                           href={`https://www.google.com/maps/search/?api=1&query=${record.check_out_latitude},${record.check_out_longitude}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-0.5 text-[9px] font-black text-blue-600 hover:text-blue-800 uppercase tracking-wide mt-1 hover:underline"
+                          className="inline-flex items-center gap-0.5 text-[9px] font-black text-brand-600 hover:text-brand-800 uppercase tracking-wide mt-1 hover:underline"
                         >
                           <MapPin size={9} />
                           {Number(record.check_out_latitude).toFixed(4)}, {Number(record.check_out_longitude).toFixed(4)}
@@ -461,7 +465,7 @@ export default function AttendanceLogsPage() {
                     {/* Visits Count */}
                     <td className="py-4 px-5 text-center">
                       <span className={`inline-flex items-center justify-center font-bold px-2 py-1 rounded-lg text-[10px] min-w-[22px] ${
-                        record.visits?.length > 0 ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-slate-50 text-slate-400 border border-slate-100'
+                        record.visits?.length > 0 ? 'bg-brand-50 text-brand-700 border border-brand-100' : 'bg-slate-50 text-slate-400 border border-slate-100'
                       }`}>
                         {record.visits?.length || 0}
                       </span>
@@ -471,10 +475,10 @@ export default function AttendanceLogsPage() {
                     <td className="py-4 px-5">
                       <span className={`inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${
                         record.status === 'checked_in'
-                          ? 'bg-blue-50 text-blue-700 border-blue-100'
+                          ? 'bg-brand-50 text-brand-700 border-brand-100'
                           : 'bg-emerald-50 text-emerald-700 border-emerald-100'
                       }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${record.status === 'checked_in' ? 'bg-blue-500 animate-pulse' : 'bg-emerald-500'}`} />
+                        <span className={`w-1.5 h-1.5 rounded-full ${record.status === 'checked_in' ? 'bg-brand-500 animate-pulse' : 'bg-emerald-500'}`} />
                         {record.status === 'checked_in' ? 'Active' : 'Completed'}
                       </span>
                     </td>
@@ -594,7 +598,7 @@ export default function AttendanceLogsPage() {
                   <div className="relative border-l border-slate-200 pl-5.5 flex flex-col gap-6 ml-2.5 py-1.5">
                     {/* Check In Node */}
                     <div className="relative">
-                      <div className="absolute -left-[30px] top-0.5 bg-blue-600 border border-white w-4 h-4 rounded-full flex items-center justify-center shadow-sm z-10" />
+                      <div className="absolute -left-[30px] top-0.5 bg-brand-600 border border-white w-4 h-4 rounded-full flex items-center justify-center shadow-sm z-10" />
                       <div>
                         <h4 className="text-xs font-bold text-slate-900">Shift Started (Check In)</h4>
                         <p className="text-[10px] text-slate-500 font-medium mt-1">

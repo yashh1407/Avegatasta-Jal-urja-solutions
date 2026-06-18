@@ -4,7 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import {
   Shield,
   Search,
@@ -374,7 +375,7 @@ function RoleModal({
             <div className="flex items-center justify-between px-8 py-5 border-b border-slate-100 flex-shrink-0 bg-slate-50/50">
               <div>
                 <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
-                  <Shield size={22} className="text-blue-600" />
+                  <Shield size={22} className="text-brand-600" />
                   {initial?.id ? 'Edit Role Details' : 'Create Custom Role'}
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
@@ -389,9 +390,10 @@ function RoleModal({
             {/* Form */}
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
               <div className="p-6 border-b border-slate-100 bg-white flex-shrink-0">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">Role Name *</label>
+                <label htmlFor="role-name" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5">Role Name *</label>
                 <input
-                  className="w-full max-w-md px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800 font-semibold disabled:opacity-50"
+                  id="role-name"
+                  className="w-full max-w-md px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-slate-800 font-semibold disabled:opacity-50"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   required
@@ -433,13 +435,13 @@ function RoleModal({
                         onClick={() => setActiveCategory(cat.id)}
                         className={`w-full flex items-center justify-between text-left p-3 rounded-2xl transition-all border ${
                           isActive
-                            ? 'bg-blue-50/70 border-blue-100 text-blue-900 shadow-sm shadow-blue-50/50'
+                            ? 'bg-brand-50/70 border-brand-100 text-brand-900 shadow-sm shadow-brand-50/50'
                             : 'bg-white border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className={`p-2 rounded-xl flex-shrink-0 ${
-                            isActive ? 'bg-blue-600 text-white shadow-md shadow-blue-200/50' : 'bg-slate-100 text-slate-500'
+                            isActive ? 'bg-brand-600 text-white shadow-md shadow-brand-200/50' : 'bg-slate-100 text-slate-500'
                           }`}>
                             <Icon size={16} />
                           </div>
@@ -452,7 +454,7 @@ function RoleModal({
                         </div>
                         {activeInCatCount > 0 && (
                           <div className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold flex-shrink-0 ${
-                            isActive ? 'bg-blue-200/60 text-blue-800' : 'bg-slate-100 text-slate-600'
+                            isActive ? 'bg-brand-200/60 text-brand-800' : 'bg-slate-100 text-slate-600'
                           }`}>
                             {activeInCatCount}/{totalPossible}
                           </div>
@@ -466,7 +468,7 @@ function RoleModal({
                     <button
                       type="button"
                       onClick={selectAllPermissions}
-                      className="w-full text-xs font-extrabold text-blue-600 hover:text-blue-700 bg-blue-50/80 hover:bg-blue-100/80 py-2.5 rounded-xl transition-all border border-blue-100/50 text-center"
+                      className="w-full text-xs font-extrabold text-brand-600 hover:text-brand-700 bg-brand-50/80 hover:bg-brand-100/80 py-2.5 rounded-xl transition-all border border-brand-100/50 text-center"
                     >
                       Enable All Modules
                     </button>
@@ -514,7 +516,7 @@ function RoleModal({
                                 return { ...prev, permissions: updated };
                               });
                             }}
-                            className="text-[10px] font-black uppercase tracking-wider text-blue-600 hover:bg-blue-50/60 px-3 py-2 border border-blue-100 rounded-xl transition-all bg-white"
+                            className="text-[10px] font-black uppercase tracking-wider text-brand-600 hover:bg-brand-50/60 px-3 py-2 border border-brand-100 rounded-xl transition-all bg-white"
                           >
                             Select Category
                           </button>
@@ -545,7 +547,7 @@ function RoleModal({
                       return (
                         <div
                           key={mod.key}
-                          className="bg-white border border-slate-200/60 rounded-3xl p-5 hover:border-blue-200 hover:shadow-md hover:shadow-blue-50/10 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                          className="bg-white border border-slate-200/60 rounded-3xl p-5 hover:border-brand-200 hover:shadow-md hover:shadow-brand-50/10 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
                         >
                           <div className="max-w-md">
                             <span className="text-sm font-black block leading-none text-slate-900">{mod.label}</span>
@@ -561,7 +563,7 @@ function RoleModal({
                                 onClick={() => handlePermissionActionToggle(mod.key, 'view')}
                                 className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border ${
                                   perms.view
-                                    ? 'bg-blue-50/80 border-blue-200 text-blue-700 shadow-sm shadow-blue-100/30'
+                                    ? 'bg-brand-50/80 border-brand-200 text-brand-700 shadow-sm shadow-brand-100/30'
                                     : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50 hover:text-slate-600'
                                 }`}
                               >
@@ -637,7 +639,7 @@ function RoleModal({
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 disabled:opacity-50"
+                  className="px-6 py-3 bg-brand-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-brand-700 transition-all shadow-lg shadow-brand-100 disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : 'Save Role'}
                 </button>
@@ -661,6 +663,7 @@ export default function RolesPage() {
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalInitial, setModalInitial] = useState<(RoleForm & { id?: number }) | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; name: string } | null>(null);
 
   const fetchRoles = useCallback(async () => {
     setLoading(true);
@@ -693,7 +696,7 @@ export default function RolesPage() {
   if (status === 'loading') {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
-        <RefreshCw className="animate-spin text-blue-600" size={32} />
+        <RefreshCw className="animate-spin text-brand-600" size={32} />
       </div>
     );
   }
@@ -716,15 +719,18 @@ export default function RolesPage() {
     );
   }
 
-  const handleDelete = async (id: number, roleName: string) => {
+  const handleDelete = (id: number, roleName: string) => {
     if (roleName === 'employee' || roleName === 'sales') {
       toast.error('System default roles cannot be deleted.');
       return;
     }
+    setDeleteTarget({ id, name: roleName });
+  };
 
-    if (!confirm(`Are you sure you want to delete the role "${roleName}"? All employees currently assigned to this role will be reset to the default "employee" role.`)) {
-      return;
-    }
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const { id, name: roleName } = deleteTarget;
+    setDeleteTarget(null);
 
     try {
       const res = await fetch(`/api/admin/roles/${id}`, {
@@ -764,13 +770,12 @@ export default function RolesPage() {
 
   return (
     <div className="p-6 sm:p-10 max-w-7xl mx-auto space-y-8">
-      <Toaster position="top-right" />
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-6">
         <div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
-            <Shield className="text-blue-600" size={28} />
+            <Shield className="text-brand-600" size={28} />
             Roles & Access Management
           </h1>
           <p className="text-slate-500 font-semibold text-xs mt-1">
@@ -779,7 +784,7 @@ export default function RolesPage() {
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+          className="flex items-center justify-center gap-2 px-5 py-3 bg-brand-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-brand-700 transition-all shadow-lg shadow-brand-100"
         >
           <Plus size={16} />
           Create Role
@@ -798,7 +803,7 @@ export default function RolesPage() {
               placeholder="Search roles by name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-slate-800"
+              className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all text-slate-800"
             />
           </div>
           <button
@@ -814,7 +819,7 @@ export default function RolesPage() {
         <div className="overflow-x-auto">
           {loading ? (
             <div className="py-24 text-center">
-              <RefreshCw size={32} className="animate-spin text-blue-600 mx-auto mb-4" />
+              <RefreshCw size={32} className="animate-spin text-brand-600 mx-auto mb-4" />
               <p className="text-slate-500 text-xs font-semibold">Loading system roles...</p>
             </div>
           ) : filteredRoles.length === 0 ? (
@@ -826,7 +831,7 @@ export default function RolesPage() {
           ) : (
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                <tr className="bg-slate-50/50 border-b border-slate-100 text-xs font-black uppercase tracking-wider text-slate-500">
                   <th className="px-6 py-4">Role Name</th>
                   <th className="px-6 py-4">Type</th>
                   <th className="px-6 py-4">Authorized Access Modules</th>
@@ -846,7 +851,7 @@ export default function RolesPage() {
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${
-                            isSystemDefault ? 'bg-slate-100 text-slate-600' : 'bg-blue-50 text-blue-600'
+                            isSystemDefault ? 'bg-slate-100 text-slate-600' : 'bg-brand-50 text-brand-600'
                           }`}>
                             {role.name.charAt(0).toUpperCase()}
                           </div>
@@ -861,7 +866,7 @@ export default function RolesPage() {
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                           isSystemDefault 
                             ? 'bg-slate-100 text-slate-600 border border-slate-200/30' 
-                            : 'bg-blue-50 text-blue-700 border border-blue-100/30'
+                            : 'bg-brand-50 text-brand-700 border border-brand-100/30'
                         }`}>
                           {isSystemDefault ? 'System Default' : 'Custom'}
                         </span>
@@ -916,17 +921,19 @@ export default function RolesPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => openEdit(role)}
-                            className="p-2 border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-200 rounded-xl transition-all"
+                            className="p-2 border border-slate-200 text-slate-600 hover:text-brand-600 hover:bg-brand-50 hover:border-brand-200 rounded-xl transition-all"
                             title="Edit Role"
+                            aria-label={`Edit role ${role.name}`}
                           >
                             <Edit2 size={14} />
                           </button>
-                          
+
                           <button
                             onClick={() => handleDelete(role.id, role.name)}
                             disabled={isSystemDefault}
                             className="p-2 border border-slate-200 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-200 rounded-xl transition-all disabled:opacity-30 disabled:pointer-events-none"
                             title={isSystemDefault ? 'System role cannot be deleted' : 'Delete Role'}
+                            aria-label={isSystemDefault ? `System role ${role.name} cannot be deleted` : `Delete role ${role.name}`}
                           >
                             <Trash2 size={14} />
                           </button>
@@ -949,6 +956,16 @@ export default function RolesPage() {
         initial={modalInitial}
         onClose={() => setModalOpen(false)}
         onSaved={fetchRoles}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={`Delete role "${deleteTarget?.name ?? ''}"?`}
+        message={`All employees currently assigned to this role will be reset to the default "employee" role. This cannot be undone.`}
+        confirmLabel="Delete Role"
+        destructive
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
     </div>
   );

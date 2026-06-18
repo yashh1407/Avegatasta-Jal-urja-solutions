@@ -201,3 +201,43 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to create invoice' }, { status: 500 });
   }
 }
+
+const INVOICE_STATUSES = ['draft', 'sent', 'paid'] as const;
+
+// PATCH updates an existing invoice's status (e.g. "Mark Paid" from the order panel).
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { error } = await requireAdminSession();
+  if (error) return error;
+
+  const { id: rawId } = await params;
+  const id = parseId(rawId);
+  if (!id) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  const status = (body as { status?: string }).status;
+  if (!status || !INVOICE_STATUSES.includes(status as (typeof INVOICE_STATUSES)[number])) {
+    return NextResponse.json({ error: 'Invalid or missing status' }, { status: 422 });
+  }
+
+  try {
+    await initDB();
+    const [res] = await pool.query('UPDATE admin_invoices SET status = ? WHERE order_id = ?', [status, id]);
+    if ((res as { affectedRows: number }).affectedRows === 0) {
+      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
+    }
+    const [rows] = await pool.query('SELECT * FROM admin_invoices WHERE order_id = ?', [id]);
+    return NextResponse.json((rows as unknown[])[0]);
+  } catch (err) {
+    console.error('Database error:', err);
+    return NextResponse.json({ error: 'Failed to update invoice' }, { status: 500 });
+  }
+}

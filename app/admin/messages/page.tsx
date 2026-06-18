@@ -28,6 +28,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -81,7 +82,7 @@ const MESSAGE_STATUS_CONFIG: Record<
   MessageStatus,
   { label: string; bg: string; text: string; dot: string }
 > = {
-  new: { label: 'New', bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
+  new: { label: 'New', bg: 'bg-brand-100', text: 'text-brand-700', dot: 'bg-brand-500' },
   in_progress: { label: 'In Progress', bg: 'bg-amber-100', text: 'text-amber-700', dot: 'bg-amber-500' },
   resolved: { label: 'Resolved', bg: 'bg-green-100', text: 'text-green-700', dot: 'bg-green-500' },
   closed: { label: 'Closed', bg: 'bg-slate-100', text: 'text-slate-600', dot: 'bg-slate-400' },
@@ -105,7 +106,7 @@ const PRIORITY_ORDER: Record<Priority, number> = { urgent: 4, high: 3, medium: 2
 
 const PRIORITY_CONFIG: Record<Priority, { label: string; bg: string; text: string; dot: string }> = {
   low: { label: 'Low', bg: 'bg-slate-100', text: 'text-slate-600', dot: 'bg-slate-400' },
-  medium: { label: 'Medium', bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
+  medium: { label: 'Medium', bg: 'bg-brand-100', text: 'text-brand-700', dot: 'bg-brand-500' },
   high: { label: 'High', bg: 'bg-orange-100', text: 'text-orange-700', dot: 'bg-orange-500' },
   urgent: { label: 'Urgent', bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
 };
@@ -213,7 +214,7 @@ function FilterSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-10 pl-3 pr-8 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none w-full"
+        className="h-10 pl-3 pr-8 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer appearance-none w-full"
       >
         <option value="">{placeholder}</option>
         {options.map((o) => (
@@ -302,6 +303,7 @@ export default function AdminMessages() {
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
+      toast.error('Failed to load messages.');
     } finally {
       setLoading(false);
     }
@@ -371,15 +373,19 @@ export default function AdminMessages() {
       if (response.ok) {
         setMessages((prev) => prev.filter((m) => m.id !== id));
         if (expandedId === id) setExpandedId(null);
+        toast.success('Message deleted.');
+      } else {
+        toast.error('Failed to delete message.');
       }
     } catch (error) {
       console.error('Error deleting message:', error);
+      toast.error('Failed to delete message.');
     }
   };
 
   const handleReplyClick = (message: Message) => {
     if (!message.email) {
-      alert('No email address available for this message');
+      toast.error('No email address available for this message.');
       return;
     }
     setReplyModal({
@@ -413,12 +419,15 @@ export default function AdminMessages() {
         throw new Error(data.error || 'Failed to send reply');
       }
       setReplySuccess('Reply sent successfully!');
+      toast.success('Reply sent successfully!');
       setTimeout(() => {
         setReplyModal(null);
         setReplySuccess(null);
       }, 2000);
     } catch (err: unknown) {
-      setReplyError(err instanceof Error ? err.message : 'Failed to send reply');
+      const message = err instanceof Error ? err.message : 'Failed to send reply';
+      setReplyError(message);
+      toast.error(message);
     } finally {
       setSendingReply(false);
     }
@@ -598,7 +607,13 @@ export default function AdminMessages() {
     setMessages((prev) => prev.filter((m) => !selectedIds.has(m.id)));
     if (expandedId !== null && selectedIds.has(expandedId)) setExpandedId(null);
     setSelectedIds(new Set());
-    await Promise.all(ids.map((id) => fetch(`/api/contact?id=${id}`, { method: 'DELETE' })));
+    try {
+      await Promise.all(ids.map((id) => fetch(`/api/contact?id=${id}`, { method: 'DELETE' })));
+      toast.success(`Deleted ${count} message${count > 1 ? 's' : ''}.`);
+    } catch {
+      toast.error('Some messages could not be deleted.');
+      await fetchMessages();
+    }
   };
 
   const handleExportCSV = (messagesToExport: Message[]) => {
@@ -660,8 +675,8 @@ export default function AdminMessages() {
           </div>
           <div className="flex items-center gap-3">
             {unreadCount > 0 && (
-              <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-700 px-3 py-2 rounded-xl text-sm font-bold">
-                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              <div className="flex items-center gap-2 bg-brand-50 border border-brand-100 text-brand-700 px-3 py-2 rounded-xl text-sm font-bold">
+                <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
                 {unreadCount} unread
               </div>
             )}
@@ -675,7 +690,7 @@ export default function AdminMessages() {
                 Export CSV
               </button>
             )}
-            <div className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg shadow-blue-100">
+            <div className="bg-brand-600 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg shadow-brand-100">
               {messages.length} Messages
             </div>
           </div>
@@ -764,12 +779,13 @@ export default function AdminMessages() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name, email, phone, GSTIN, subject, or message..."
-                className="w-full h-10 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
+                className="w-full h-10 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-colors"
               />
               {searchQuery && (
                 <button
                   onClick={() => { setSearchQuery(''); setDebouncedSearch(''); }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  aria-label="Clear search"
                 >
                   <X size={15} />
                 </button>
@@ -826,7 +842,7 @@ export default function AdminMessages() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as SortOption)}
-                    className="h-10 pl-3 pr-8 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none"
+                    className="h-10 pl-3 pr-8 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer appearance-none"
                   >
                     <option value="newest">Newest first</option>
                     <option value="oldest">Oldest first</option>
@@ -849,21 +865,23 @@ export default function AdminMessages() {
                 >
                   <div className="flex flex-wrap gap-3 pt-1">
                     <div className="flex items-center gap-2">
-                      <label className="text-xs font-semibold text-slate-500 whitespace-nowrap">From</label>
+                      <label htmlFor="filter-date-from" className="text-xs font-semibold text-slate-500 whitespace-nowrap">From</label>
                       <input
+                        id="filter-date-from"
                         type="date"
                         value={customFrom}
                         onChange={(e) => setCustomFrom(e.target.value)}
-                        className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500"
                       />
                     </div>
                     <div className="flex items-center gap-2">
-                      <label className="text-xs font-semibold text-slate-500 whitespace-nowrap">To</label>
+                      <label htmlFor="filter-date-to" className="text-xs font-semibold text-slate-500 whitespace-nowrap">To</label>
                       <input
+                        id="filter-date-to"
                         type="date"
                         value={customTo}
                         onChange={(e) => setCustomTo(e.target.value)}
-                        className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500"
                       />
                     </div>
                   </div>
@@ -887,12 +905,13 @@ export default function AdminMessages() {
                 {activeFilterChips.map((chip) => (
                   <span
                     key={chip.key}
-                    className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold rounded-full"
+                    className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 bg-brand-50 border border-brand-100 text-brand-700 text-xs font-bold rounded-full"
                   >
                     {chip.label}
                     <button
                       onClick={chip.onClear}
-                      className="text-blue-400 hover:text-blue-700 transition-colors rounded-full"
+                      className="text-brand-400 hover:text-brand-700 transition-colors rounded-full"
+                      aria-label={`Remove filter ${chip.label}`}
                     >
                       <X size={12} />
                     </button>
@@ -911,7 +930,7 @@ export default function AdminMessages() {
 
         {loading ? (
           <div className="flex justify-center py-16 sm:py-20 lg:py-24">
-            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-12 h-12 border-4 border-brand-600 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : filteredAndSorted.length === 0 ? (
           <div className="bg-white rounded-[2.5rem] p-24 text-center border border-slate-100 shadow-sm">
@@ -945,7 +964,7 @@ export default function AdminMessages() {
                 checked={allPageSelected}
                 ref={(el) => { if (el) el.indeterminate = somePageSelected; }}
                 onChange={handleSelectAllPage}
-                className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer"
+                className="w-4 h-4 rounded border-slate-300 accent-brand-600 cursor-pointer"
               />
               <span className="text-xs font-bold text-slate-500">
                 {selectedIds.size > 0
@@ -1047,7 +1066,7 @@ export default function AdminMessages() {
                   animate={{ opacity: 1, y: 0 }}
                   className={`bg-white rounded-[2rem] border transition-all cursor-pointer ${
                     isUnread
-                      ? 'border-blue-200 shadow-md shadow-blue-50'
+                      ? 'border-brand-200 shadow-md shadow-brand-50'
                       : 'border-slate-100 shadow-sm hover:shadow-lg'
                   } ${isPending ? 'opacity-80' : ''}`}
                   onClick={() => handleCardClick(msg)}
@@ -1062,16 +1081,16 @@ export default function AdminMessages() {
                             type="checkbox"
                             checked={selectedIds.has(msg.id)}
                             onChange={(e) => handleSelectOne(msg.id, e)}
-                            className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer"
+                            className="w-4 h-4 rounded border-slate-300 accent-brand-600 cursor-pointer"
                           />
                         </div>
                         {/* Unread dot */}
                         <div className="relative">
-                          <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 shrink-0">
+                          <div className="w-12 h-12 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-600 shrink-0">
                             <User size={24} />
                           </div>
                           {isUnread && (
-                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white" />
+                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-brand-500 rounded-full border-2 border-white" />
                           )}
                         </div>
                         <div>
@@ -1091,7 +1110,7 @@ export default function AdminMessages() {
                             )}
                             {msg.gstin && (
                               <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                                <span className="text-[9px] font-black uppercase text-slate-400">GSTIN:</span>
+                                <span className="text-xs font-black uppercase text-slate-500">GSTIN:</span>
                                 <span className="font-mono">{msg.gstin}</span>
                               </div>
                             )}
@@ -1165,12 +1184,13 @@ export default function AdminMessages() {
 
                             {/* Internal Notes */}
                             <div className="col-span-1 md:col-span-2">
-                              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                              <label htmlFor={`msg-notes-${msg.id}`} className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                                 <StickyNote size={12} />
                                 Internal Notes
                                 <span className="normal-case font-normal text-slate-400 ml-1">(not sent to customer)</span>
                               </label>
                               <textarea
+                                id={`msg-notes-${msg.id}`}
                                 value={notesDraft[msg.id] ?? ''}
                                 onChange={(e) =>
                                   setNotesDraft((prev) => ({ ...prev, [msg.id]: e.target.value }))
@@ -1178,7 +1198,7 @@ export default function AdminMessages() {
                                 onBlur={() => handleNoteBlur(msg.id)}
                                 placeholder="Add internal notes..."
                                 rows={3}
-                                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white resize-none transition-colors"
+                                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white resize-none transition-colors"
                               />
                               {notesSavedAt[msg.id] && (
                                 <p className="text-xs text-slate-400 mt-1">
@@ -1189,27 +1209,29 @@ export default function AdminMessages() {
 
                             {/* Follow-Up Date */}
                             <div>
-                              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                              <label htmlFor={`msg-followup-${msg.id}`} className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                                 <Calendar size={12} />
                                 Follow-Up Date
                               </label>
                               <input
+                                id={`msg-followup-${msg.id}`}
                                 type="date"
                                 value={msg.follow_up_date ?? ''}
                                 onChange={(e) =>
                                   patchMessage(msg.id, { follow_up_date: e.target.value || null })
                                 }
-                                className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
+                                className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-colors"
                               />
                             </div>
 
                             {/* Assigned To */}
                             <div>
-                              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                              <label htmlFor={`msg-assigned-${msg.id}`} className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                                 <UserCheck size={12} />
                                 Assigned To
                               </label>
                               <input
+                                id={`msg-assigned-${msg.id}`}
                                 type="text"
                                 value={assignedDraft[msg.id] ?? ''}
                                 onChange={(e) =>
@@ -1217,7 +1239,7 @@ export default function AdminMessages() {
                                 }
                                 onBlur={() => handleAssignedBlur(msg.id)}
                                 placeholder="Admin name or email..."
-                                className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
+                                className="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-colors"
                               />
                             </div>
 
@@ -1232,12 +1254,12 @@ export default function AdminMessages() {
                                 {parseTags(msg.tags).map((tag) => (
                                   <span
                                     key={tag}
-                                    className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold rounded-full"
+                                    className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 bg-brand-50 border border-brand-200 text-brand-700 text-xs font-semibold rounded-full"
                                   >
                                     {tag}
                                     <button
                                       onClick={() => handleTagToggle(msg.id, tag, msg.tags)}
-                                      className="text-blue-400 hover:text-blue-700 transition-colors"
+                                      className="text-brand-400 hover:text-brand-700 transition-colors"
                                     >
                                       <X size={11} />
                                     </button>
@@ -1279,7 +1301,7 @@ export default function AdminMessages() {
                             )}
                             <a
                               href={`tel:${msg.phone}`}
-                              className="px-5 py-2 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-100"
+                              className="px-5 py-2 bg-brand-600 text-white font-bold text-sm rounded-xl hover:bg-brand-700 shadow-lg shadow-brand-100"
                               onClick={(e) => e.stopPropagation()}
                             >
                               Call Customer
@@ -1311,6 +1333,7 @@ export default function AdminMessages() {
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                   className="p-2 rounded-xl hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700"
+                  aria-label="Previous page"
                 >
                   <ChevronLeft size={18} />
                 </button>
@@ -1342,6 +1365,7 @@ export default function AdminMessages() {
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
                   className="p-2 rounded-xl hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-slate-700"
+                  aria-label="Next page"
                 >
                   <ChevronRight size={18} />
                 </button>
@@ -1373,6 +1397,7 @@ export default function AdminMessages() {
                   <button
                     onClick={() => setReplyModal(null)}
                     className="p-1 hover:bg-slate-100 rounded-lg"
+                    aria-label="Close reply dialog"
                   >
                     <X size={24} />
                   </button>
@@ -1402,8 +1427,9 @@ export default function AdminMessages() {
                   )}
 
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">To</label>
+                    <label htmlFor="reply-to" className="block text-sm font-bold text-slate-700 mb-2">To</label>
                     <input
+                      id="reply-to"
                       type="email"
                       value={replyModal.to}
                       disabled
@@ -1412,31 +1438,34 @@ export default function AdminMessages() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">Subject</label>
+                    <label htmlFor="reply-subject" className="block text-sm font-bold text-slate-700 mb-2">Subject</label>
                     <input
+                      id="reply-subject"
                       type="text"
                       value={replyModal.subject}
                       onChange={(e) => setReplyModal({ ...replyModal, subject: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">HTML Body</label>
+                    <label htmlFor="reply-html-body" className="block text-sm font-bold text-slate-700 mb-2">HTML Body</label>
                     <textarea
+                      id="reply-html-body"
                       value={replyModal.htmlBody}
                       onChange={(e) => setReplyModal({ ...replyModal, htmlBody: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent font-mono text-sm"
                       rows={8}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">Text Body</label>
+                    <label htmlFor="reply-text-body" className="block text-sm font-bold text-slate-700 mb-2">Text Body</label>
                     <textarea
+                      id="reply-text-body"
                       value={replyModal.textBody}
                       onChange={(e) => setReplyModal({ ...replyModal, textBody: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent font-mono text-sm"
                       rows={8}
                     />
                   </div>
@@ -1451,7 +1480,7 @@ export default function AdminMessages() {
                     <button
                       onClick={handleSendReply}
                       disabled={sendingReply}
-                      className="flex-1 px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:bg-slate-400 flex items-center justify-center gap-2"
+                      className="flex-1 px-6 py-2 bg-brand-600 text-white rounded-lg font-bold hover:bg-brand-700 disabled:bg-slate-400 flex items-center justify-center gap-2"
                     >
                       <Send size={18} />
                       {sendingReply ? 'Sending...' : 'Send Reply'}

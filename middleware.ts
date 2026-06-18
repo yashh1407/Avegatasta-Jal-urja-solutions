@@ -135,10 +135,22 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const pathname = req.nextUrl.pathname;
 
+  // Redirect base. req.url is normalized by Next.js to the internal origin
+  // (e.g. http://localhost:3003) behind a reverse proxy, so it can't be used.
+  // Prefer the server-configured canonical origin (NEXTAUTH_URL) so redirect
+  // targets never depend on client-influenced Host / X-Forwarded-Host headers
+  // (avoids open-redirect / host-header injection). Fall back to the Host
+  // header only if NEXTAUTH_URL is unset (e.g. local dev).
+  const base =
+    process.env.NEXTAUTH_URL ??
+    `${req.headers.get('x-forwarded-proto') ?? req.nextUrl.protocol.replace(/:$/, '')}://${
+      req.headers.get('host') ?? req.nextUrl.host
+    }`;
+
   // 1. Handle Sales Portal Login Path
   if (pathname === '/sales-portal/login') {
     if (token) {
-      return NextResponse.redirect(new URL('/sales-portal', req.url));
+      return NextResponse.redirect(new URL('/sales-portal', base));
     }
     return NextResponse.next();
   }
@@ -147,11 +159,11 @@ export async function middleware(req: NextRequest) {
   if (pathname === '/admin/login') {
     if (token) {
       if (token.role === 'sales') {
-        return NextResponse.redirect(new URL('/sales-portal', req.url));
+        return NextResponse.redirect(new URL('/sales-portal', base));
       }
-      return NextResponse.redirect(new URL('/admin', req.url));
+      return NextResponse.redirect(new URL('/admin', base));
     }
-    return NextResponse.redirect(new URL('/admin', req.url));
+    return NextResponse.redirect(new URL('/admin', base));
   }
 
   // 3. Require authentication for /admin paths, admin API paths, and /sales-portal paths
@@ -163,7 +175,7 @@ export async function middleware(req: NextRequest) {
     if (!token) {
       // If unauthenticated: redirect to sales portal login for sales portal paths, else general login
       if (isSalesPortalPath) {
-        return NextResponse.redirect(new URL('/sales-portal/login', req.url));
+        return NextResponse.redirect(new URL('/sales-portal/login', base));
       }
       if (isAdminApiPath) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -172,7 +184,7 @@ export async function middleware(req: NextRequest) {
       if (pathname === '/admin') {
         return NextResponse.next();
       }
-      return NextResponse.redirect(new URL('/admin', req.url));
+      return NextResponse.redirect(new URL('/admin', base));
     }
 
     // 4. Authenticated check - enforce sales role restrictions
@@ -184,7 +196,7 @@ export async function middleware(req: NextRequest) {
         if (pathname.startsWith('/api/')) {
           return NextResponse.json({ error: 'Forbidden: Sales role restricted' }, { status: 403 });
         }
-        return NextResponse.redirect(new URL('/sales-portal', req.url));
+        return NextResponse.redirect(new URL('/sales-portal', base));
       }
       return NextResponse.next();
     }
@@ -213,12 +225,12 @@ export async function middleware(req: NextRequest) {
           if (firstAllowedModule) {
             const firstModulePath = getModulePath(firstAllowedModule);
             if (firstModulePath) {
-              return NextResponse.redirect(new URL(firstModulePath, req.url));
+              return NextResponse.redirect(new URL(firstModulePath, base));
             }
           }
         }
         // If they have no permissions, redirect to login
-        return NextResponse.redirect(new URL('/admin/login', req.url));
+        return NextResponse.redirect(new URL('/admin/login', base));
       }
     }
 
@@ -255,7 +267,7 @@ export async function middleware(req: NextRequest) {
               { status: 403 }
             );
           }
-          return NextResponse.redirect(new URL('/admin?error=forbidden', req.url));
+          return NextResponse.redirect(new URL('/admin?error=forbidden', base));
         }
       }
     }
