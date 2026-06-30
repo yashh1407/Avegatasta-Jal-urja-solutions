@@ -5,7 +5,6 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import { BookOpen, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
-import Footer from '@/components/Footer';
 import CaseStudyForm, { type CaseStudyInitialData } from '../../CaseStudyForm';
 
 export default function EditCaseStudyPage() {
@@ -95,7 +94,6 @@ export default function EditCaseStudyPage() {
         ) : null}
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

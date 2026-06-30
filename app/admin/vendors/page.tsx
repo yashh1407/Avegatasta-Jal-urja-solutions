@@ -5,7 +5,6 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { Truck, RefreshCw, LogOut, Plus, X, Trash2, Phone, Mail } from 'lucide-react';
-import Footer from '@/components/Footer';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
@@ -449,8 +448,7 @@ export default function AdminVendorsPage() {
         </div>
       </main>
 
-      <Footer />
-
+      
       <VendorFormModal
         open={modalOpen}
         initial={modalInitial}

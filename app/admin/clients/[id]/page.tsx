@@ -25,7 +25,6 @@ import {
   FileText,
   ExternalLink,
 } from 'lucide-react';
-import Footer from '@/components/Footer';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { products as catalogProducts } from '@/lib/data';
@@ -1229,8 +1228,7 @@ export default function ClientDetailPage() {
         )}
       </main>
 
-      <Footer />
-
+      
       <ProductPurchaseModal
         open={addProductOpen}
         clientId={clientId}

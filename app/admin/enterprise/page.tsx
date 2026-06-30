@@ -15,7 +15,6 @@ import {
   ChevronDown,
   X,
 } from 'lucide-react';
-import Footer from '@/components/Footer';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
@@ -435,8 +434,7 @@ export default function AdminEnterprisePage() {
         </div>
       </main>
 
-      <Footer />
-
+      
       <ConfirmDialog
         open={deleteTarget !== null}
         title="Delete inquiry?"

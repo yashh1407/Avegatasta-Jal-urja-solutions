@@ -5,7 +5,6 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { Users, RefreshCw, LogOut, Plus, X, Phone, Mail, UserCheck, UserX } from 'lucide-react';
-import Footer from '@/components/Footer';
 import toast from 'react-hot-toast';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -443,8 +442,7 @@ export default function AdminSalesTeamPage() {
         </div>
       </main>
 
-      <Footer />
-
+      
       <MemberFormModal
         open={modalOpen}
         initial={modalInitial}

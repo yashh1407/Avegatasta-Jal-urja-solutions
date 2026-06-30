@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Captcha, CaptchaRef } from '@/components/Captcha';
 import {
@@ -170,14 +170,89 @@ function validateForm(data: FormData): string | null {
   return null;
 }
 
+const SECTOR_ICON_MAP: Record<string, any> = { Factory, Hotel, Building2, Waves, GraduationCap };
+const DELIVERABLE_ICON_MAP: Record<string, any> = { ClipboardList, ShieldCheck, Wrench, Zap, HeartHandshake };
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function EnterprisePageClient() {
+export default function EnterprisePageClient({ sections = [], pageData = {} }: { sections?: any[]; pageData?: any } = {}) {
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
   const captchaRef = useRef<CaptchaRef>(null);
 
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  useEffect(() => {
+    fetch('/api/site-settings')
+      .then((response) => response.json())
+      .then((data) => {
+        if (data && typeof data === 'object') setSettings(data);
+      })
+      .catch(console.error);
+  }, []);
+
+  const heroSec = sections.find(s => s.section_type === 'GenericHero' || s.section_key === 'enterprise-hero');
+  const clientsSec = sections.find(s => s.section_type === 'EnterpriseClientTypes' || s.section_key === 'enterprise-clients');
+  const deliverablesSec = sections.find(s => s.section_type === 'EnterpriseDeliverables' || s.section_key === 'enterprise-deliverables');
+  const whySec = sections.find(s => s.section_type === 'EnterpriseWhyUs' || s.section_key === 'enterprise-why-us');
+  const statsSec = sections.find(s => s.section_type === 'EnterpriseTrackRecord' || s.section_key === 'enterprise-stats');
+  const formSec = sections.find(s => s.section_type === 'EnterpriseForm' || s.section_key === 'enterprise-form');
+  const credentialsSec = sections.find(s => s.section_type === 'EnterpriseCredentials' || s.section_key === 'enterprise-credentials');
+
+  const parseJson = (val: any) => {
+    if (typeof val === 'object' && val !== null) return val;
+    try { return JSON.parse(val || '{}'); } catch { return {}; }
+  };
+
+  const heroData = heroSec ? parseJson(heroSec.data_json) : {};
+  const clientsData = clientsSec ? parseJson(clientsSec.data_json) : {};
+  const deliverablesData = deliverablesSec ? parseJson(deliverablesSec.data_json) : {};
+  const whyData = whySec ? parseJson(whySec.data_json) : {};
+  const statsData = statsSec ? parseJson(statsSec.data_json) : {};
+  const formDataJson = formSec ? parseJson(formSec.data_json) : {};
+  const credentialsData = credentialsSec ? parseJson(credentialsSec.data_json) : {};
+
+  const heroTitle = heroSec?.subtitle || settings.enterprise_hero_title || 'Infrastructure-Scale <br className="hidden sm:block" /> <span class="text-accent-400">Water, Energy</span> <br /> &amp; Pool Solutions';
+  const heroSubtitle = heroSec?.title || settings.enterprise_hero_subtitle || 'Enterprise &amp; Bulk Projects · Nashik';
+  const heroCopy = heroSec?.content || settings.enterprise_hero_copy || 'End-to-end B2B project delivery for industrial, commercial, and institutional clients across Nashik. Authorized supply, certified installation, and dedicated after-sales support from a single trusted partner.';
+  const heroImage = heroData.background_image || heroData.image || settings.enterprise_hero_image || 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=900&h=675';
+  const heroBtnText = heroData.button_label || settings.enterprise_hero_btn_text || 'Submit Enterprise Enquiry';
+  const heroBtnLink = heroData.button_link || '#enterprise-enquiry';
+  const heroCallText = heroData.call_label || settings.enterprise_hero_call_text || 'Talk to Our Team';
+  const heroFooterText = heroData.footer_text || settings.enterprise_hero_footer_text || 'V-Guard · Wilo · Zero B · Bluewave India — authorized channel partner';
+
+  const clientsEyebrow = clientsSec?.title || 'Who We Serve';
+  const clientsTitle = clientsSec?.subtitle || 'Built for Every <span class="text-brand-600">Enterprise Sector</span>';
+  const clientsCopy = clientsSec?.content || 'From a single commercial building to a multi-site industrial estate, our B2B solutions are scoped and delivered to match the demands of your sector.';
+  const clientsList = clientsData.clients || CLIENT_TYPES;
+
+  const deliverablesEyebrow = deliverablesSec?.title || 'What We Deliver';
+  const deliverablesTitle = deliverablesSec?.subtitle || 'Full-Cycle <span class="text-brand-600">Project Execution</span>';
+  const deliverablesCopy = deliverablesSec?.content || 'We handle every stage — from initial scoping to post-installation support — so your project stays on schedule and on budget.';
+  const deliverablesList = deliverablesData.deliverables || DELIVERABLES;
+
+  const whyEyebrow = whySec?.title || 'Why Choose Us';
+  const whyTitle = whySec?.subtitle || 'Why Enterprise Buyers <span class="text-accent-400">Choose Avegatasta</span>';
+  const whyImage = whyData.image || 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=800&h=1000';
+  const whyList = whyData.benefits || WHY_US;
+  const whyBtnText = whyData.button_label || 'Start Your Project';
+
+  const statsTitle = statsSec?.title || 'Our Track Record';
+  const statsSubtitle = statsSec?.subtitle || 'Proven at Scale';
+  const defaultTrackRecordStats = [
+    { value: '10+', label: 'Years Serving B2B Clients', sub: 'Established enterprise partner in Nashik' },
+    { value: '1,000+', label: 'Corporate Clients', sub: 'Across industrial, commercial &amp; hospitality' },
+    { value: '5,000+', label: 'Units Installed', sub: 'Heat pumps, pumps, purifiers, pool systems' },
+    { value: '10+', label: 'Industry Sectors', sub: 'From manufacturing to aquatics' },
+  ];
+  const trackRecordStats = statsData.stats || defaultTrackRecordStats;
+
+  const formSubtitle = formSec?.title || 'Get in Touch';
+  const formTitle = formSec?.subtitle || 'Enterprise Enquiry';
+  const formContent = formSec?.content || 'Tell us about your project. Our team will respond within one business day with a tailored proposal.';
+
+  const credentialsTitle = credentialsSec?.title || 'Authorized Channel Partner For';
+  const credentialsList = credentialsData.credentials || CREDENTIALS;
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -286,52 +361,39 @@ export default function EnterprisePageClient() {
               className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-brand-800/60 border border-brand-700/50 text-accent-400 text-sm font-semibold tracking-wide mb-8"
             >
               <span className="w-2 h-2 bg-accent-400 rounded-full animate-pulse" />
-              Enterprise &amp; Bulk Projects · Nashik
+              <span dangerouslySetInnerHTML={{ __html: heroSubtitle }} />
             </motion.div>
 
             <motion.h1
               variants={fadeUp}
               className="font-black tracking-tight text-white leading-[1.05] mb-6"
               style={{ fontSize: 'clamp(2.25rem, 4.5vw + 1rem, 4.5rem)' }}
-            >
-              Infrastructure-Scale{' '}
-              <br className="hidden sm:block" />
-              <span className="text-accent-400">Water, Energy</span>
-              <br />
-              &amp; Pool Solutions
-            </motion.h1>
+              dangerouslySetInnerHTML={{ __html: heroTitle }}
+            />
 
             <motion.p
               variants={fadeUp}
               className="text-lg text-brand-300 font-medium leading-relaxed max-w-xl mb-10"
-            >
-              End-to-end B2B project delivery for industrial, commercial, and institutional clients
-              across Nashik. Authorized supply, certified installation, and dedicated after-sales
-              support from a single trusted partner.
-            </motion.p>
+              dangerouslySetInnerHTML={{ __html: heroCopy }}
+            />
 
             <motion.div variants={fadeUp} className="flex flex-wrap gap-4 mb-10">
               <a
-                href="#enterprise-enquiry"
+                href={heroBtnLink}
                 className="inline-flex items-center gap-2 px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                 style={{ boxShadow: '0 16px 48px -8px oklch(47% 0.18 250 / 0.40)' }}
-              >
-                Submit Enterprise Enquiry
-                <ArrowRight size={18} />
-              </a>
+                dangerouslySetInnerHTML={{ __html: heroBtnText + ' <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>' }}
+              />
               <Link
                 href="/contact"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-white/10 hover:bg-white/15 border border-white/20 text-white rounded-2xl font-bold backdrop-blur-sm transition-all duration-300"
-              >
-                Talk to Our Team
-              </Link>
+                dangerouslySetInnerHTML={{ __html: heroCallText }}
+              />
             </motion.div>
 
             <motion.div variants={fadeUp} className="flex items-center gap-2 text-brand-400">
               <ShieldCheck size={16} className="text-accent-400 shrink-0" />
-              <span className="text-sm font-semibold">
-                V-Guard · Wilo · Zero B · Bluewave India — authorized channel partner
-              </span>
+              <span className="text-sm font-semibold" dangerouslySetInnerHTML={{ __html: heroFooterText }} />
             </motion.div>
           </motion.div>
 
@@ -347,7 +409,7 @@ export default function EnterprisePageClient() {
               style={{ boxShadow: '0 40px 100px -20px oklch(14% 0.07 250 / 0.7)' }}
             >
               <Image
-                src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=900&h=675"
+                src={heroImage}
                 alt="Industrial water and energy infrastructure"
                 fill
                 className="object-cover"
@@ -393,20 +455,14 @@ export default function EnterprisePageClient() {
             <motion.p
               variants={fadeUp}
               className="text-xs font-black text-accent-500 uppercase tracking-[0.2em] mb-3"
-            >
-              Who We Serve
-            </motion.p>
+              dangerouslySetInnerHTML={{ __html: clientsEyebrow }}
+            />
             <motion.h2
               variants={fadeUp}
               className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-950 tracking-tight leading-tight mb-5"
-            >
-              Built for Every{' '}
-              <span className="text-brand-600">Enterprise Sector</span>
-            </motion.h2>
-            <motion.p variants={fadeUp} className="text-slate-600 font-medium text-lg leading-relaxed">
-              From a single commercial building to a multi-site industrial estate, our B2B solutions
-              are scoped and delivered to match the demands of your sector.
-            </motion.p>
+              dangerouslySetInnerHTML={{ __html: clientsTitle }}
+            />
+            <motion.p variants={fadeUp} className="text-slate-600 font-medium text-lg leading-relaxed" dangerouslySetInnerHTML={{ __html: clientsCopy }} />
           </motion.div>
 
           <motion.div
@@ -416,19 +472,24 @@ export default function EnterprisePageClient() {
             viewport={{ once: true, margin: '-60px' }}
             className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5"
           >
-            {CLIENT_TYPES.map(({ icon: Icon, label, description }) => (
-              <motion.div
-                key={label}
-                variants={fadeUp}
-                className="group rounded-2xl border border-slate-100 bg-slate-50 p-7 hover:border-brand-200 hover:bg-brand-50 transition-colors duration-300"
-              >
-                <div className="w-11 h-11 rounded-xl bg-brand-100 flex items-center justify-center mb-5 group-hover:bg-brand-200 transition-colors duration-300">
-                  <Icon size={20} className="text-brand-700" strokeWidth={1.8} />
-                </div>
-                <h3 className="text-base font-black text-brand-950 mb-2">{label}</h3>
-                <p className="text-sm text-slate-600 font-medium leading-relaxed">{description}</p>
-              </motion.div>
-            ))}
+            {clientsList.map((item: any, i: number) => {
+              const Icon = SECTOR_ICON_MAP[item.icon] || SECTOR_ICON_MAP[CLIENT_TYPES[i % CLIENT_TYPES.length].label] || Factory;
+              const title = item.label || item.title || '';
+              const desc = item.description || item.desc || '';
+              return (
+                <motion.div
+                  key={title}
+                  variants={fadeUp}
+                  className="group rounded-2xl border border-slate-100 bg-slate-50 p-7 hover:border-brand-200 hover:bg-brand-50 transition-colors duration-300"
+                >
+                  <div className="w-11 h-11 rounded-xl bg-brand-100 flex items-center justify-center mb-5 group-hover:bg-brand-200 transition-colors duration-300">
+                    <Icon size={20} className="text-brand-700" strokeWidth={1.8} />
+                  </div>
+                  <h3 className="text-base font-black text-brand-950 mb-2" dangerouslySetInnerHTML={{ __html: title }} />
+                  <p className="text-sm text-slate-600 font-medium leading-relaxed" dangerouslySetInnerHTML={{ __html: desc }} />
+                </motion.div>
+              );
+            })}
           </motion.div>
         </div>
       </section>
@@ -446,20 +507,14 @@ export default function EnterprisePageClient() {
             <motion.p
               variants={fadeUp}
               className="text-xs font-black text-accent-500 uppercase tracking-[0.2em] mb-3"
-            >
-              What We Deliver
-            </motion.p>
+              dangerouslySetInnerHTML={{ __html: deliverablesEyebrow }}
+            />
             <motion.h2
               variants={fadeUp}
               className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-950 tracking-tight leading-tight mb-5"
-            >
-              Full-Cycle{' '}
-              <span className="text-brand-600">Project Execution</span>
-            </motion.h2>
-            <motion.p variants={fadeUp} className="text-slate-600 font-medium text-lg leading-relaxed">
-              We handle every stage — from initial scoping to post-installation support — so your
-              project stays on schedule and on budget.
-            </motion.p>
+              dangerouslySetInnerHTML={{ __html: deliverablesTitle }}
+            />
+            <motion.p variants={fadeUp} className="text-slate-600 font-medium text-lg leading-relaxed" dangerouslySetInnerHTML={{ __html: deliverablesCopy }} />
           </motion.div>
 
           <motion.div
@@ -469,19 +524,24 @@ export default function EnterprisePageClient() {
             viewport={{ once: true, margin: '-60px' }}
             className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            {DELIVERABLES.map(({ icon: Icon, title, body }) => (
-              <motion.div
-                key={title}
-                variants={fadeUp}
-                className="bg-white rounded-2xl border border-slate-100 p-7 shadow-sm hover:shadow-md transition-shadow duration-300"
-              >
-                <div className="w-12 h-12 rounded-xl bg-brand-100 flex items-center justify-center mb-5">
-                  <Icon size={22} className="text-brand-700" strokeWidth={1.7} />
-                </div>
-                <h3 className="text-base font-black text-brand-950 mb-2">{title}</h3>
-                <p className="text-sm text-slate-600 font-medium leading-relaxed">{body}</p>
-              </motion.div>
-            ))}
+            {deliverablesList.map((item: any, i: number) => {
+              const Icon = DELIVERABLE_ICON_MAP[item.icon] || DELIVERABLE_ICON_MAP[DELIVERABLES[i % DELIVERABLES.length].title] || ShieldCheck;
+              const title = item.title || item.label || '';
+              const bodyText = item.body || item.description || item.desc || '';
+              return (
+                <motion.div
+                  key={title}
+                  variants={fadeUp}
+                  className="bg-white rounded-2xl border border-slate-100 p-7 shadow-sm hover:shadow-md transition-shadow duration-300"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-brand-100 flex items-center justify-center mb-5">
+                    <Icon size={22} className="text-brand-700" strokeWidth={1.7} />
+                  </div>
+                  <h3 className="text-base font-black text-brand-950 mb-2" dangerouslySetInnerHTML={{ __html: title }} />
+                  <p className="text-sm text-slate-600 font-medium leading-relaxed" dangerouslySetInnerHTML={{ __html: bodyText }} />
+                </motion.div>
+              );
+            })}
           </motion.div>
         </div>
       </section>
@@ -509,20 +569,16 @@ export default function EnterprisePageClient() {
             <motion.p
               variants={fadeUp}
               className="text-xs font-black text-accent-400 uppercase tracking-[0.2em] mb-4"
-            >
-              Why Choose Us
-            </motion.p>
+              dangerouslySetInnerHTML={{ __html: whyEyebrow }}
+            />
             <motion.h2
               variants={fadeUp}
               className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-10 leading-tight"
-            >
-              Why Enterprise Buyers{' '}
-              <br />
-              <span className="text-accent-400">Choose Avegatasta</span>
-            </motion.h2>
+              dangerouslySetInnerHTML={{ __html: whyTitle }}
+            />
 
             <motion.ul variants={staggerContainer} className="space-y-5 mb-10">
-              {WHY_US.map((item) => (
+              {whyList.map((item: string) => (
                 <motion.li key={item} variants={fadeUp} className="flex gap-4 items-start">
                   <div className="w-7 h-7 rounded-full bg-accent-500/20 border border-accent-500/30 flex items-center justify-center shrink-0 mt-0.5">
                     <svg viewBox="0 0 12 12" width={10} fill="none" aria-hidden className="text-accent-400">
@@ -535,7 +591,7 @@ export default function EnterprisePageClient() {
                       />
                     </svg>
                   </div>
-                  <p className="text-brand-200 leading-relaxed font-medium">{item}</p>
+                  <p className="text-brand-200 leading-relaxed font-medium" dangerouslySetInnerHTML={{ __html: item }} />
                 </motion.li>
               ))}
             </motion.ul>
@@ -544,10 +600,8 @@ export default function EnterprisePageClient() {
               <a
                 href="#enterprise-enquiry"
                 className="inline-flex items-center gap-2 px-7 py-3.5 bg-white text-brand-950 rounded-2xl font-bold hover:bg-brand-50 transition-colors"
-              >
-                Start Your Project
-                <ArrowRight size={16} />
-              </a>
+                dangerouslySetInnerHTML={{ __html: whyBtnText + ' <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>' }}
+              />
             </motion.div>
           </motion.div>
 
@@ -560,7 +614,7 @@ export default function EnterprisePageClient() {
           >
             <div className="rounded-[2.5rem] overflow-hidden aspect-[4/5] rotate-2 shadow-2xl">
               <Image
-                src="https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=800&h=1000"
+                src={whyImage}
                 alt="Industrial pump and energy installation"
                 fill
                 className="object-cover"
@@ -581,21 +635,12 @@ export default function EnterprisePageClient() {
             transition={{ duration: 0.55 }}
             className="text-center mb-14"
           >
-            <p className="text-xs font-black text-accent-500 uppercase tracking-[0.2em] mb-3">
-              Our Track Record
-            </p>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-950 tracking-tight">
-              Proven at Scale
-            </h2>
+            <p className="text-xs font-black text-accent-500 uppercase tracking-[0.2em] mb-3" dangerouslySetInnerHTML={{ __html: statsTitle }} />
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-950 tracking-tight" dangerouslySetInnerHTML={{ __html: statsSubtitle }} />
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-            {[
-              { value: '10+', label: 'Years Serving B2B Clients', sub: 'Established enterprise partner in Nashik' },
-              { value: '1,000+', label: 'Corporate Clients', sub: 'Across industrial, commercial & hospitality' },
-              { value: '5,000+', label: 'Units Installed', sub: 'Heat pumps, pumps, purifiers, pool systems' },
-              { value: '10+', label: 'Industry Sectors', sub: 'From manufacturing to aquatics' },
-            ].map((stat, i) => (
+            {trackRecordStats.map((stat: any, i: number) => (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, y: 24 }}
@@ -604,11 +649,9 @@ export default function EnterprisePageClient() {
                 transition={{ duration: 0.5, delay: i * 0.1 }}
                 className="bg-slate-50 border border-slate-100 rounded-2xl p-7 text-center"
               >
-                <div className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-950 mb-2 tabular-nums">
-                  {stat.value}
-                </div>
-                <p className="text-sm font-black text-brand-700 mb-1">{stat.label}</p>
-                <p className="text-xs text-slate-500 font-medium">{stat.sub}</p>
+                <div className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-950 mb-2 tabular-nums" dangerouslySetInnerHTML={{ __html: stat.value }} />
+                <p className="text-sm font-black text-brand-700 mb-1" dangerouslySetInnerHTML={{ __html: stat.label }} />
+                <p className="text-xs text-slate-500 font-medium" dangerouslySetInnerHTML={{ __html: stat.sub }} />
               </motion.div>
             ))}
           </div>
@@ -632,19 +675,14 @@ export default function EnterprisePageClient() {
               <motion.p
                 variants={fadeUp}
                 className="text-xs font-black text-accent-500 uppercase tracking-[0.2em] mb-3"
-              >
-                Get in Touch
-              </motion.p>
+                dangerouslySetInnerHTML={{ __html: formSubtitle }}
+              />
               <motion.h2
                 variants={fadeUp}
                 className="text-3xl sm:text-4xl md:text-5xl font-black text-brand-950 tracking-tight mb-4"
-              >
-                Enterprise Enquiry
-              </motion.h2>
-              <motion.p variants={fadeUp} className="text-slate-600 font-medium text-lg">
-                Tell us about your project. Our team will respond within one business day with a
-                tailored proposal.
-              </motion.p>
+                dangerouslySetInnerHTML={{ __html: formTitle }}
+              />
+              <motion.p variants={fadeUp} className="text-slate-600 font-medium text-lg" dangerouslySetInnerHTML={{ __html: formContent }} />
             </motion.div>
 
             {submitState === 'success' ? (
@@ -866,9 +904,7 @@ export default function EnterprisePageClient() {
             transition={{ duration: 0.5 }}
             className="text-center mb-10"
           >
-            <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">
-              Authorized Channel Partner For
-            </p>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]" dangerouslySetInnerHTML={{ __html: credentialsTitle }} />
           </motion.div>
 
           <motion.div
@@ -878,14 +914,14 @@ export default function EnterprisePageClient() {
             viewport={{ once: true, margin: '-40px' }}
             className="grid grid-cols-2 md:grid-cols-4 gap-4"
           >
-            {CREDENTIALS.map(({ name, category }) => (
+            {credentialsList.map(({ name, category }: any) => (
               <motion.div
                 key={name}
                 variants={fadeUp}
                 className="flex flex-col items-center gap-2 rounded-2xl border border-slate-100 bg-slate-50 px-6 py-7 hover:border-brand-200 hover:bg-brand-50 transition-colors duration-300"
               >
-                <p className="text-lg font-black text-brand-950">{name}</p>
-                <p className="text-xs font-semibold text-slate-500 text-center">{category}</p>
+                <p className="text-lg font-black text-brand-950" dangerouslySetInnerHTML={{ __html: name }} />
+                <p className="text-xs font-semibold text-slate-500 text-center" dangerouslySetInnerHTML={{ __html: category }} />
               </motion.div>
             ))}
           </motion.div>

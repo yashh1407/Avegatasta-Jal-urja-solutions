@@ -952,31 +952,10 @@ export default function AdminInquiriesPage() {
     setGpsError(null);
     setIsIpFallback(false);
 
-    const fallbackToIp = async (browserErrorMsg: string) => {
-      try {
-        console.log('Attempting IP Geolocation fallback via /api/geolocation...');
-        const res = await fetch('/api/geolocation');
-        if (!res.ok) throw new Error('IP geolocation request failed');
-        const data = await res.json();
-        if (data.latitude && data.longitude) {
-          setGpsLatitude(Number(data.latitude));
-          setGpsLongitude(Number(data.longitude));
-          setGpsAccuracy(data.accuracy ? Number(data.accuracy) : null);
-          setIsIpFallback(true);
-          setGpsStatus('success');
-          console.log('IP Geolocation fallback successful:', data.city, data.latitude, data.longitude);
-        } else {
-          throw new Error('Invalid IP geolocation data');
-        }
-      } catch (err) {
-        console.error('IP Geolocation fallback failed:', err);
-        setGpsStatus('error');
-        setGpsError(browserErrorMsg);
-      }
-    };
-
     if (!navigator.geolocation) {
-      fallbackToIp('Geolocation not supported by browser.');
+      const msg = 'Device GPS/Location services are not supported by this browser.';
+      setGpsStatus('error');
+      setGpsError(msg);
       return;
     }
 
@@ -989,17 +968,18 @@ export default function AdminInquiriesPage() {
       },
       (error) => {
         console.error(`Geolocation error details: code=${error.code}, message="${error.message || 'N/A'}"`);
-        let errMsg = 'Failed to acquire location.';
+        let errMsg = 'Failed to acquire precise GPS location. Please ensure location services are enabled on your device.';
         if (error.code === error.PERMISSION_DENIED) {
-          errMsg = 'Permission denied. Please enable location services in your browser settings.';
+          errMsg = 'Location permission denied. Please allow location access in your browser settings to proceed.';
         } else if (error.code === error.POSITION_UNAVAILABLE) {
-          errMsg = 'Location position unavailable. Please try again.';
+          errMsg = 'Device GPS coordinates are currently unavailable. Please verify GPS coverage.';
         } else if (error.code === error.TIMEOUT) {
-          errMsg = 'Location request timed out. Please try again.';
+          errMsg = 'Location request timed out. Please try again with a better signal.';
         }
-        fallbackToIp(errMsg);
+        setGpsStatus('error');
+        setGpsError(errMsg);
       },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   }, []);
 

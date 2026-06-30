@@ -16,7 +16,13 @@ const productSchema = z.object({
   inStock: z.boolean(),
   hsn_code: z.string().max(50).optional().nullable(),
   sac_code: z.string().max(50).optional().nullable(),
+  dp_price: z.number().optional().nullable(),
+  mrp_price: z.number().optional().nullable(),
+  pricing_description: z.string().optional().nullable(),
 });
+
+const hasOwn = (value: unknown, key: string) =>
+  typeof value === 'object' && value !== null && Object.prototype.hasOwnProperty.call(value, key);
 
 export async function GET() {
   const { error } = await requireAdminSession('products');
@@ -24,7 +30,16 @@ export async function GET() {
 
   try {
     await initDB();
-    const [rows] = await pool.query('SELECT * FROM products ORDER BY created_at DESC');
+    const [rows] = await pool.query(`
+      SELECT
+        p.*,
+        pp.dp_price,
+        pp.mrp_price,
+        pp.description AS pricing_description
+      FROM products p
+      LEFT JOIN product_pricing pp ON pp.product_id COLLATE utf8mb4_general_ci = p.id
+      ORDER BY p.created_at DESC
+    `);
     const safeParse = (v: unknown, fallback: unknown) => {
       if (typeof v !== 'string') return v ?? fallback;
       try { return JSON.parse(v); } catch { return fallback; }
@@ -58,7 +73,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 422 });
   }
 
-  const { id, name, brand, category, subCategory, description, image, features, specs, inStock, hsn_code, sac_code } = parsed.data;
+  const {
+    id,
+    name,
+    brand,
+    category,
+    subCategory,
+    description,
+    image,
+    features,
+    specs,
+    inStock,
+    hsn_code,
+    sac_code,
+    dp_price,
+    mrp_price,
+    pricing_description,
+  } = parsed.data;
 
   try {
     await initDB();
@@ -88,6 +119,16 @@ export async function POST(request: Request) {
       ]
     );
 
+    await pool.query(
+      `INSERT INTO product_pricing (product_id, dp_price, mrp_price, description)
+       VALUES (?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         dp_price = VALUES(dp_price),
+         mrp_price = VALUES(mrp_price),
+         description = VALUES(description)`,
+      [id, dp_price ?? null, mrp_price ?? null, pricing_description ?? null]
+    );
+
     return NextResponse.json({ success: true, product_id: id });
   } catch (err) {
     console.error('Failed to create product:', err);
@@ -112,7 +153,23 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 422 });
   }
 
-  const { id, name, brand, category, subCategory, description, image, features, specs, inStock, hsn_code, sac_code } = parsed.data;
+  const {
+    id,
+    name,
+    brand,
+    category,
+    subCategory,
+    description,
+    image,
+    features,
+    specs,
+    inStock,
+    hsn_code,
+    sac_code,
+    dp_price,
+    mrp_price,
+    pricing_description,
+  } = parsed.data;
 
   try {
     await initDB();
@@ -143,6 +200,31 @@ export async function PATCH(request: Request) {
       await pool.query(`UPDATE products SET ${updates.join(', ')} WHERE id = ?`, values);
     }
 
+    const hasDpPrice = hasOwn(body, 'dp_price');
+    const hasMrpPrice = hasOwn(body, 'mrp_price');
+    const hasPricingDescription = hasOwn(body, 'pricing_description');
+
+    if (hasDpPrice || hasMrpPrice || hasPricingDescription) {
+      const pricingUpdates = [
+        hasDpPrice ? 'dp_price = VALUES(dp_price)' : null,
+        hasMrpPrice ? 'mrp_price = VALUES(mrp_price)' : null,
+        hasPricingDescription ? 'description = VALUES(description)' : null,
+      ].filter(Boolean);
+
+      await pool.query(
+        `INSERT INTO product_pricing (product_id, dp_price, mrp_price, description)
+         VALUES (?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+           ${pricingUpdates.join(', ')}`,
+        [
+          id,
+          hasDpPrice ? dp_price ?? null : null,
+          hasMrpPrice ? mrp_price ?? null : null,
+          hasPricingDescription ? pricing_description ?? null : null,
+        ]
+      );
+    }
+
     return NextResponse.json({ success: true, product_id: id });
   } catch (err) {
     console.error('Failed to update product:', err);
@@ -170,6 +252,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
+    await pool.query('DELETE FROM product_pricing WHERE product_id = ?', [id]);
     await pool.query('DELETE FROM products WHERE id = ?', [id]);
 
     return NextResponse.json({ success: true });

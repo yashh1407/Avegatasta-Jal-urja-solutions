@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { BookOpen, LogOut } from 'lucide-react';
-import Footer from '@/components/Footer';
 import CaseStudyForm from '../CaseStudyForm';
 
 export default function NewCaseStudyPage() {
@@ -42,7 +41,6 @@ export default function NewCaseStudyPage() {
         <CaseStudyForm mode="new" />
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

@@ -5,6 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import toast, { Toaster } from 'react-hot-toast';
+import dynamic from 'next/dynamic';
 import {
   MapPin,
   Clock,
@@ -22,8 +23,18 @@ import {
   Package,
   Map as MapIcon,
   ChevronsRight,
-  User
+  User,
+  RefreshCw
 } from 'lucide-react';
+
+const LeafletMap = dynamic(() => import('@/components/LeafletMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[240px] flex items-center justify-center bg-slate-50 border border-slate-200 rounded-2xl">
+      <div className="w-6 h-6 border-2 border-blue-600/40 border-t-blue-600 rounded-full animate-spin"></div>
+    </div>
+  )
+});
 
 export default function SalesPortalPage() {
   const { data: session, status } = useSession();
@@ -71,6 +82,42 @@ export default function SalesPortalPage() {
       setResolvedAddress(null);
     }
   }, [coords, gpsStatus, fetchAddress]);
+
+  // Visit location geocoding states
+  const [visitCoords, setVisitCoords] = useState<{ latitude: number; longitude: number; accuracy: number | null; method: 'gps'; ip: string } | null>(null);
+  const [visitGpsStatus, setVisitGpsStatus] = useState<'idle' | 'acquiring' | 'success' | 'error'>('idle');
+  const [visitGpsError, setVisitGpsError] = useState<string | null>(null);
+  const [visitAddress, setVisitAddress] = useState<string | null>(null);
+
+  const fetchVisitAddress = useCallback(async (lat: number, lng: number) => {
+    try {
+      const res = await fetch(`/api/admin/sales-portal/reverse-geocode?lat=${lat}&lng=${lng}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setVisitAddress(data.address);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to resolve visit address:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (visitCoords && visitGpsStatus === 'success') {
+      fetchVisitAddress(visitCoords.latitude, visitCoords.longitude);
+    } else {
+      setVisitAddress(null);
+    }
+  }, [visitCoords, visitGpsStatus, fetchVisitAddress]);
+
+  const handleCoordsChange = useCallback((newCoords: { latitude: number; longitude: number }) => {
+    setCoords(prev => prev ? { ...prev, ...newCoords } : { latitude: newCoords.latitude, longitude: newCoords.longitude, accuracy: null, method: 'gps', ip: 'local' });
+  }, []);
+
+  const handleVisitCoordsChange = useCallback((newCoords: { latitude: number; longitude: number }) => {
+    setVisitCoords(prev => prev ? { ...prev, ...newCoords } : { latitude: newCoords.latitude, longitude: newCoords.longitude, accuracy: null, method: 'gps', ip: 'local' });
+  }, []);
 
   // Marketing Visit Form States
   const [visitTitle, setVisitTitle] = useState('');
@@ -171,86 +218,94 @@ export default function SalesPortalPage() {
     };
   }, [activeShift]);
 
-  // Robust client-side geolocation check (with local server API fallback)
-  const acquireLocation = useCallback(() => {
-    return new Promise<{ latitude: number; longitude: number; accuracy: number | null; method: 'gps' | 'ip'; ip: string }>((resolve, reject) => {
-      setGpsStatus('acquiring');
-      setGpsError(null);
-
-      const handleIpFallback = async (browserError: string) => {
-        try {
-          console.log('[Sales Portal] Falling back to server-side IP Geolocation API...');
-          const res = await fetch('/api/geolocation');
-          if (!res.ok) throw new Error('IP lookup returned error status');
-          const data = await res.json();
-          if (data.latitude && data.longitude) {
-            const result = {
-              latitude: Number(data.latitude),
-              longitude: Number(data.longitude),
-              accuracy: data.accuracy ? Number(data.accuracy) : null,
-              method: 'ip' as const,
-              ip: data.ip || 'unknown'
-            };
-            setCoords(result);
-            setGpsStatus('success');
-            resolve(result);
-          } else {
-            throw new Error('Invalid coordinates in IP lookup data');
-          }
-        } catch (e: any) {
-          console.error('[Sales Portal] IP Geolocation fallback failed:', e);
-          setGpsStatus('error');
-          setGpsError(browserError);
-          reject(new Error(browserError));
-        }
-      };
-
+  // Helper to fetch raw GPS coordinates from browser
+  const getCurrentGPS = useCallback(() => {
+    return new Promise<{ latitude: number; longitude: number; accuracy: number | null; method: 'gps'; ip: string }>((resolve, reject) => {
       if (!navigator.geolocation) {
-        handleIpFallback('Browser Geolocation is not supported.');
+        let errorMsg = 'Device GPS/Location services are not supported by this browser.';
+        if (typeof window !== 'undefined' && window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
+          errorMsg = 'Location access is blocked on insecure HTTP connections. Please access the portal using a secure HTTPS connection or from localhost.';
+        }
+        reject(new Error(errorMsg));
         return;
       }
-
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const result = {
+          resolve({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
             accuracy: position.coords.accuracy,
             method: 'gps' as const,
             ip: 'local'
-          };
-          setCoords(result);
-          setGpsStatus('success');
-          resolve(result);
+          });
         },
         (error) => {
           console.warn('[Sales Portal] Browser geolocation error details:', error.code, error.message);
-          let msg = 'Browser geolocation request denied.';
-          if (error.code === error.POSITION_UNAVAILABLE) msg = 'Location unavailable.';
-          if (error.code === error.TIMEOUT) msg = 'Location request timed out.';
-          handleIpFallback(msg);
+          let msg = 'Location access denied. Precise device GPS location is required to proceed. Please enable location permissions in your browser and device settings.';
+          if (error.code === error.POSITION_UNAVAILABLE) {
+            msg = 'GPS location is currently unavailable. Please ensure your device GPS/location services are turned on.';
+          } else if (error.code === error.TIMEOUT) {
+            msg = 'Location request timed out. Please ensure you have a clear GPS signal and try again.';
+          }
+          reject(new Error(msg));
         },
-        { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     });
   }, []);
 
+  // Precise device-only GPS location checker (No IP fallback)
+  const acquireLocation = useCallback(async () => {
+    setGpsStatus('acquiring');
+    setGpsError(null);
+    try {
+      const res = await getCurrentGPS();
+      setCoords(res);
+      setGpsStatus('success');
+      return res;
+    } catch (err: any) {
+      setGpsStatus('error');
+      setGpsError(err.message);
+      toast.error(err.message);
+      throw err;
+    }
+  }, [getCurrentGPS]);
+
+  // Separate GPS location checker for Visit logging
+  const acquireVisitLocation = useCallback(async () => {
+    setVisitGpsStatus('acquiring');
+    setVisitGpsError(null);
+    try {
+      const res = await getCurrentGPS();
+      setVisitCoords(res);
+      setVisitGpsStatus('success');
+      return res;
+    } catch (err: any) {
+      setVisitGpsStatus('error');
+      setVisitGpsError(err.message);
+      toast.error(err.message);
+      throw err;
+    }
+  }, [getCurrentGPS]);
+
   // Handle shift check-in
   const handleCheckIn = async () => {
+    if (!coords) {
+      toast.error('Please acquire and verify your check-in location first.');
+      return;
+    }
     setLoading(true);
     try {
-      const location = await acquireLocation();
-      
       const res = await fetch('/api/admin/sales-portal/attendance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'checkin',
-          latitude: location.latitude,
-          longitude: location.longitude,
-          accuracy: location.accuracy,
-          ip: location.ip,
-          method: location.method
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          accuracy: coords.accuracy,
+          ip: coords.ip,
+          method: coords.method
         })
       });
 
@@ -269,7 +324,8 @@ export default function SalesPortalPage() {
   const handleCheckOut = async () => {
     setLoading(true);
     try {
-      const location = await acquireLocation();
+      // For checkout, we acquire location dynamically
+      const location = await getCurrentGPS();
       
       const res = await fetch('/api/admin/sales-portal/attendance', {
         method: 'POST',
@@ -332,12 +388,13 @@ export default function SalesPortalPage() {
       toast.error('Please take/upload a photo of the visit.');
       return;
     }
+    if (!visitCoords) {
+      toast.error('Please acquire and pinpoint the visit location on the map first.');
+      return;
+    }
 
     setSubmittingVisit(true);
     try {
-      // Re-acquire location to get current coordinates of this specific visit
-      const location = await acquireLocation();
-
       const res = await fetch('/api/admin/sales-portal/visit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -345,10 +402,10 @@ export default function SalesPortalPage() {
           visitTitle: visitTitle.trim(),
           notes: notes.trim(),
           imageUrl,
-          latitude: location.latitude,
-          longitude: location.longitude,
-          accuracy: location.accuracy,
-          method: location.method
+          latitude: visitCoords.latitude,
+          longitude: visitCoords.longitude,
+          accuracy: visitCoords.accuracy,
+          method: visitCoords.method
         })
       });
 
@@ -359,6 +416,8 @@ export default function SalesPortalPage() {
       setVisitTitle('');
       setNotes('');
       setImageUrl('');
+      setVisitCoords(null);
+      setVisitGpsStatus('idle');
       if (fileInputRef.current) fileInputRef.current.value = '';
       
       // Reload shift state to include new visit in feed
@@ -550,16 +609,75 @@ export default function SalesPortalPage() {
           ) : (
             <div className="flex flex-col gap-4 py-2">
               <p className="text-xs text-slate-500 text-center leading-relaxed px-2">
-                You are currently clocked out. Check-in records your timestamp and current location coordinates.
+                You are currently clocked out. Check-in records your timestamp and exact location.
               </p>
               
-              <button
-                onClick={handleCheckIn}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-wider text-xs py-3.5 rounded-2xl transition-all shadow-sm hover:shadow-md shadow-blue-200 flex items-center justify-center gap-2"
-              >
-                <CheckCircle2 size={14} />
-                Check In & Start Shift
-              </button>
+              {gpsStatus !== 'success' ? (
+                <button
+                  type="button"
+                  onClick={acquireLocation}
+                  disabled={gpsStatus === 'acquiring'}
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold uppercase tracking-wider text-xs py-3.5 rounded-2xl transition-all shadow-sm hover:shadow-md shadow-blue-200 flex items-center justify-center gap-2"
+                >
+                  {gpsStatus === 'acquiring' ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Acquiring GPS Location...
+                    </>
+                  ) : (
+                    <>
+                      <MapIcon size={14} />
+                      Acquire Location to Check In
+                    </>
+                  )}
+                </button>
+              ) : (
+                <div className="space-y-4">
+                  <div className="text-xs space-y-1 bg-slate-50 border border-slate-200/60 rounded-2xl p-3.5 text-slate-600">
+                    <div className="flex items-center gap-1.5 text-slate-800 font-bold mb-1">
+                      <MapPin size={14} className="text-blue-600" />
+                      <span>Verify Check-In Location</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Drag the marker to pinpoint your exact location.
+                    </p>
+                    {resolvedAddress && (
+                      <div className="mt-2 text-slate-850 font-bold bg-white border border-slate-100 rounded-xl p-2.5 shadow-sm leading-relaxed">
+                        {resolvedAddress}
+                      </div>
+                    )}
+                  </div>
+
+                  {coords && (
+                    <LeafletMap
+                      latitude={coords.latitude}
+                      longitude={coords.longitude}
+                      onChange={handleCoordsChange}
+                      height="220px"
+                    />
+                  )}
+
+                  <div className="flex gap-3.5">
+                    <button
+                      type="button"
+                      onClick={acquireLocation}
+                      disabled={(gpsStatus as string) === 'acquiring'}
+                      className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[10px] rounded-2xl transition-all flex items-center justify-center"
+                      title="Recenter Map"
+                    >
+                      Recenter
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCheckIn}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-wider text-xs py-3.5 rounded-2xl transition-all shadow-sm hover:shadow-md shadow-blue-200 flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle2 size={14} />
+                      Check In & Start Shift
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>
@@ -645,6 +763,66 @@ export default function SalesPortalPage() {
                       </>
                     )}
                   </button>
+                )}
+              </div>
+
+              {/* Geolocation verification for the visit */}
+              <div className="space-y-3 pt-2">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Customer Location *</label>
+                {visitGpsStatus !== 'success' ? (
+                  <button
+                    type="button"
+                    onClick={acquireVisitLocation}
+                    disabled={visitGpsStatus === 'acquiring'}
+                    className="w-full bg-slate-50 hover:bg-slate-100 text-slate-755 border border-slate-200 border-dashed font-bold uppercase tracking-wider text-[11px] py-4 rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                  >
+                    {visitGpsStatus === 'acquiring' ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin text-blue-500" />
+                        Acquiring GPS...
+                      </>
+                    ) : (
+                      <>
+                        <MapIcon size={14} className="text-slate-400" />
+                        Pin Customer Location on Map
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <div className="space-y-3.5">
+                    <div className="text-xs space-y-1 bg-slate-50 border border-slate-200/60 rounded-2xl p-3.5 text-slate-600">
+                      <div className="flex items-center gap-1.5 text-slate-800 font-bold mb-1">
+                        <MapPin size={14} className="text-blue-600" />
+                        <span>Verify Customer Shop Location</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400">
+                        Drag the marker to mark the exact shop location.
+                      </p>
+                      {visitAddress && (
+                        <div className="mt-2 text-slate-850 font-bold bg-white border border-slate-100 rounded-xl p-2.5 shadow-sm leading-relaxed">
+                          {visitAddress}
+                        </div>
+                      )}
+                    </div>
+
+                    {visitCoords && (
+                      <LeafletMap
+                        latitude={visitCoords.latitude}
+                        longitude={visitCoords.longitude}
+                        onChange={handleVisitCoordsChange}
+                        height="200px"
+                      />
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={acquireVisitLocation}
+                      disabled={(visitGpsStatus as string) === 'acquiring'}
+                      className="w-full bg-slate-100 hover:bg-slate-200 text-slate-755 font-bold uppercase tracking-wider text-[9px] py-2 rounded-xl transition-all"
+                    >
+                      Recenter Map to Current GPS
+                    </button>
+                  </div>
                 )}
               </div>
 

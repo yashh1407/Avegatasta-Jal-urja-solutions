@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   RefreshCw,
   Search,
+  FileDown,
 } from 'lucide-react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
@@ -78,7 +79,22 @@ interface Product {
   inStock: boolean;
   hsn_code?: string;
   sac_code?: string;
+  dp_price?: number | null;
+  mrp_price?: number | null;
+  pricing_description?: string | null;
 }
+
+const QUOTATION_FILE_COMMENT = /^<!-- FILENAME: (.*?) -->\n/;
+
+const getQuotationFileName = (description?: string | null) => {
+  const match = (description || '').match(QUOTATION_FILE_COMMENT);
+  return match?.[1] || '';
+};
+
+const toOptionalPrice = (value: string) => {
+  const trimmed = value.trim();
+  return trimmed === '' ? null : Number(trimmed);
+};
 
 // ─── Product Card ─────────────────────────────────────────────────────────────
 
@@ -323,6 +339,10 @@ export default function AdminProductsPage() {
   const [formInStock, setFormInStock] = useState(true);
   const [formHsnCode, setFormHsnCode] = useState('');
   const [formSacCode, setFormSacCode] = useState('');
+  const [formDpPrice, setFormDpPrice] = useState('');
+  const [formMrpPrice, setFormMrpPrice] = useState('');
+  const [formPricingDescription, setFormPricingDescription] = useState('');
+  const [formPricingFileName, setFormPricingFileName] = useState('');
 
   // Feature entries
   const [featuresList, setFeaturesList] = useState<string[]>([]);
@@ -339,6 +359,7 @@ export default function AdminProductsPage() {
 
   // File Upload state
   const [uploading, setUploading] = useState(false);
+  const [importingDocx, setImportingDocx] = useState(false);
 
   // Fetch products
   const fetchProducts = async () => {
@@ -396,6 +417,38 @@ export default function AdminProductsPage() {
     }
   };
 
+  const handleQuotationDocxUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    e.target.value = '';
+    setImportingDocx(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/admin/parse-docx', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setFormPricingDescription(`<!-- FILENAME: ${file.name} -->\n${data.text || ''}`);
+        setFormPricingFileName(file.name);
+        toast.success('Word document imported.');
+      } else {
+        toast.error('Failed to parse the Word document.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error uploading file.');
+    } finally {
+      setImportingDocx(false);
+    }
+  };
+
   // Features Actions
   const addFeature = () => {
     if (!featureInput.trim()) return;
@@ -438,6 +491,10 @@ export default function AdminProductsPage() {
     setFormInStock(true);
     setFormHsnCode('');
     setFormSacCode('');
+    setFormDpPrice('');
+    setFormMrpPrice('');
+    setFormPricingDescription('');
+    setFormPricingFileName('');
     setFeaturesList([]);
     setSpecsList([]);
     setFormError(null);
@@ -484,6 +541,10 @@ export default function AdminProductsPage() {
     setFormInStock(product.inStock);
     setFormHsnCode(product.hsn_code || '');
     setFormSacCode(product.sac_code || '');
+    setFormDpPrice(product.dp_price != null ? String(product.dp_price) : '');
+    setFormMrpPrice(product.mrp_price != null ? String(product.mrp_price) : '');
+    setFormPricingDescription(product.pricing_description || '');
+    setFormPricingFileName(getQuotationFileName(product.pricing_description));
     setFeaturesList(product.features || []);
 
     const loadedSpecs = Object.entries(product.specs || {}).map(([key, val]) => ({
@@ -517,6 +578,21 @@ export default function AdminProductsPage() {
       return;
     }
 
+    const dpPrice = toOptionalPrice(formDpPrice);
+    const mrpPrice = toOptionalPrice(formMrpPrice);
+
+    if (dpPrice !== null && !Number.isFinite(dpPrice)) {
+      setFormError('DP price must be a valid number.');
+      setSaving(false);
+      return;
+    }
+
+    if (mrpPrice !== null && !Number.isFinite(mrpPrice)) {
+      setFormError('MRP price must be a valid number.');
+      setSaving(false);
+      return;
+    }
+
     const payload = {
       id: formId.trim(),
       name: formName.trim(),
@@ -533,6 +609,9 @@ export default function AdminProductsPage() {
       inStock: formInStock,
       hsn_code: formHsnCode.trim() || null,
       sac_code: formSacCode.trim() || null,
+      dp_price: dpPrice,
+      mrp_price: mrpPrice,
+      pricing_description: formPricingDescription.trim() || null,
     };
 
     try {
@@ -983,35 +1062,136 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
 
-                {/* HSN & SAC Codes */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="prod-form-hsn" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
-                      HSN Code
-                    </label>
-                    <input
-                      id="prod-form-hsn"
-                      disabled={saving}
-                      type="text"
-                      placeholder="e.g. 84191920"
-                      value={formHsnCode}
-                      onChange={(e) => setFormHsnCode(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
-                    />
+                {/* Pricing & Quotation */}
+                <div className="rounded-[1.75rem] border border-slate-100 bg-slate-50/70 p-5 space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-black text-brand-950">Pricing & Quotation</h3>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Products edit
+                    </span>
                   </div>
-                  <div>
-                    <label htmlFor="prod-form-sac" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
-                      SAC Code
-                    </label>
-                    <input
-                      id="prod-form-sac"
-                      disabled={saving}
-                      type="text"
-                      placeholder="e.g. 998719"
-                      value={formSacCode}
-                      onChange={(e) => setFormSacCode(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all"
-                    />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="prod-form-dp-price" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
+                        DP Price (₹)
+                      </label>
+                      <input
+                        id="prod-form-dp-price"
+                        disabled={saving}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        inputMode="decimal"
+                        placeholder="0.00"
+                        value={formDpPrice}
+                        onChange={(e) => setFormDpPrice(e.target.value)}
+                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-semibold text-brand-950"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="prod-form-mrp-price" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
+                        MRP Price (₹)
+                      </label>
+                      <input
+                        id="prod-form-mrp-price"
+                        disabled={saving}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        inputMode="decimal"
+                        placeholder="0.00"
+                        value={formMrpPrice}
+                        onChange={(e) => setFormMrpPrice(e.target.value)}
+                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-semibold text-brand-950"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="prod-form-hsn" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
+                        HSN Code
+                      </label>
+                      <input
+                        id="prod-form-hsn"
+                        disabled={saving}
+                        type="text"
+                        placeholder="e.g. 84191920"
+                        value={formHsnCode}
+                        onChange={(e) => setFormHsnCode(e.target.value)}
+                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-semibold text-brand-950"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="prod-form-sac" className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1.5 ml-1">
+                        SAC Code
+                      </label>
+                      <input
+                        id="prod-form-sac"
+                        disabled={saving}
+                        type="text"
+                        placeholder="e.g. 998719"
+                        value={formSacCode}
+                        onChange={(e) => setFormSacCode(e.target.value)}
+                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 transition-all font-semibold text-brand-950"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2 pt-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 block">
+                        Quotation Word File (.docx)
+                      </label>
+                      <label className={`shrink-0 ${importingDocx || saving ? 'cursor-not-allowed bg-slate-100 text-slate-400' : 'cursor-pointer bg-brand-50 text-brand-600 hover:bg-brand-100'} px-3 py-1.5 rounded-xl text-xs font-black transition-colors flex items-center gap-1.5`}>
+                        {importingDocx ? (
+                          <>
+                            <RefreshCw size={14} className="animate-spin" />
+                            Importing...
+                          </>
+                        ) : (
+                          <>
+                            <FileDown size={14} />
+                            Import .docx
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept=".docx"
+                          className="hidden"
+                          onChange={handleQuotationDocxUpload}
+                          disabled={importingDocx || saving}
+                        />
+                      </label>
+                    </div>
+                    <div className="min-h-[72px] flex items-center bg-white p-4 rounded-2xl border border-slate-100">
+                      {formPricingDescription ? (
+                        <div className="inline-flex max-w-full items-center gap-3 bg-brand-50 border border-brand-100 px-4 py-2 rounded-xl text-sm font-medium text-brand-700 shadow-sm">
+                          <FileDown size={16} className="text-brand-500 shrink-0" />
+                          <span className="font-bold text-xs truncate">
+                            {formPricingFileName || 'Quotation template attached'}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={saving || importingDocx}
+                            onClick={() => {
+                              setFormPricingDescription('');
+                              setFormPricingFileName('');
+                            }}
+                            className="p-1 hover:bg-brand-200 rounded-lg text-brand-500 hover:text-brand-800 transition-colors disabled:opacity-50 shrink-0"
+                            title="Remove attachment"
+                            aria-label="Remove quotation file"
+                          >
+                            <X size={14} strokeWidth={3} />
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-400 italic font-medium pl-1">
+                          No quotation file imported yet. Import a .docx file to parse quotation content.
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 

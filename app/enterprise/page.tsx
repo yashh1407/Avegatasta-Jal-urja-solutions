@@ -1,12 +1,22 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
 import EnterprisePageClient from './EnterprisePageClient';
+import { query } from '@/lib/db';
 
-export const metadata: Metadata = {
-  title: 'Enterprise Solutions | Avegatasta Jal-Urja Solutions, Nashik',
-  description:
-    'End-to-end B2B water, energy & pool infrastructure solutions for industrial, commercial, hospitality and institutional projects in Nashik. Authorized partner for V-Guard, Wilo, Zero B & Bluewave India.',
-  keywords: [
+export async function generateMetadata(): Promise<Metadata> {
+  let dbPage: any = null;
+  try {
+    const pages = await query("SELECT * FROM pages WHERE slug = 'enterprise'") as any[];
+    if (pages && pages.length > 0) {
+      dbPage = pages[0];
+    }
+  } catch (e) {
+    console.error("Failed to load enterprise page metadata:", e);
+  }
+
+  const title = dbPage?.meta_title || 'Enterprise Solutions | Avegatasta Jal-Urja Solutions, Nashik';
+  const description = dbPage?.meta_description || 'End-to-end B2B water, energy & pool infrastructure solutions for industrial, commercial, hospitality and institutional projects in Nashik. Authorized partner for V-Guard, Wilo, Zero B & Bluewave India.';
+  const keywords = dbPage?.meta_keywords ? dbPage.meta_keywords.split(',').map((k: string) => k.trim()) : [
     'enterprise water solutions Nashik',
     'enterprise water heater Nashik',
     'industrial hot water systems Maharashtra',
@@ -22,28 +32,31 @@ export const metadata: Metadata = {
     'Zero B bulk supply Nashik',
     'Bluewave pool solutions Nashik',
     'enterprise project enquiry water energy Nashik',
-  ],
-  alternates: {
-    canonical: '/enterprise',
-  },
-  openGraph: {
-    title: 'Enterprise Solutions | Avegatasta Jal-Urja Solutions',
-    description:
-      'Infrastructure-scale water, energy & pool solutions for B2B projects across Nashik and Maharashtra. Submit your enterprise enquiry today.',
-    url: 'https://avegatasta.com/enterprise',
-    images: [
-      {
-        url: 'https://avegatasta.com/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Enterprise Solutions — Avegatasta Jal-Urja Solutions, Nashik',
-      },
-    ],
-    type: 'website',
-  },
-};
+  ];
 
-// ─── JSON-LD ──────────────────────────────────────────────────────────────────
+  return {
+    title,
+    description,
+    keywords,
+    alternates: {
+      canonical: dbPage?.canonical_url || '/enterprise',
+    },
+    openGraph: {
+      title: dbPage?.og_title || title,
+      description: dbPage?.og_description || description,
+      url: dbPage?.canonical_url || 'https://avegatasta.com/enterprise',
+      images: [
+        {
+          url: dbPage?.og_image || 'https://avegatasta.com/og-image.jpg',
+          width: 1200,
+          height: 630,
+          alt: 'Enterprise Solutions — Avegatasta Jal-Urja Solutions, Nashik',
+        },
+      ],
+      type: 'website',
+    },
+  };
+}
 
 const provider = {
   '@type': 'LocalBusiness',
@@ -143,9 +156,23 @@ const breadcrumbJsonLd = {
   ],
 };
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+export default async function EnterprisePage() {
+  let page: any = {};
+  let sections: any[] = [];
 
-export default function EnterprisePage() {
+  try {
+    const pages = await query("SELECT * FROM pages WHERE slug = 'enterprise'") as any[];
+    if (pages && pages.length > 0) {
+      page = pages[0];
+      sections = await query(
+        "SELECT * FROM page_sections WHERE page_id = ? AND is_active = 1 ORDER BY sort_order ASC",
+        [page.id]
+      ) as any[];
+    }
+  } catch (err) {
+    console.error("Failed to query database for enterprise page:", err);
+  }
+
   return (
     <>
       <Script
@@ -160,7 +187,7 @@ export default function EnterprisePage() {
         strategy="afterInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <EnterprisePageClient />
+      <EnterprisePageClient sections={sections} pageData={page} />
     </>
   );
 }

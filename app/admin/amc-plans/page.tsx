@@ -17,7 +17,6 @@ import {
   FileText,
   ArrowLeft,
 } from 'lucide-react';
-import Footer from '@/components/Footer';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -535,8 +534,7 @@ export default function AmcPlansPage() {
         </div>
       </main>
 
-      <Footer />
-
+      
       <PlanFormModal
         open={modalOpen}
         initial={editTarget}

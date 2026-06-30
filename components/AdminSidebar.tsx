@@ -103,32 +103,11 @@ const ADMIN_SECTIONS = [
     module: 'vendors'
   },
   {
-    label: 'Enterprise Leads',
-    href: '/admin/enterprise',
-    icon: Building2,
-    category: 'management',
-    module: 'enterprise'
-  },
-  {
-    label: 'Team Members',
-    href: '/admin/team-members',
-    icon: UserCheck,
-    category: 'management',
-    module: 'team-members'
-  },
-  {
     label: 'Sales',
     href: '/admin/sales',
     icon: TrendingUp,
     category: 'sales',
     module: 'sales'
-  },
-  {
-    label: 'Sales Team',
-    href: '/admin/sales-team',
-    icon: Users,
-    category: 'sales',
-    module: 'sales-team'
   },
   {
     label: 'Case Studies',

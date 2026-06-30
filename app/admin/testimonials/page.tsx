@@ -20,7 +20,6 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import Footer from '@/components/Footer';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -937,8 +936,7 @@ export default function AdminTestimonialsPage() {
         </div>
       </main>
 
-      <Footer />
-
+      
       <TestimonialFormModal
         open={modalOpen}
         initial={modalInitial}

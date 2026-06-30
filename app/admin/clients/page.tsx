@@ -22,7 +22,6 @@ import {
   Eye,
   Package,
 } from 'lucide-react';
-import Footer from '@/components/Footer';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -636,8 +635,7 @@ export default function AdminClientsPage() {
         </div>
       </main>
 
-      <Footer />
-
+      
       <ClientFormModal
         open={modalOpen}
         initial={modalInitial}

@@ -14,7 +14,8 @@ export async function GET() {
     const count = (rows as Array<{ count: number }>)[0].count;
     return NextResponse.json({ count });
   } catch (error) {
-    console.error('Error fetching unread count:', error);
-    return NextResponse.json({ error: 'Failed to fetch unread count' }, { status: 500 });
+    const dbError = error as { code?: string; message?: string };
+    console.warn('Unread count unavailable:', dbError.code ?? dbError.message ?? error);
+    return NextResponse.json({ count: 0, dbConnected: false });
   }
 }

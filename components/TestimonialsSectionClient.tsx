@@ -6,6 +6,6 @@ const TestimonialsSection = dynamic(() => import('@/components/TestimonialsSecti
   ssr: false,
 })
 
-export default function TestimonialsSectionClient() {
-  return <TestimonialsSection />
+export default function TestimonialsSectionClient({ badge, titleHtml }: { badge?: string; titleHtml?: string } = {}) {
+  return <TestimonialsSection badge={badge} titleHtml={titleHtml} />
 }

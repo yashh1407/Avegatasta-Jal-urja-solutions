@@ -21,7 +21,6 @@ import {
   Users,
   TrendingUp,
 } from 'lucide-react';
-import Footer from '@/components/Footer';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
@@ -788,8 +787,7 @@ export default function AmcDashboardPage() {
         )}
       </main>
 
-      <Footer />
-
+      
       <RenewModal
         open={renewOpen}
         amc={renewTarget}

@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { motion } from 'motion/react';
 import { BookOpen, RefreshCw, LogOut, Plus, Trash2, MapPin, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
-import Footer from '@/components/Footer';
 import StatusBadge from '@/components/ui/StatusBadge';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -356,7 +355,6 @@ export default function AdminCaseStudiesPage() {
         </div>
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

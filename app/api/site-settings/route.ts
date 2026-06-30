@@ -6,7 +6,15 @@ const SITE_SETTINGS_TTL_MS = 5 * 60 * 1000;
 
 // Keys that live in site_settings but must never be exposed to the public/client
 // (they are consumed server-side only — e.g. the Google Maps server API key).
-const SENSITIVE_KEYS = new Set(['google_maps_api_key']);
+const SENSITIVE_KEYS = new Set([
+  'google_maps_api_key',
+  'bank_account_name',
+  'bank_account_no',
+  'bank_ifsc',
+  'bank_name',
+  'bank_branch',
+  'bank_accounts',
+]);
 
 export async function GET(request: NextRequest) {
   const group = request.nextUrl.searchParams.get('group');

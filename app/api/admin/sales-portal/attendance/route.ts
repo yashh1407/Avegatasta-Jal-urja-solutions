@@ -19,6 +19,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid action. Must be checkin or checkout' }, { status: 400 });
     }
 
+    if (method !== 'gps') {
+      return NextResponse.json({ error: 'Precise device GPS location is required. IP-based location is not allowed.' }, { status: 400 });
+    }
+
     await initDB();
 
     if (action === 'checkin') {

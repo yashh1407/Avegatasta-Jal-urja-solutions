@@ -58,7 +58,12 @@ function TestimonialSkeleton() {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function TestimonialsSection() {
+interface TestimonialsSectionProps {
+  badge?: string;
+  titleHtml?: string;
+}
+
+export default function TestimonialsSection({ badge, titleHtml }: TestimonialsSectionProps = {}) {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, dragFree: false });
@@ -101,6 +106,9 @@ export default function TestimonialsSection() {
     return () => clearInterval(id);
   }, [paused, emblaApi]);
 
+  const resolvedBadge = badge || 'Testimonials';
+  const resolvedTitleHtml = titleHtml || 'What Our Customers Say';
+
   return (
     <section
       className="py-16 sm:py-20 lg:py-24 bg-white border-t border-brand-100/60"
@@ -111,11 +119,9 @@ export default function TestimonialsSection() {
         {/* Header */}
         <div className="text-center mb-10 sm:mb-14 lg:mb-16">
           <p className="text-xs font-black text-brand-500 uppercase tracking-[0.2em] mb-3">
-            Testimonials
+            {resolvedBadge}
           </p>
-          <h2 className="text-3xl sm:text-4xl font-black text-brand-950 tracking-tight">
-            What Our Customers Say
-          </h2>
+          <h2 className="text-3xl sm:text-4xl font-black text-brand-950 tracking-tight" dangerouslySetInnerHTML={{ __html: resolvedTitleHtml }} />
         </div>
 
         {loading ? (

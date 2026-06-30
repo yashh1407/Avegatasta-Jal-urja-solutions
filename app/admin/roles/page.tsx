@@ -158,13 +158,6 @@ const AVAILABLE_MODULES = [
     supportedActions: ['view', 'add', 'edit', 'delete']
   },
   { 
-    key: 'sales-team', 
-    label: 'Sales Team', 
-    category: 'Sales', 
-    desc: 'Manage sales representatives',
-    supportedActions: ['view', 'add', 'edit', 'delete']
-  },
-  { 
     key: 'inquiries', 
     label: 'Customer Inquiries', 
     category: 'Sales', 

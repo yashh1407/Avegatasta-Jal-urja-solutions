@@ -24,6 +24,9 @@ export async function POST(req: Request) {
     if (latitude === undefined || longitude === undefined) {
       return NextResponse.json({ error: 'Location coordinates are required.' }, { status: 400 });
     }
+    if (method !== 'gps') {
+      return NextResponse.json({ error: 'Precise device GPS location is required to log a visit. IP-based location is not allowed.' }, { status: 400 });
+    }
 
     await initDB();
 

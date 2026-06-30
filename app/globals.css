@@ -128,41 +128,7 @@
   border-radius: var(--radius-badge);
 }
 
-/* Site motion layer */
-@keyframes site-section-reveal {
-  from {
-    opacity: 0.35;
-    transform: translateY(42px) scale(0.985);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
 
-@keyframes site-copy-reveal {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes site-media-reveal {
-  from {
-    opacity: 0.45;
-    clip-path: inset(8% round 1.5rem);
-    filter: saturate(0.8) contrast(0.94);
-  }
-  to {
-    opacity: 1;
-    clip-path: inset(0 round 0);
-    filter: saturate(1) contrast(1);
-  }
-}
 
 @layer utilities {
   .motion-page-shell {
@@ -200,37 +166,7 @@
   }
 }
 
-@supports (animation-timeline: view()) {
-  body.site-motion [data-motion-root] main > section:not(:first-child) {
-    animation: site-section-reveal both;
-    animation-timeline: view();
-    animation-range: entry 6% cover 28%;
-    transform-origin: center top;
-    will-change: opacity, transform;
-  }
 
-  body.site-motion [data-motion-root] main > section:not(:first-child) :where(h2, h3, p, li, dt, dd, form) {
-    animation: site-copy-reveal both;
-    animation-timeline: view();
-    animation-range: entry 8% cover 30%;
-    will-change: opacity, transform;
-  }
-
-  body.site-motion [data-motion-root] main > section:not(:first-child) :where(img, picture, video) {
-    animation: site-media-reveal both;
-    animation-timeline: view();
-    animation-range: entry 4% cover 34%;
-    will-change: opacity, clip-path, filter;
-  }
-
-  body.site-motion [data-admin-shell] :where(section, h1, h2, h3, p, li, dt, dd, form, img, picture, video) {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-    filter: none !important;
-    clip-path: none !important;
-  }
-}
 
 body.site-motion [data-motion-root] main :where(a, button) {
   transition-timing-function: var(--ease-brand);

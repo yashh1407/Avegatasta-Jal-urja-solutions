@@ -38,7 +38,17 @@ const BRAND_PARTNERS = [
   },
 ];
 
-export default function BrandsSection() {
+interface BrandsSectionProps {
+  badge?: string;
+  titleHtml?: string;
+  description?: string;
+}
+
+export default function BrandsSection({ badge, titleHtml, description }: BrandsSectionProps = {}) {
+  const resolvedBadge = badge || 'Brands We Partner With';
+  const resolvedTitleHtml = titleHtml || 'Authorized for India\'s <span class="text-accent-400">Leading Brands</span>';
+  const resolvedDescription = description || 'We are authorized channel partners for four specialized brands, covering every aspect of water, energy, and pool infrastructure for enterprise clients.';
+
   return (
     <section className="py-16 sm:py-20 lg:py-24 bg-brand-950 text-white overflow-hidden relative">
       {/* Background glow */}
@@ -60,21 +70,18 @@ export default function BrandsSection() {
             variants={fadeUp}
             className="text-xs font-black text-accent-400 uppercase tracking-[0.2em] mb-4"
           >
-            Brands We Partner With
+            {resolvedBadge}
           </motion.p>
           <motion.h2
             variants={fadeUp}
             className="text-4xl md:text-5xl font-black tracking-tight leading-tight"
-          >
-            Authorized for India&apos;s{' '}
-            <span className="text-accent-400">Leading Brands</span>
-          </motion.h2>
+            dangerouslySetInnerHTML={{ __html: resolvedTitleHtml }}
+          />
           <motion.p
             variants={fadeUp}
             className="mt-5 text-brand-300 max-w-2xl mx-auto text-lg leading-relaxed"
           >
-            We are authorized channel partners for four specialized brands, covering every aspect
-            of water, energy, and pool infrastructure for enterprise clients.
+            {resolvedDescription}
           </motion.p>
         </motion.div>
 

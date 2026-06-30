@@ -11,7 +11,6 @@ import {
   Save,
   Send,
 } from 'lucide-react';
-import Footer from '@/components/Footer';
 
 interface SMTPSettings {
   id?: number;
@@ -327,7 +326,6 @@ export default function SMTPSettingsPage() {
         </motion.div>
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

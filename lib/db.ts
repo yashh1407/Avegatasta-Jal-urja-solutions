@@ -445,6 +445,14 @@ export async function initDB() {
       )
     `);
     try { await connection.query(`ALTER TABLE product_pricing MODIFY COLUMN description LONGTEXT`); } catch (e: any) { if (e.code !== 'ER_DUP_FIELDNAME') throw e; }
+    const [pricingProductIdColumns] = await connection.query(`SHOW FULL COLUMNS FROM product_pricing WHERE Field = 'product_id'`);
+    const pricingProductIdColumn = (pricingProductIdColumns as Array<{ Collation?: string }>)[0];
+    if (pricingProductIdColumn?.Collation !== 'utf8mb4_general_ci') {
+      await connection.query(`
+        ALTER TABLE product_pricing
+        MODIFY COLUMN product_id VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL
+      `);
+    }
 
     // Sales Team
     await connection.query(`
@@ -589,6 +597,115 @@ export async function initDB() {
       { key: 'total_clients',    value: '1000+',            label: 'Total Clients',    group: 'hero' },
       { key: 'units_installed',  value: '5000+',            label: 'Units Installed',  group: 'hero' },
       { key: 'industry_sectors', value: '10+',              label: 'Industry Sectors', group: 'hero' },
+      { key: 'home_hero_badge', value: 'Avegatasta Jal-Urja Solutions - Nashik', label: 'Home Hero Badge', group: 'general' },
+      { key: 'home_hero_title', value: '<span class="whitespace-nowrap">Enterprise Water,</span><br/><span class="text-accent-400 whitespace-nowrap">Energy & Pool</span><br/>Solutions', label: 'Home Hero Title HTML', group: 'general' },
+      { key: 'home_hero_content', value: 'Authorized channel partner for V-Guard, Wilo, Zero B, and Bluewave India. End-to-end B2B solutions - water heating, pumping, treatment, solar, and swimming pool systems - for industrial, commercial, and large-scale residential projects across Nashik.', label: 'Home Hero Content', group: 'general' },
+      { key: 'home_hero_image_1', value: '/hero/solar-field.jpg', label: 'Home Hero Image 1', group: 'general' },
+      { key: 'home_hero_image_2', value: '/hero/water-pump.png', label: 'Home Hero Image 2', group: 'general' },
+      { key: 'home_hero_image_3', value: '/hero/partner-team.jpg', label: 'Home Hero Image 3', group: 'general' },
+      { key: 'home_hero_image_4', value: '/hero/water-solutions.jpg', label: 'Home Hero Image 4', group: 'general' },
+      { key: 'home_hero_image_1_label', value: 'Solar', label: 'Home Hero Image 1 Label', group: 'general' },
+      { key: 'home_hero_image_2_label', value: 'Pumping', label: 'Home Hero Image 2 Label', group: 'general' },
+      { key: 'home_hero_image_3_label', value: 'Partner', label: 'Home Hero Image 3 Label', group: 'general' },
+      { key: 'home_hero_image_4_label', value: 'Water', label: 'Home Hero Image 4 Label', group: 'general' },
+      { key: 'home_primary_button_text', value: 'Explore Products', label: 'Home Primary Button Text', group: 'general' },
+      { key: 'home_primary_button_url', value: '/products', label: 'Home Primary Button URL', group: 'general' },
+      { key: 'home_secondary_button_text', value: 'Get Free Advice', label: 'Home Secondary Button Text', group: 'general' },
+      { key: 'home_secondary_button_url', value: '/contact', label: 'Home Secondary Button URL', group: 'general' },
+      { key: 'home_trust_strip_text', value: 'Enterprise-grade products - B2B project specialists - Multi-sector experience', label: 'Home Trust Strip Text', group: 'general' },
+      { key: 'home_why_eyebrow', value: 'Why Choose Us', label: 'Home Why Eyebrow', group: 'general' },
+      { key: 'home_why_title', value: 'Your Enterprise\nSolutions Partner', label: 'Home Why Title', group: 'general' },
+      { key: 'home_why_benefits', value: JSON.stringify([
+        'Authorized partner for V-Guard, Wilo, Zero B & Bluewave India',
+        'End-to-end B2B project delivery - supply, install, and support',
+        'Serving industrial, commercial, hospitality, and residential sectors',
+        'Swimming pool equipment and chemical solutions via Bluewave India',
+        'Bulk procurement and enterprise project management capabilities',
+        'Energy-efficient systems with certified after-sales service',
+      ]), label: 'Home Why Benefits (JSON)', group: 'general' },
+      { key: 'home_why_image_1', value: 'https://images.unsplash.com/photo-1581093806997-124204d9fa9d?auto=format&fit=crop&q=80&w=800&h=450', label: 'Home Why Image 1', group: 'general' },
+      { key: 'home_why_image_2', value: '/about/b2b-services.jpg', label: 'Home Why Image 2', group: 'general' },
+      { key: 'home_enterprise_eyebrow', value: 'Enterprise & Bulk Projects', label: 'Home Enterprise Eyebrow', group: 'general' },
+      { key: 'home_enterprise_title', value: "Powering India's", label: 'Home Enterprise Title', group: 'general' },
+      { key: 'home_enterprise_highlight', value: 'Enterprises', label: 'Home Enterprise Highlight', group: 'general' },
+      { key: 'home_enterprise_copy', value: 'From a single commercial building to an entire industrial estate - Avegatasta delivers end-to-end B2B project execution with authorised equipment, certified installation, and dedicated after-sales support across every major sector.', label: 'Home Enterprise Copy', group: 'general' },
+      { key: 'home_enterprise_image', value: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=700&h=875', label: 'Home Enterprise Image', group: 'general' },
+      { key: 'home_enterprise_button_text', value: 'Explore Enterprise Solutions', label: 'Home Enterprise Button Text', group: 'general' },
+      { key: 'projects_hero_eyebrow', value: 'Projects & Installations', label: 'Projects Hero Eyebrow', group: 'general' },
+      { key: 'projects_hero_title', value: 'Proven Solutions.', label: 'Projects Hero Title', group: 'general' },
+      { key: 'projects_hero_highlight', value: 'Successful Installations.', label: 'Projects Hero Highlight', group: 'general' },
+      { key: 'projects_hero_copy_1', value: 'At Avegatasta Solution, we take pride in delivering reliable and efficient solutions for water heating, pumping systems, water treatment, and solar energy projects. Our experienced team ensures professional installation, system optimization, and long-term performance for every project we undertake.', label: 'Projects Hero Copy 1', group: 'general' },
+      { key: 'projects_hero_copy_2', value: 'We work with trusted brands such as V-Guard, Wilo, and Zero B from Ion Exchange (India) Ltd., ensuring high-quality systems and dependable results.', label: 'Projects Hero Copy 2', group: 'general' },
+      { key: 'projects_installation_types', value: JSON.stringify([
+        { id: 'solar', title: 'Solar System Installations', intro: 'We design and install on-grid solar power systems for residential and commercial customers. Our team manages the entire process from system planning to installation and commissioning.' },
+        { id: 'water-heating', title: 'Water Heating System Installations', intro: 'We install modern water heating systems that deliver efficient hot water solutions for various applications.' },
+        { id: 'pumping', title: 'Pumping System Installations', intro: 'Our team installs advanced pumping systems designed for efficient water pressure management and water distribution.' },
+        { id: 'water-treatment', title: 'Water Treatment Installations', intro: 'We provide professional installation of water treatment systems to ensure clean and safe water for both utility and drinking purposes.' },
+      ]), label: 'Projects Installation Types (JSON)', group: 'general' },
+      { key: 'projects_process_eyebrow', value: 'How We Work', label: 'Projects Process Eyebrow', group: 'general' },
+      { key: 'projects_process_title', value: 'A structured installation process from start to support', label: 'Projects Process Title', group: 'general' },
+      { key: 'projects_process_copy', value: 'Every project is planned with technical clarity, professional execution, and dependable after-sales service.', label: 'Projects Process Copy', group: 'general' },
+      { key: 'projects_process_steps', value: JSON.stringify([
+        'Site inspection and requirement analysis',
+        'System design and product selection',
+        'Professional installation by trained technicians',
+        'Testing and system commissioning',
+        'Customer guidance and after-sales support',
+      ]), label: 'Projects Process Steps (JSON)', group: 'general' },
+      { key: 'projects_trust_eyebrow', value: 'Why Customers Trust Us', label: 'Projects Trust Eyebrow', group: 'general' },
+      { key: 'projects_trust_title', value: 'Trusted execution for water and energy infrastructure', label: 'Projects Trust Title', group: 'general' },
+      { key: 'projects_trust_copy', value: 'From system selection to commissioning, Avegatasta focuses on delivering reliable performance, clean installation work, and long-term service value.', label: 'Projects Trust Copy', group: 'general' },
+      { key: 'projects_trust_items', value: JSON.stringify([
+        'Experienced installation team',
+        'Trusted technology from leading brands',
+        'Customized solutions for every project',
+        'Reliable service and technical support',
+      ]), label: 'Projects Trust Items (JSON)', group: 'general' },
+      { key: 'enterprise_hero_badge', value: 'Enterprise & Bulk Projects - Nashik', label: 'Enterprise Hero Badge', group: 'general' },
+      { key: 'enterprise_hero_title', value: 'Infrastructure-Scale', label: 'Enterprise Hero Title', group: 'general' },
+      { key: 'enterprise_hero_highlight', value: 'Water, Energy', label: 'Enterprise Hero Highlight', group: 'general' },
+      { key: 'enterprise_hero_copy', value: 'End-to-end B2B project delivery for industrial, commercial, and institutional clients across Nashik. Authorized supply, certified installation, and dedicated after-sales support from a single trusted partner.', label: 'Enterprise Hero Copy', group: 'general' },
+      { key: 'enterprise_hero_image', value: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=900&h=675', label: 'Enterprise Hero Image', group: 'general' },
+      { key: 'enterprise_primary_button_text', value: 'Submit Enterprise Enquiry', label: 'Enterprise Primary Button Text', group: 'general' },
+      { key: 'enterprise_secondary_button_text', value: 'Talk to Our Team', label: 'Enterprise Secondary Button Text', group: 'general' },
+      { key: 'enterprise_trust_text', value: 'V-Guard - Wilo - Zero B - Bluewave India - authorized channel partner', label: 'Enterprise Trust Text', group: 'general' },
+      { key: 'enterprise_stats', value: JSON.stringify([
+        { value: '10+', label: 'Years in Business' },
+        { value: '1,000+', label: 'Corporate Clients' },
+        { value: '5,000+', label: 'Units Installed' },
+        { value: '10+', label: 'Industry Sectors' },
+      ]), label: 'Enterprise Stats (JSON)', group: 'general' },
+      { key: 'enterprise_client_eyebrow', value: 'Who We Serve', label: 'Enterprise Client Eyebrow', group: 'general' },
+      { key: 'enterprise_client_title', value: 'Built for Every', label: 'Enterprise Client Title', group: 'general' },
+      { key: 'enterprise_client_highlight', value: 'Enterprise Sector', label: 'Enterprise Client Highlight', group: 'general' },
+      { key: 'enterprise_client_copy', value: 'From a single commercial building to a multi-site industrial estate, our B2B solutions are scoped and delivered to match the demands of your sector.', label: 'Enterprise Client Copy', group: 'general' },
+      { key: 'enterprise_client_types', value: JSON.stringify([
+        { label: 'Industrial', description: 'Large-scale pumping systems, water treatment plants, and solar on-grid installations for factories, industrial estates, and manufacturing units.' },
+        { label: 'Hospitality', description: 'Heat pump water heaters, complete swimming pool setups, and bulk chemical supply for hotels, resorts, and service apartments.' },
+        { label: 'Commercial', description: 'Booster pump systems, water purifiers, softeners, and energy systems for office buildings, malls, and commercial complexes.' },
+        { label: 'Aquatics', description: 'Full-spectrum pool solutions via Bluewave India - filtration equipment, pool chemicals, and ongoing supply contracts.' },
+        { label: 'Institutional', description: 'Reliable water and energy infrastructure for schools, hospitals, housing societies, and government projects in Nashik.' },
+      ]), label: 'Enterprise Client Types (JSON)', group: 'general' },
+      { key: 'enterprise_deliverables_eyebrow', value: 'What We Deliver', label: 'Enterprise Deliverables Eyebrow', group: 'general' },
+      { key: 'enterprise_deliverables_title', value: 'Full-Cycle', label: 'Enterprise Deliverables Title', group: 'general' },
+      { key: 'enterprise_deliverables_copy', value: 'We handle every stage - from initial scoping to post-installation support - so your project stays on schedule and on budget.', label: 'Enterprise Deliverables Copy', group: 'general' },
+      { key: 'enterprise_deliverables', value: JSON.stringify([
+        { title: 'Site Assessment & Scoping', body: 'Our team visits your site to evaluate load requirements, infrastructure fit, and optimal product selection - at no cost for Nashik projects.' },
+        { title: 'Authorized Equipment Supply', body: 'Factory-fresh stock from V-Guard, Wilo, Zero B, and Bluewave India with full manufacturer warranty on every unit.' },
+        { title: 'Certified Installation', body: 'End-to-end installation by trained technicians - from civil prep to commissioning - with safety compliance documentation.' },
+        { title: 'Energy & Performance Audits', body: 'Post-install efficiency checks and energy reports to help your project meet sustainability targets and reduce operating costs.' },
+        { title: 'After-Sales & AMC', body: 'Dedicated support contracts, spare parts availability, and priority service response for all enterprise accounts.' },
+      ]), label: 'Enterprise Deliverables (JSON)', group: 'general' },
+      { key: 'enterprise_why_items', value: JSON.stringify([
+        'Authorized channel partner for V-Guard, Wilo, Zero B & Bluewave India',
+        'Single-vendor B2B project delivery - supply, install, and support',
+        'Bulk procurement pricing and flexible payment terms for large orders',
+        'Dedicated project manager for every enterprise engagement',
+        'Proven track record across 10+ industry sectors in Nashik',
+        'Certified technicians with manufacturer-endorsed training',
+        'Fast turnaround on site visits and formal project quotations',
+      ]), label: 'Enterprise Why Items (JSON)', group: 'general' },
+      { key: 'enterprise_why_image', value: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&q=80&w=800&h=1000', label: 'Enterprise Why Image', group: 'general' },
       { key: 'company_phone',    value: '+919689881369',    label: 'Company Phone',    group: 'contact' },
       { key: 'company_email',    value: 'sales@avegatasta.com', label: 'Company Email', group: 'contact' },
       { key: 'company_address',  value: 'Avegatasta Solution, Nashik, Maharashtra', label: 'Company Address', group: 'contact' },
@@ -598,6 +715,100 @@ export async function initDB() {
       { key: 'social_instagram',value: '',                label: 'Instagram URL',          group: 'contact' },
       { key: 'social_facebook', value: '',                label: 'Facebook URL',           group: 'contact' },
       { key: 'about_why_choose',value: '["Authorized partner for trusted brands like V-Guard, Wilo, and Zero B","Professional installation and technical support","Energy-efficient and cost-effective systems","Customized solutions for residential and commercial projects","Reliable service and maintenance support"]', label: 'About Why Choose Us (JSON)', group: 'general' },
+      { key: 'about_hero_eyebrow', value: 'About Us - Avegatasta Solution', label: 'About Hero Eyebrow', group: 'general' },
+      { key: 'about_hero_title', value: 'Your Trusted Partner for Water & Energy Solutions', label: 'About Hero Title', group: 'general' },
+      { key: 'about_what_eyebrow', value: 'What We Do', label: 'About What We Do Eyebrow', group: 'general' },
+      { key: 'about_what_title', value: 'Complete Solutions for Modern Requirements', label: 'About What We Do Title', group: 'general' },
+      { key: 'about_what_description', value: 'At Avegatasta Solution, we offer complete solutions that address modern water and energy requirements. From efficient water heating systems to advanced water purification and solar power generation, our services are designed to deliver long-term value and sustainability.', label: 'About What We Do Description', group: 'general' },
+      { key: 'about_service_cards', value: JSON.stringify([
+        { title: 'Water Heating Solutions', description: 'We provide modern water heating technologies, including the latest heat pump water heater models and comprehensive solar water heater installation. As a leading solar water heater supplier, we offer energy efficient water heater solutions and commercial heat pump water heater systems suitable for homes, hotels, hospitals, and commercial facilities.', icon: 'Droplets' },
+        { title: 'Pumping Solutions', description: 'Our pumping solutions ensure smooth water flow, stable pressure, and efficient water distribution. We specialize in water pressure pump installation and provide robust booster pump system for buildings. As a trusted Wilo pump dealer and inline water pump supplier, we deliver reliable water transfer pump system setups for residential and industrial environments.', icon: 'Waves' },
+        { title: 'Water Treatment Systems', description: 'We offer advanced utility water treatment and drinking water purification. Our services include water softener installation, whole house water filter setups, and expert RO water purifier installation. As a certified Zero B water purifier dealer and UV water purifier supplier, we ensure safe and high-quality water for your property.', icon: 'ShieldCheck' },
+        { title: 'Solar On-Grid Power Systems', description: 'We design and execute professional solar system installation, including on grid solar system installation and commercial solar installation. If you are looking for solar panel installation near me or a solar power system for home, our experts can help, offering scalable solutions like 3kW solar system installation to reduce dependence on conventional power sources.', icon: 'Sun' },
+      ]), label: 'About Service Cards (JSON)', group: 'general' },
+      { key: 'about_mission_title', value: 'Our Mission', label: 'About Mission Title', group: 'general' },
+      { key: 'about_vision_title', value: 'Our Vision', label: 'About Vision Title', group: 'general' },
+      { key: 'about_why_image', value: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1200&h=1200', label: 'About Why Choose Image', group: 'general' },
+      { key: 'about_why_image_alt', value: 'Modern Home with Solar Panels', label: 'About Why Choose Image Alt', group: 'general' },
+      { key: 'about_why_eyebrow', value: 'Why Choose Us', label: 'About Why Choose Eyebrow', group: 'general' },
+      { key: 'about_why_title', value: 'Why Choose Avegatasta Solution', label: 'About Why Choose Title', group: 'general' },
+      { key: 'about_quote', value: '"We believe in building long-term relationships with our customers by providing trusted products, expert guidance, and dependable service."', label: 'About Quote', group: 'general' },
+      { key: 'contact_hero_background_image', value: 'https://images.unsplash.com/photo-1541944743827-e04aa6427c33?auto=format&fit=crop&q=80&w=1920&h=1080&blur=10', label: 'Contact Hero Background Image', group: 'general' },
+      { key: 'contact_hero_eyebrow', value: 'Contact Us - Avegatasta Solution', label: 'Contact Hero Eyebrow', group: 'general' },
+      { key: 'contact_hero_title', value: 'Get in Touch with', label: 'Contact Hero Title', group: 'general' },
+      { key: 'contact_hero_highlight', value: 'Our Experts', label: 'Contact Hero Highlight', group: 'general' },
+      { key: 'contact_hero_copy', value: 'At Avegatasta Solution, we are committed to providing reliable support and expert guidance for all your water heating, pumping, water treatment, and solar energy needs. Whether you are planning a new installation or looking for the right solution for your home or business, our team is here to help.', label: 'Contact Hero Copy', group: 'general' },
+      { key: 'contact_hero_button_label', value: 'Request a Consultation', label: 'Contact Hero Button Label', group: 'general' },
+      { key: 'contact_call_label', value: 'Call us directly', label: 'Contact Call Label', group: 'general' },
+      { key: 'company_working_days', value: 'Monday - Saturday', label: 'Company Working Days', group: 'contact' },
+      { key: 'company_working_hours', value: '9:30 AM - 6:30 PM', label: 'Company Working Hours', group: 'contact' },
+      { key: 'company_address_short', value: 'Nashik, Maharashtra', label: 'Company Short Address', group: 'contact' },
+      { key: 'contact_form_eyebrow', value: 'Request a Consultation', label: 'Contact Form Eyebrow', group: 'general' },
+      { key: 'contact_form_title', value: 'Planning a new installation?', label: 'Contact Form Title', group: 'general' },
+      { key: 'contact_form_highlight', value: 'Let our experts help.', label: 'Contact Form Highlight', group: 'general' },
+      { key: 'contact_form_copy', value: 'If you are planning a solar installation, water heating system, pump installation, or water purification solution, our experts can help you choose the right system based on your requirements. Send us your enquiry and our team will contact you with the best solution and quotation.', label: 'Contact Form Copy', group: 'general' },
+      { key: 'contact_solutions_title', value: 'Our Solutions', label: 'Contact Solutions Title', group: 'general' },
+      { key: 'contact_solutions_copy', value: 'We provide professional consultation and installation services for:', label: 'Contact Solutions Copy', group: 'general' },
+      { key: 'contact_solution_items', value: '["Water Heating Solutions","Pumping Solutions","Water Treatment Solutions","Solar On-Grid Systems"]', label: 'Contact Solution Items (JSON)', group: 'general' },
+      { key: 'contact_trusted_title', value: 'Trusted Brands', label: 'Contact Trusted Brands Title', group: 'general' },
+      { key: 'contact_trusted_copy', value: 'Our solutions are supported by trusted brands such as V-Guard, Wilo, and Zero B from Ion Exchange (India) Ltd.', label: 'Contact Trusted Brands Copy', group: 'general' },
+      { key: 'contact_success_title', value: 'Message Received!', label: 'Contact Success Title', group: 'general' },
+      { key: 'contact_success_copy', value: 'Our team will contact you soon.', label: 'Contact Success Copy', group: 'general' },
+      { key: 'contact_success_button_label', value: 'Send Another Message', label: 'Contact Success Button Label', group: 'general' },
+      { key: 'contact_faq_eyebrow', value: 'Common Questions', label: 'Contact FAQ Eyebrow', group: 'general' },
+      { key: 'contact_faq_title', value: 'Frequently Asked Questions', label: 'Contact FAQ Title', group: 'general' },
+      { key: 'contact_faqs', value: JSON.stringify([
+        { question: 'How long does installation take?', answer: 'Most domestic pump and water purifier installations are completed within 4-6 hours. Larger solar or industrial systems may take 1-2 days depending on the complexity.' },
+        { question: 'Do you provide after-sales service?', answer: 'Yes, we are authorized service providers for all brands we sell. We offer both on-call repairs and annual maintenance contracts (AMC).' },
+        { question: 'What is the warranty period?', answer: 'Warranty varies by product and brand. Typically, V-Guard and Zero B products come with a 1-year comprehensive warranty, while some pump motors have up to 2 years.' },
+        { question: 'Do you offer free site visits?', answer: 'For solar water heaters and industrial pumping solutions, we provide free site surveys within Nashik city limits to ensure the right product selection.' },
+      ]), label: 'Contact FAQs (JSON)', group: 'general' },
+      { key: 'contact_map_title', value: 'Visit our Visitors Area', label: 'Contact Map Title', group: 'general' },
+      { key: 'contact_map_copy', value: 'Experience our range of V-Guard, Wilo, and Zero B products in person. Our technical staff is available for live demonstrations.', label: 'Contact Map Copy', group: 'general' },
+      { key: 'contact_map_background_image', value: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=1200&h=800&blur=2', label: 'Contact Map Background Image', group: 'general' },
+      { key: 'contact_map_card_title', value: 'Avegatasta Visitors Area', label: 'Contact Map Card Title', group: 'general' },
+      { key: 'contact_map_card_copy', value: 'Click below to view our exact location on Google Maps.', label: 'Contact Map Card Copy', group: 'general' },
+      { key: 'contact_map_button_label', value: 'Open Maps', label: 'Contact Map Button Label', group: 'general' },
+      { key: 'contact_directions_label', value: 'Get Driving Directions', label: 'Contact Directions Label', group: 'general' },
+      { key: 'footer_logo_image', value: '/logo.webp', label: 'Footer Logo Image', group: 'general' },
+      { key: 'footer_brand_description', value: 'Authorized distributor of V-Guard, Zero B, and Wilo water solutions. Premium heat pumps, pumps, and water treatment for homes and industries across Nashik.', label: 'Footer Brand Description', group: 'general' },
+      { key: 'footer_product_links', value: JSON.stringify([
+        { name: 'Water Heating Solutions', href: '/products/water-heating-solutions' },
+        { name: 'Pumping Solutions', href: '/products/pumping-solutions' },
+        { name: 'Water Treatment Solutions', href: '/products/water-treatment-solutions' },
+        { name: 'Swimming Pool Solutions', href: '/products/swimming-pool-solutions' },
+        { name: 'Solar Power Systems', href: '/products/solar-power-systems' },
+      ]), label: 'Footer Product Links (JSON)', group: 'general' },
+      { key: 'footer_quick_links', value: JSON.stringify([
+        { name: 'Home', href: '/' },
+        { name: 'Products', href: '/products' },
+        { name: 'Services', href: '/services' },
+        { name: 'Projects', href: '/projects' },
+        { name: 'Enterprise', href: '/enterprise' },
+        { name: 'About Us', href: '/about' },
+        { name: 'Contact', href: '/contact' },
+      ]), label: 'Footer Quick Links (JSON)', group: 'general' },
+      { key: 'footer_distributor_label', value: 'Authorized Distributor', label: 'Footer Distributor Label', group: 'general' },
+      { key: 'footer_distributor_brands', value: '["V-Guard","Zero B","Wilo","Bluewave"]', label: 'Footer Distributor Brands (JSON)', group: 'general' },
+      { key: 'footer_copyright_name', value: 'Avegatasta Jal Urja Solutions', label: 'Footer Copyright Name', group: 'general' },
+      { key: 'footer_map_link_label', value: 'View on Google Maps', label: 'Footer Map Link Label', group: 'general' },
+      { key: 'footer_legal_links', value: JSON.stringify([
+        { name: 'Privacy Policy', href: '/privacy-policy' },
+        { name: 'Terms of Service', href: '/terms-of-service' },
+        { name: 'Cookies', href: '/cookies' },
+        { name: 'Sitemap', href: '/sitemap' },
+      ]), label: 'Footer Legal Links (JSON)', group: 'general' },
+      { key: 'services_hero_eyebrow', value: 'Our Services', label: 'Services Hero Eyebrow', group: 'general' },
+      { key: 'services_hero_title', value: 'Professional Water & Energy Solutions', label: 'Services Hero Title', group: 'general' },
+      { key: 'services_hero_copy', value: 'Avegatasta Solution provides comprehensive services for residential, commercial, and industrial projects. Our experienced team ensures professional installation and reliable service support across all our offerings.', label: 'Services Hero Copy', group: 'general' },
+      { key: 'services_installation_hero_eyebrow', value: 'Installation Services', label: 'Services Installation Hero Eyebrow', group: 'general' },
+      { key: 'services_installation_hero_title', value: 'Heat Pump Installation Service Nashik', label: 'Services Installation Hero Title', group: 'general' },
+      { key: 'services_installation_hero_copy', value: 'Avegatasta provides heat pump installation service Nashik support for homes, hotels, hospitals and commercial projects, along with solar water heater, water purifier and pumping system installation coordination.', label: 'Services Installation Hero Copy', group: 'general' },
+      { key: 'services_areas_title', value: 'Service Areas', label: 'Services Areas Title', group: 'general' },
+      { key: 'services_areas_copy', value: 'We provide specialized services for various sectors including:', label: 'Services Areas Copy', group: 'general' },
+      { key: 'services_areas_items', value: '["Apartments and Villas","Hotels and Hospitals","Commercial Buildings","Industrial Facilities"]', label: 'Services Areas Items (JSON)', group: 'general' },
+      { key: 'services_why_title', value: 'Why Choose Avegatasta Solution', label: 'Services Why Choose Title', group: 'general' },
+      { key: 'services_contact_button_label', value: 'Contact Us', label: 'Services Contact Button Label', group: 'general' },
       // Integrations / tracking — managed from Admin → Site Settings → Integrations.
       // analytics_enabled defaults to 'false' so trackers stay OFF until explicitly
       // enabled (e.g. disabled on staging/UAT). gtm_id/meta_pixel_id are seeded with
@@ -606,6 +817,22 @@ export async function initDB() {
       { key: 'gtm_id',              value: 'GTM-KRLD5J4P',     label: 'Google Tag Manager Container ID',     group: 'general' },
       { key: 'meta_pixel_id',       value: '1105969235067039', label: 'Meta Pixel ID',                       group: 'general' },
       { key: 'google_maps_api_key', value: '',                 label: 'Google Maps API Key (server-side)',   group: 'general' },
+      { key: 'bank_account_name', value: 'AVEGATASTA SOLUTION', label: 'Bank Account Name', group: 'general' },
+      { key: 'bank_account_no',   value: '04750500009935',     label: 'Bank Account Number', group: 'general' },
+      { key: 'bank_ifsc',         value: 'BARB0NASIKR',        label: 'Bank IFSC Code', group: 'general' },
+      { key: 'bank_name',         value: 'Bank of Baroda',     label: 'Bank Name', group: 'general' },
+      { key: 'bank_branch',       value: 'Nashik Road',        label: 'Bank Branch', group: 'general' },
+      { key: 'bank_accounts',     value: JSON.stringify([
+        {
+          id: 'bank_default_seed',
+          bankName: 'Bank of Baroda',
+          branch: 'Nashik Road',
+          accountName: 'AVEGATASTA SOLUTION',
+          accountNo: '04750500009935',
+          ifsc: 'BARB0NASIKR',
+          isPrimary: true
+        }
+      ]), label: 'Bank Accounts (JSON)', group: 'general' },
     ];
     for (const s of siteSettingsSeeds) {
       await connection.query(
@@ -1302,6 +1529,64 @@ export async function initDB() {
         }
         console.log(`[initDB] Seeded ${initialProducts.length} initial products from lib/data.ts`);
       }
+
+      // Pages table
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS pages (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          title VARCHAR(255) NOT NULL,
+          slug VARCHAR(255) NOT NULL UNIQUE,
+          meta_title VARCHAR(255),
+          meta_description TEXT,
+          meta_keywords TEXT,
+          canonical_url VARCHAR(255),
+          og_title VARCHAR(255),
+          og_description TEXT,
+          og_image VARCHAR(255),
+          status ENUM('published', 'draft') DEFAULT 'draft',
+          show_in_menu BOOLEAN DEFAULT FALSE,
+          menu_label VARCHAR(255),
+          menu_order INT DEFAULT 0,
+          parent_id INT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+
+      // Page Sections table
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS page_sections (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          page_id INT NOT NULL,
+          section_type VARCHAR(100) NOT NULL,
+          section_key VARCHAR(100) NOT NULL,
+          category VARCHAR(100),
+          title VARCHAR(255),
+          subtitle TEXT,
+          content LONGTEXT,
+          data_json JSON,
+          sort_order INT DEFAULT 0,
+          is_active BOOLEAN DEFAULT TRUE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
+
+      // Page FAQs table
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS page_faqs (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          page_id INT NOT NULL,
+          question TEXT NOT NULL,
+          answer TEXT NOT NULL,
+          sort_order INT DEFAULT 0,
+          is_active BOOLEAN DEFAULT TRUE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
 
     // Performance indexes for high-traffic public reads and admin dashboard summaries.
     for (const ddl of [

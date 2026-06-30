@@ -37,6 +37,7 @@ type QuotationData = {
     bankName: string;
     branch: string;
   };
+  includeBankDetails?: boolean;
   terms: string[];
 };
 
@@ -62,9 +63,32 @@ const DEFAULT_BANK = {
   branch: 'Nashik Main Branch'
 };
 
+const generateNextQuoteNumber = (savedQuotes: any[]): string => {
+  if (!savedQuotes || savedQuotes.length === 0) {
+    return 'AVE-001';
+  }
+  
+  let maxNum = 0;
+  const regex = /^AVE-(\d+)$/i;
+  
+  savedQuotes.forEach(q => {
+    if (q.quote_number) {
+      const match = q.quote_number.match(regex);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) {
+          maxNum = num;
+        }
+      }
+    }
+  });
+  
+  return `AVE-${String(maxNum + 1).padStart(3, '0')}`;
+};
+
 export default function ProposalBuilderPage() {
   const [data, setData] = useState<QuotationData>({
-    quoteNumber: `QT-${Math.floor(Math.random() * 10000)}`,
+    quoteNumber: 'AVE-001',
     date: new Date().toISOString().split('T')[0],
     clientCompany: '',
     clientName: '',
@@ -73,6 +97,7 @@ export default function ProposalBuilderPage() {
     discount: 0,
     taxRate: 18,
     bankDetails: { ...DEFAULT_BANK },
+    includeBankDetails: true,
     terms: [...DEFAULT_TERMS],
   });
 
@@ -122,7 +147,20 @@ export default function ProposalBuilderPage() {
     fetch('/api/admin/quotations')
       .then(r => r.json())
       .then(res => {
-        if (res.quotations) setSavedQuotations(res.quotations);
+        if (res.quotations) {
+          setSavedQuotations(res.quotations);
+          
+          const params = new URLSearchParams(window.location.search);
+          const loadQuote = params.get('load');
+          if (!loadQuote) {
+            setData(prev => {
+              if (!prev.quoteNumber || prev.quoteNumber === 'AVE-001' || prev.quoteNumber.startsWith('QT-')) {
+                return { ...prev, quoteNumber: generateNextQuoteNumber(res.quotations) };
+              }
+              return prev;
+            });
+          }
+        }
       })
       .catch(() => toast.error('Failed to load saved quotations.'));
   };
@@ -167,8 +205,9 @@ export default function ProposalBuilderPage() {
         fetchSavedQuotations();
         // Clear the form if they just deleted the currently active quote
         if (data.quoteNumber === quote_number) {
+           const remainingQuotes = savedQuotations.filter(q => q.quote_number !== quote_number);
            setData({
-             quoteNumber: '',
+             quoteNumber: generateNextQuoteNumber(remainingQuotes),
              date: new Date().toISOString().split('T')[0],
              clientCompany: '',
              clientName: '',
@@ -177,6 +216,7 @@ export default function ProposalBuilderPage() {
              discount: 0,
              taxRate: 18,
              bankDetails: { ...DEFAULT_BANK },
+             includeBankDetails: true,
              terms: [...DEFAULT_TERMS],
            });
         }
@@ -340,7 +380,23 @@ export default function ProposalBuilderPage() {
               className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
               value={data.quoteNumber}
               onChange={(e) => {
-                if(e.target.value) loadQuotation(e.target.value);
+                if (e.target.value) {
+                  loadQuotation(e.target.value);
+                } else {
+                  setData({
+                    quoteNumber: generateNextQuoteNumber(savedQuotations),
+                    date: new Date().toISOString().split('T')[0],
+                    clientCompany: '',
+                    clientName: '',
+                    clientPhone: '',
+                    items: [],
+                    discount: 0,
+                    taxRate: 18,
+                    bankDetails: { ...DEFAULT_BANK },
+                    includeBankDetails: true,
+                    terms: [...DEFAULT_TERMS],
+                  });
+                }
               }}
             >
               <option value="">Start New Quotation...</option>

@@ -16,7 +16,6 @@ import {
   BarChart3,
   AlertTriangle,
 } from 'lucide-react';
-import Footer from '@/components/Footer';
 import { products } from '@/lib/data';
 import toast from 'react-hot-toast';
 
@@ -592,9 +591,9 @@ export default function AdminSalesPage() {
         </form>
 
         {/* ── Summary Cards ───────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
           {loadingDash ? (
-            Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+            Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)
           ) : (
             <>
               {/* Sales Today */}
@@ -635,25 +634,6 @@ export default function AdminSalesPage() {
                   <span className="text-sm font-medium text-slate-400 ml-1">sales</span>
                 </p>
                 <p className="text-sm font-black text-slate-500">{fmt(dashboard?.this_month.revenue ?? 0)}</p>
-              </motion.div>
-
-              {/* Gross Margin */}
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6"
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 bg-violet-50 rounded-xl flex items-center justify-center">
-                    <IndianRupee size={16} className="text-violet-600" />
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Gross Margin</span>
-                </div>
-                <p className={`text-2xl font-black mb-1 ${(dashboard?.this_month.margin ?? 0) >= 0 ? 'text-brand-950' : 'text-red-600'}`}>
-                  {fmt(dashboard?.this_month.margin ?? 0)}
-                </p>
-                <p className="text-sm font-black text-slate-400">Revenue − DP cost</p>
               </motion.div>
 
               {/* Top Performer */}
@@ -736,15 +716,14 @@ export default function AdminSalesPage() {
                   <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">DP</th>
                   <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Sold</th>
                   <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">MRP</th>
-                  <th className="px-5 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Margin</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {loadingRecords ? (
-                  Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} cols={9} />)
+                  Array.from({ length: 6 }).map((_, i) => <SkeletonRow key={i} cols={8} />)
                 ) : records.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-8 py-20 text-center">
+                    <td colSpan={8} className="px-8 py-20 text-center">
                       <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
                         <TrendingUp size={32} />
                       </div>
@@ -812,13 +791,6 @@ export default function AdminSalesPage() {
                             {r.mrp_price_at_sale != null ? fmt(r.mrp_price_at_sale) : <span className="text-slate-300">—</span>}
                           </span>
                         </td>
-                        <td className="px-5 py-4 text-right">
-                          <span
-                            className={`text-sm font-black ${marginPositive ? 'text-emerald-600' : 'text-red-600'}`}
-                          >
-                            {fmt(r.margin * r.quantity)}
-                          </span>
-                        </td>
                       </motion.tr>
                     );
                   })
@@ -829,8 +801,7 @@ export default function AdminSalesPage() {
         </div>
       </main>
 
-      <Footer />
-
+      
       <LogSaleModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}

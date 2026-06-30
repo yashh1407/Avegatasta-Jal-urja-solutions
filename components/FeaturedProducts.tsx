@@ -174,7 +174,13 @@ function InquiryDialog({ product, onClose }: InquiryDialogProps) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function FeaturedProducts() {
+interface FeaturedProductsProps {
+  badge?: string;
+  titleHtml?: string;
+  description?: string;
+}
+
+export default function FeaturedProducts({ badge, titleHtml, description }: FeaturedProductsProps = {}) {
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
   const [productsList, setProductsList] = useState<Product[]>(() => products);
 
@@ -189,11 +195,15 @@ export default function FeaturedProducts() {
       .catch((err) => console.error('Failed to sync featured products:', err));
   }, []);
   
-  // Custom selection for "Top Picks" based on user request
+  // Custom selection for "Top Picks" based on B2B requirements
   const featuredIds = ['vg-hp-vhp150', 'zb-softener-as1', 'wilo-fmhil-booster', 'zb-zenora-ro-uf'];
   const featured = featuredIds
     .map(id => productsList.find(p => p.id === id))
     .filter(Boolean) as Product[];
+
+  const resolvedBadge = badge || 'Featured Products';
+  const resolvedTitleHtml = titleHtml || 'Top Picks for You';
+  const resolvedDescription = description || 'Handpicked water solutions from V-Guard, Zero B, and Wilo.';
 
   return (
     <>
@@ -203,13 +213,11 @@ export default function FeaturedProducts() {
           <div className="flex items-end justify-between mb-12">
             <div>
               <p className="text-xs font-black text-brand-500 uppercase tracking-[0.2em] mb-2">
-                Featured Products
+                {resolvedBadge}
               </p>
-              <h2 className="text-3xl font-black text-brand-950 tracking-tight">
-                Top Picks for You
-              </h2>
+              <h2 className="text-3xl font-black text-brand-950 tracking-tight" dangerouslySetInnerHTML={{ __html: resolvedTitleHtml }} />
               <p className="text-brand-500 font-medium mt-2">
-                Handpicked water solutions from V-Guard, Zero B, and Wilo.
+                {resolvedDescription}
               </p>
             </div>
             <Link

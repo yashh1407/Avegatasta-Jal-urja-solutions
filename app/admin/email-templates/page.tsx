@@ -17,7 +17,6 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import Footer from '@/components/Footer';
 
 interface EmailTemplate {
   id: number;
@@ -527,7 +526,6 @@ export default function EmailTemplatesPage() {
         </div>
       </main>
 
-      <Footer />
-    </div>
+          </div>
   );
 }

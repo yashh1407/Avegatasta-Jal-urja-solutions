@@ -20,7 +20,7 @@ export async function GET() {
         (sr.unit_price_sold * sr.quantity) AS revenue,
         (COALESCE(sr.dp_price_at_sale, 0) * sr.quantity) AS cost
       FROM sales_records sr
-      LEFT JOIN sales_team st ON st.id = sr.sales_team_id
+      LEFT JOIN admin_users st ON st.id = sr.sales_team_id
 
       UNION ALL
 
@@ -43,7 +43,7 @@ export async function GET() {
         pi.agreed_price AS revenue,
         COALESCE(pp.dp_price, 0) AS cost
       FROM product_inquiries pi
-      LEFT JOIN product_pricing pp ON pp.product_id = pi.product_id
+      LEFT JOIN product_pricing pp ON pp.product_id = pi.product_id COLLATE utf8mb4_general_ci
       WHERE pi.status = 'delivered'
         AND pi.agreed_price IS NOT NULL
     `;

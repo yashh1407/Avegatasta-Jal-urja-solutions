@@ -11,8 +11,9 @@ export default function PageTransition({
 }) {
   const pathname = usePathname();
   const reduceMotion = useReducedMotion();
+  const isAdminRoute = pathname?.startsWith('/admin');
 
-  if (reduceMotion) {
+  if (reduceMotion || isAdminRoute) {
     return (
       <div data-motion-root className="motion-page-shell">
         {children}

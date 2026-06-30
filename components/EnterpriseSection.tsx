@@ -19,7 +19,23 @@ const STATS = [
   { value: '10+',    label: 'Sectors Served' },
 ];
 
-export default function EnterpriseSection() {
+interface EnterpriseSectionProps {
+  eyebrow?: string;
+  title?: string;
+  highlight?: string;
+  copy?: string;
+  image?: string;
+  buttonText?: string;
+}
+
+export default function EnterpriseSection({ eyebrow, title, highlight, copy, image, buttonText }: EnterpriseSectionProps = {}) {
+  const resolvedEyebrow = eyebrow || 'Enterprise & Bulk Projects';
+  const resolvedTitle = title || "Powering India's";
+  const resolvedHighlight = highlight || 'Enterprises';
+  const resolvedCopy = copy || 'From a single commercial building to an entire industrial estate — Avegatasta delivers end-to-end B2B project execution with authorised equipment, certified installation, and dedicated after-sales support across every major sector.';
+  const resolvedImage = image || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=700&h=875';
+  const resolvedButtonText = buttonText || 'Explore Enterprise Solutions';
+
   return (
     <section
       className="py-16 sm:py-20 lg:py-24 bg-white border-t border-slate-100 overflow-hidden"
@@ -48,7 +64,7 @@ export default function EnterpriseSection() {
                 variants={fadeUp}
                 className="text-xs font-black text-accent-400 uppercase tracking-[0.2em] mb-4"
               >
-                Enterprise &amp; Bulk Projects
+                {resolvedEyebrow}
               </motion.p>
 
               {/* ── Headline ──────────────────────────────────────────── */}
@@ -56,8 +72,8 @@ export default function EnterpriseSection() {
                 variants={fadeUp}
                 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight mb-5 max-w-xl"
               >
-                Powering India&rsquo;s{' '}
-                <span className="text-accent-400">Enterprises</span>
+                {resolvedTitle}{' '}
+                <span className="text-accent-400">{resolvedHighlight}</span>
               </motion.h2>
 
               {/* ── Sub-copy ──────────────────────────────────────────── */}
@@ -65,9 +81,7 @@ export default function EnterpriseSection() {
                 variants={fadeUp}
                 className="text-brand-300 font-medium text-lg leading-relaxed max-w-2xl mb-8"
               >
-                From a single commercial building to an entire industrial estate — Avegatasta delivers
-                end-to-end B2B project execution with authorised equipment, certified installation,
-                and dedicated after-sales support across every major sector.
+                {resolvedCopy}
               </motion.p>
 
               {/* ── Vertical icons ────────────────────────────────────── */}
@@ -109,7 +123,7 @@ export default function EnterpriseSection() {
                   className="inline-flex items-center gap-2 px-8 py-4 bg-brand-500 hover:bg-brand-400 text-white rounded-2xl font-bold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                   style={{ boxShadow: '0 16px 48px -8px oklch(47% 0.18 250 / 0.45)' }}
                 >
-                  Explore Enterprise Solutions
+                  {resolvedButtonText}
                   <ArrowRight size={16} />
                 </Link>
               </motion.div>
@@ -121,7 +135,7 @@ export default function EnterpriseSection() {
               className="motion-media hidden lg:block relative rounded-[2rem] overflow-hidden aspect-[4/5] shadow-2xl"
             >
               <Image
-                src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=700&h=875"
+                src={resolvedImage}
                 alt="Enterprise Commercial Infrastructure"
                 fill
                 className="object-cover"

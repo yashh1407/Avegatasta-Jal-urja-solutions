@@ -63,7 +63,7 @@ export async function GET(request: Request) {
            sr.mrp_price_at_sale,
            (sr.unit_price_sold - COALESCE(sr.dp_price_at_sale, 0)) AS margin
          FROM sales_records sr
-         LEFT JOIN sales_team st ON st.id = sr.sales_team_id
+         LEFT JOIN admin_users st ON st.id = sr.sales_team_id
          LEFT JOIN clients c ON c.id = sr.client_id
          ${manualWhere}
 
@@ -99,7 +99,7 @@ export async function GET(request: Request) {
            pp.mrp_price AS mrp_price_at_sale,
            (pi.agreed_price - COALESCE(pp.dp_price, 0)) AS margin
          FROM product_inquiries pi
-         LEFT JOIN product_pricing pp ON pp.product_id = pi.product_id
+         LEFT JOIN product_pricing pp ON pp.product_id = pi.product_id COLLATE utf8mb4_general_ci
          WHERE pi.status = 'delivered'
            AND pi.agreed_price IS NOT NULL
            ${productInquiryWhere}

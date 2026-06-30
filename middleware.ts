@@ -59,10 +59,7 @@ function getRequiredModule(pathname: string): string | null {
   
   if (
     pathname.startsWith('/admin/sales-team') || 
-    pathname.startsWith('/api/admin/sales-team')
-  ) return 'sales-team';
-  
-  if (
+    pathname.startsWith('/api/admin/sales-team') ||
     pathname.startsWith('/admin/sales') || 
     pathname.startsWith('/api/admin/sales') || 
     pathname.startsWith('/api/admin/sales-records') || 
@@ -111,7 +108,7 @@ function getModulePath(moduleKey: string): string | null {
     'clients': '/admin/clients',
     'products': '/admin/products',
     'vendors': '/admin/vendors',
-    'sales-team': '/admin/sales-team',
+    'sales-team': '/admin/sales',
     'sales': '/admin/sales',
     'case-studies': '/admin/case-studies',
     'testimonials': '/admin/testimonials',
@@ -207,6 +204,13 @@ export async function middleware(req: NextRequest) {
       const role = token.role;
       if (role !== 'superadmin') {
         const permissions = token.permissions;
+
+        // Allow dev fallback admins (role is admin but permissions is null) to access the dashboard
+        const isDevFallback = role === 'admin' && permissions === null;
+        if (isDevFallback) {
+          return NextResponse.next();
+        }
+
         if (permissions) {
           let firstAllowedModule: string | null = null;
           if (Array.isArray(permissions)) {
@@ -229,8 +233,9 @@ export async function middleware(req: NextRequest) {
             }
           }
         }
-        // If they have no permissions, redirect to login
-        return NextResponse.redirect(new URL('/admin/login', base));
+        // If they have no allowed modules, don't redirect to /admin/login to avoid infinite redirect loop.
+        // Instead, let them access /admin dashboard where they can see the layout and logout button.
+        return NextResponse.next();
       }
     }
 

@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
-import Footer from '@/components/Footer';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -70,6 +69,7 @@ interface InvoiceData {
   taxRate: number; // default 18
   roundOff: boolean;
   bankDetails: BankDetails;
+  includeBankDetails?: boolean;
   terms: string;
   jurisdiction: string;
   declaration: string;
@@ -84,6 +84,17 @@ const DEFAULT_BANK: BankDetails = {
   bankName: 'Bank of Baroda',
   branch: 'Nashik Road'
 };
+
+const bankDetailsFromSettings = (
+  settings: Record<string, string | null | undefined>,
+  fallback: BankDetails = DEFAULT_BANK
+): BankDetails => ({
+  accountName: settings.bank_account_name || fallback.accountName,
+  accountNo: settings.bank_account_no || fallback.accountNo,
+  ifsc: settings.bank_ifsc || fallback.ifsc,
+  bankName: settings.bank_name || fallback.bankName,
+  branch: settings.bank_branch || fallback.branch,
+});
 
 const DEFAULT_DECLARATION = 'Certified that the particulars given above are True & Correct';
 const DEFAULT_JURISDICTION = 'Subject To Nashik Jurisdiction';
@@ -114,6 +125,7 @@ const INITIAL_DATA: InvoiceData = {
   taxRate: 18,
   roundOff: true,
   bankDetails: { ...DEFAULT_BANK },
+  includeBankDetails: true,
   terms: DEFAULT_TERMS,
   jurisdiction: DEFAULT_JURISDICTION,
   declaration: DEFAULT_DECLARATION
@@ -174,6 +186,7 @@ export default function InvoiceBuilderPage() {
 
   const [mounted, setMounted] = useState(false);
   const [data, setData] = useState<InvoiceData>({ ...INITIAL_DATA });
+  const [configuredBank, setConfiguredBank] = useState<BankDetails>({ ...DEFAULT_BANK });
   const [dbProducts, setDbProducts] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [savedInvoices, setSavedInvoices] = useState<any[]>([]);
@@ -206,6 +219,7 @@ export default function InvoiceBuilderPage() {
       return;
     }
     setMounted(true);
+    const invoiceParam = new URLSearchParams(window.location.search).get('invoice');
     // Fetch products for autocomplete
     fetch('/api/admin/pricing')
       .then(r => r.json())
@@ -218,6 +232,17 @@ export default function InvoiceBuilderPage() {
       .then(r => r.json())
       .then(res => {
         if (Array.isArray(res)) setClients(res);
+      })
+      .catch(console.error);
+
+    fetch('/api/admin/site-settings', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(res => {
+        const bank = bankDetailsFromSettings(res?.map ?? {});
+        setConfiguredBank(bank);
+        if (!invoiceParam) {
+          setData(prev => ({ ...prev, bankDetails: bank }));
+        }
       })
       .catch(console.error);
 
@@ -286,7 +311,7 @@ export default function InvoiceBuilderPage() {
         showToast('Invoice deleted.', 'success');
         fetchSavedInvoices();
         if (data.invoiceNumber === invoiceNum) {
-          setData({ ...INITIAL_DATA });
+          setData({ ...INITIAL_DATA, bankDetails: { ...configuredBank } });
         }
       } else {
         showToast('Failed to delete invoice.', 'error');
@@ -450,7 +475,7 @@ export default function InvoiceBuilderPage() {
             <button onClick={() => setShowSavedList(true)} className="w-8 h-8 bg-slate-100 text-slate-600 rounded-lg flex items-center justify-center hover:bg-slate-200 transition-colors" title="Saved Invoices" aria-label="Saved invoices">
               <Receipt size={14} />
             </button>
-            <button onClick={() => setData({ ...INITIAL_DATA })} className="w-8 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors" title="Clear/New" aria-label="Clear and start new invoice">
+            <button onClick={() => setData({ ...INITIAL_DATA, bankDetails: { ...configuredBank } })} className="w-8 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors" title="Clear/New" aria-label="Clear and start new invoice">
               <Trash2 size={14} />
             </button>
           </div>
@@ -842,25 +867,17 @@ export default function InvoiceBuilderPage() {
             </button>
             {openSections.bankDetails && (
               <div className="p-4 space-y-3">
-                <div>
-                  <label htmlFor="inv-bank-name" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Bank Name</label>
-                  <input id="inv-bank-name" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.bankDetails.bankName} onChange={e => setData({ ...data, bankDetails: { ...data.bankDetails, bankName: e.target.value } })} />
-                </div>
-                <div>
-                  <label htmlFor="inv-bank-branch" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Branch</label>
-                  <input id="inv-bank-branch" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.bankDetails.branch} onChange={e => setData({ ...data, bankDetails: { ...data.bankDetails, branch: e.target.value } })} />
-                </div>
-                <div>
-                  <label htmlFor="inv-bank-account-name" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Account Holder</label>
-                  <input id="inv-bank-account-name" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.bankDetails.accountName} onChange={e => setData({ ...data, bankDetails: { ...data.bankDetails, accountName: e.target.value } })} />
-                </div>
-                <div>
-                  <label htmlFor="inv-bank-account-no" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">Account No</label>
-                  <input id="inv-bank-account-no" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.bankDetails.accountNo} onChange={e => setData({ ...data, bankDetails: { ...data.bankDetails, accountNo: e.target.value } })} />
-                </div>
-                <div>
-                  <label htmlFor="inv-bank-ifsc" className="text-[9px] font-black uppercase tracking-wider text-slate-500 block mb-1">IFSC Code</label>
-                  <input id="inv-bank-ifsc" type="text" className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold outline-none focus:border-brand-400" value={data.bankDetails.ifsc} onChange={e => setData({ ...data, bankDetails: { ...data.bankDetails, ifsc: e.target.value } })} />
+                <div className="flex items-center gap-2">
+                  <input
+                    id="inv-include-bank"
+                    type="checkbox"
+                    checked={data.includeBankDetails !== false}
+                    onChange={e => setData({ ...data, includeBankDetails: e.target.checked })}
+                    className="w-4 h-4 text-brand-650 border-slate-200 rounded focus:ring-brand-500"
+                  />
+                  <label htmlFor="inv-include-bank" className="text-xs font-semibold text-slate-750">
+                    Include Bank Details on Invoice
+                  </label>
                 </div>
               </div>
             )}
@@ -1145,26 +1162,30 @@ export default function InvoiceBuilderPage() {
             <div className="p-3 border-r border-slate-800 space-y-3.5">
               <div>
                 <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest block mb-1.5">Bank Details</span>
-                <table className="w-full text-[11.5px] text-slate-600 font-medium">
-                  <tbody>
-                    <tr>
-                      <td className="w-24 font-bold text-slate-400 uppercase text-[9.5px] tracking-wider py-0.5">Bank Name</td>
-                      <td className="font-bold text-slate-800 py-0.5">{data.bankDetails.bankName || '—'}</td>
-                    </tr>
-                    <tr>
-                      <td className="font-bold text-slate-400 uppercase text-[9.5px] tracking-wider py-0.5">Branch</td>
-                      <td className="py-0.5">{data.bankDetails.branch || '—'}</td>
-                    </tr>
-                    <tr>
-                      <td className="font-bold text-slate-400 uppercase text-[9.5px] tracking-wider py-0.5">A/C No.</td>
-                      <td className="font-bold text-slate-850 py-0.5">{data.bankDetails.accountNo || '—'}</td>
-                    </tr>
-                    <tr>
-                      <td className="font-bold text-slate-400 uppercase text-[9.5px] tracking-wider py-0.5">IFSC Code</td>
-                      <td className="font-bold text-slate-850 py-0.5">{data.bankDetails.ifsc || '—'}</td>
-                    </tr>
-                  </tbody>
-                </table>
+                {data.includeBankDetails !== false ? (
+                  <table className="w-full text-[11.5px] text-slate-600 font-medium">
+                    <tbody>
+                      <tr>
+                        <td className="w-24 font-bold text-slate-400 uppercase text-[9.5px] tracking-wider py-0.5">Bank Name</td>
+                        <td className="font-bold text-slate-800 py-0.5">{data.bankDetails.bankName || '—'}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold text-slate-400 uppercase text-[9.5px] tracking-wider py-0.5">Branch</td>
+                        <td className="py-0.5">{data.bankDetails.branch || '—'}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold text-slate-400 uppercase text-[9.5px] tracking-wider py-0.5">A/C No.</td>
+                        <td className="font-bold text-slate-850 py-0.5">{data.bankDetails.accountNo || '—'}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-bold text-slate-400 uppercase text-[9.5px] tracking-wider py-0.5">IFSC Code</td>
+                        <td className="font-bold text-slate-850 py-0.5">{data.bankDetails.ifsc || '—'}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                ) : (
+                  <p className="text-[11px] text-slate-400 italic py-1">Bank details not included</p>
+                )}
               </div>
 
               <div className="text-[9.5px] text-slate-400 font-extrabold border-t border-slate-100 pt-2 text-center uppercase tracking-wider">

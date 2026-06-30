@@ -25,6 +25,17 @@ const QUICK_LINKS = [
   { name: 'Contact',    href: '/contact' },
 ];
 
+type FooterLink = { name: string; href: string };
+
+function parseJsonArray<T>(value: string | undefined, fallback: T[]): T[] {
+  try {
+    const parsed = JSON.parse(value ?? '[]');
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 // â”€â”€â”€ WhatsApp icon (inline SVG â€” not in Lucide) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function WhatsAppIcon({ size = 18 }: { size?: number }) {
@@ -52,11 +63,21 @@ export default function Footer() {
     social_linkedin: '',
     social_instagram: '',
     social_facebook: '',
+    google_maps_url: '',
+    footer_logo_image: '/logo.webp',
+    footer_brand_description: 'Authorized distributor of V-Guard, Zero B, and Wilo water solutions. Premium heat pumps, pumps, and water treatment for homes and industries across Nashik.',
+    footer_product_links: '',
+    footer_quick_links: '',
+    footer_distributor_label: 'Authorized Distributor',
+    footer_distributor_brands: '',
+    footer_copyright_name: 'Avegatasta Jal Urja Solutions',
+    footer_map_link_label: 'View on Google Maps',
+    footer_legal_links: '',
   });
 
   useEffect(() => {
     const loadSettings = () => {
-      fetch('/api/site-settings?group=contact')
+      fetch('/api/site-settings')
         .then(r => r.json())
         .then(data => {
           if (data && typeof data === 'object') {
@@ -85,6 +106,18 @@ export default function Footer() {
   const linkedinUrl = contact.social_linkedin || 'https://linkedin.com';
   const instagramUrl = contact.social_instagram || 'https://instagram.com';
   const facebookUrl = contact.social_facebook || 'https://facebook.com';
+  const footerLogo = contact.footer_logo_image || '/logo.webp';
+  const footerDescription = contact.footer_brand_description || 'Authorized distributor of V-Guard, Zero B, and Wilo water solutions. Premium heat pumps, pumps, and water treatment for homes and industries across Nashik.';
+  const productLinks = parseJsonArray<FooterLink>(contact.footer_product_links, PRODUCT_CATEGORIES);
+  const quickLinks = parseJsonArray<FooterLink>(contact.footer_quick_links, QUICK_LINKS);
+  const distributorBrands = parseJsonArray<string>(contact.footer_distributor_brands, ['V-Guard', 'Zero B', 'Wilo', 'Bluewave']);
+  const legalLinks = parseJsonArray<FooterLink>(contact.footer_legal_links, [
+    { name: 'Privacy Policy', href: '/privacy-policy' },
+    { name: 'Terms of Service', href: '/terms-of-service' },
+    { name: 'Cookies', href: '/cookies' },
+    { name: 'Sitemap', href: '/sitemap' },
+  ]);
+  const mapsUrl = contact.google_maps_url || 'https://maps.google.com/?q=Avegatasta+Jal+Urja+Solutions+Nashik';
 
   return (
     <footer className="bg-brand-50 text-slate-600 pt-10 lg:pt-14 pb-6 lg:pb-8">
@@ -97,7 +130,7 @@ export default function Footer() {
           <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="block relative h-12 sm:h-14 w-48 sm:w-56 mb-6">
               <Image
-                src="/logo.webp"
+                src={footerLogo}
                 alt="Avegatasta Jal-Urja Solutions"
                 fill
                 className="object-contain object-left"
@@ -106,7 +139,7 @@ export default function Footer() {
             </Link>
 
             <p className="text-slate-600 text-sm leading-relaxed mb-6 max-w-xs">
-              Authorized distributor of V-Guard, Zero B, and Wilo water solutions. Premium heat pumps, pumps, and water treatment for homes and industries across Nashik.
+              {footerDescription}
             </p>
 
             {/* Social icons */}
@@ -166,7 +199,7 @@ export default function Footer() {
               Products
             </h4>
             <ul className="space-y-3">
-              {PRODUCT_CATEGORIES.map((item) => (
+              {productLinks.map((item) => (
                 <li key={item.name}>
                   <Link
                     href={item.href}
@@ -185,7 +218,7 @@ export default function Footer() {
               Quick Links
             </h4>
             <ul className="space-y-3">
-              {QUICK_LINKS.map((item) => (
+              {quickLinks.map((item) => (
                 <li key={item.name}>
                   <Link
                     href={item.href}
@@ -234,13 +267,13 @@ export default function Footer() {
 
             {/* Google Maps link */}
             <a
-              href="https://maps.google.com/?q=Avegatasta+Jal+Urja+Solutions+Nashik"
+              href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-xs font-bold text-brand-600 hover:text-brand-700 transition-colors border border-slate-200 bg-white rounded-xl px-3 py-2 hover:border-slate-300"
             >
               <MapPin size={12} />
-              View on Google Maps
+              {contact.footer_map_link_label || 'View on Google Maps'}
             </a>
           </div>
         </div>
@@ -255,14 +288,14 @@ export default function Footer() {
             <div className="flex items-center gap-4 mb-8">
               <div className="h-px bg-gradient-to-r from-transparent to-slate-200 flex-1" />
               <p className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-400 text-center">
-                Authorized Distributor
+                {contact.footer_distributor_label || 'Authorized Distributor'}
               </p>
               <div className="h-px bg-gradient-to-l from-transparent to-slate-200 flex-1" />
             </div>
             
             {/* Brands with diamonds */}
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4 sm:gap-x-10 text-slate-700">
-              {['V-Guard', 'Zero B', 'Wilo', 'Bluewave'].map((brand, index, array) => (
+              {distributorBrands.map((brand, index, array) => (
                 <React.Fragment key={brand}>
                   <span className="text-xl sm:text-2xl font-black tracking-tight text-brand-950">
                     {brand}
@@ -281,21 +314,14 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-slate-200/60 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-xs font-medium text-slate-500">
-            &copy; {new Date().getFullYear()} Avegatasta Jal Urja Solutions. All rights reserved.
+            &copy; {new Date().getFullYear()} {contact.footer_copyright_name || 'Avegatasta Jal Urja Solutions'}. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            <Link href="/privacy-policy" className="text-xs font-medium text-slate-500 hover:text-brand-600 transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/terms-of-service" className="text-xs font-medium text-slate-500 hover:text-brand-600 transition-colors">
-              Terms of Service
-            </Link>
-            <Link href="/cookies" className="text-xs font-medium text-slate-500 hover:text-brand-600 transition-colors">
-              Cookies
-            </Link>
-            <Link href="/sitemap" className="text-xs font-medium text-slate-500 hover:text-brand-600 transition-colors">
-              Sitemap
-            </Link>
+            {legalLinks.map((item) => (
+              <Link key={item.href} href={item.href} className="text-xs font-medium text-slate-500 hover:text-brand-600 transition-colors">
+                {item.name}
+              </Link>
+            ))}
           </div>
         </div>
       </div>
